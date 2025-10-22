@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>انیمیشن الگوریتم BFS</title>
+    <style>
+        :root {
+            --primary: #6c5ce7;
+            --secondary: #a29bfe;
+            --accent: #fd79a8;
+            --dark: #2d3436;
+            --light: #dfe6e9;
+            --success: #00b894;
+            --warning: #fdcb6e;
+            --danger: #e17055;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: var(--light);
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            color: var(--secondary);
+            margin-bottom: 20px;
+        }
+        
+        .content {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .panel {
+            flex: 1;
+            min-width: 300px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        label {
+            font-weight: 600;
+            color: var(--secondary);
+        }
+        
+        input, select, button {
+            padding: 12px 15px;
+            border-radius: 8px;
+            border: none;
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--light);
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px var(--primary);
+        }
+        
+        button {
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(108, 92, 231, 0.4);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .visualization {
+            flex: 2;
+            min-width: 500px;
+            height: 600px;
+            position: relative;
+            overflow: hidden;
+            border-radius: 15px;
+            background: rgba(0, 0, 0, 0.2);
+        }
+        
+        .tree-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+        
+        .node {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            z-index: 10;
+            transition: all 0.5s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+        }
+        
+        .node.visited {
+            background: var(--success);
+            transform: scale(1.1);
+        }
+        
+        .node.current {
+            background: var(--accent);
+            box-shadow: 0 0 0 5px rgba(253, 121, 168, 0.5);
+            animation: pulse 1.5s infinite;
+        }
+        
+        .node.queued {
+            background: var(--warning);
+        }
+        
+        .node.default {
+            background: var(--primary);
+        }
+        
+        .edge {
+            position: absolute;
+            height: 3px;
+            background: var(--secondary);
+            transform-origin: 0 0;
+            z-index: 5;
+            transition: all 0.5s ease;
+        }
+        
+        .edge.visited {
+            background: var(--success);
+            height: 4px;
+        }
+        
+        .queue-display {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            min-height: 100px;
+        }
+        
+        .queue-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--secondary);
+        }
+        
+        .queue-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .queue-item {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--warning);
+            font-weight: bold;
+            color: var(--dark);
+        }
+        
+        .queue-item.current {
+            background: var(--accent);
+            color: white;
+            transform: scale(1.2);
+        }
+        
+        .legend {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+            justify-content: center;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.9rem;
+        }
+        
+        .legend-color {
+            width: 15px;
+            height: 15px;
+            border-radius: 3px;
+        }
+        
+        .legend-default {
+            background: var(--primary);
+        }
+        
+        .legend-visited {
+            background: var(--success);
+        }
+        
+        .legend-current {
+            background: var(--accent);
+        }
+        
+        .legend-queued {
+            background: var(--warning);
+        }
+        
+        .info-panel {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+        }
+        
+        .info-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--secondary);
+        }
+        
+        .info-content {
+            line-height: 1.6;
+        }
+        
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(253, 121, 168, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(253, 121, 168, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(253, 121, 168, 0);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .content {
+                flex-direction: column;
+            }
+            
+            .visualization {
+                min-width: 100%;
+                height: 400px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>الگوریتم جستجوی اول سطح (BFS)</h1>
+            <p class="subtitle">شبیه‌سازی بصری الگوریتم BFS بر روی درخت</p>
+        </header>
+        
+        <div class="content">
+            <div class="panel controls">
+                <div class="control-group">
+                    <label for="tree-type">نوع درخت:</label>
+                    <select id="tree-type">
+                        <option value="binary">درخت دودویی</option>
+                        <option value="balanced">درخت متعادل</option>
+                        <option value="random">درخت تصادفی</option>
+                    </select>
+                </div>
+                
+                <div class="control-group">
+                    <label for="node-count">تعداد گره‌ها:</label>
+                    <input type="range" id="node-count" min="5" max="20" value="10">
+                    <span id="node-count-value">10</span>
+                </div>
+                
+                <div class="control-group">
+                    <label for="speed">سرعت انیمیشن:</label>
+                    <input type="range" id="speed" min="1" max="10" value="5">
+                    <span id="speed-value">متوسط</span>
+                </div>
+                
+                <button id="generate-tree">
+                    <span>تولید درخت جدید</span>
+                </button>
+                
+                <button id="start-bfs">
+                    <span>شروع الگوریتم BFS</span>
+                </button>
+                
+                <button id="reset">
+                    <span>بازنشانی</span>
+                </button>
+                
+                <div class="queue-display">
+                    <div class="queue-title">صف BFS:</div>
+                    <div class="queue-items" id="queue-items"></div>
+                </div>
+                
+                <div class="info-panel">
+                    <div class="info-title">توضیحات الگوریتم BFS:</div>
+                    <div class="info-content">
+                        الگوریتم جستجوی اول سطح (BFS) یک الگوریتم پیمایش گراف است که از یک صف برای ذخیره گره‌ها استفاده می‌کند. این الگوریتم از ریشه شروع کرده و تمام گره‌های همسایه را قبل از رفتن به سطح بعدی بررسی می‌کند.
+                    </div>
+                </div>
+            </div>
+            
+            <div class="panel visualization">
+                <div class="tree-container" id="tree-container"></div>
+            </div>
+        </div>
+        
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color legend-default"></div>
+                <span>گره عادی</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color legend-visited"></div>
+                <span>گره بازدید شده</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color legend-current"></div>
+                <span>گره فعلی</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color legend-queued"></div>
+                <span>گره در صف</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // تنظیمات اولیه
+        const treeContainer = document.getElementById('tree-container');
+        const nodeCountSlider = document.getElementById('node-count');
+        const nodeCountValue = document.getElementById('node-count-value');
+        const speedSlider = document.getElementById('speed');
+        const speedValue = document.getElementById('speed-value');
+        const generateTreeBtn = document.getElementById('generate-tree');
+        const startBfsBtn = document.getElementById('start-bfs');
+        const resetBtn = document.getElementById('reset');
+        const queueItems = document.getElementById('queue-items');
+        const treeTypeSelect = document.getElementById('tree-type');
+        
+        let tree = [];
+        let edges = [];
+        let isAnimating = false;
+        let animationSpeed = 500;
+        
+        // به‌روزرسانی نمایش مقدار تعداد گره‌ها
+        nodeCountSlider.addEventListener('input', function() {
+            nodeCountValue.textContent = this.value;
+        });
+        
+        // به‌روزرسانی نمایش سرعت
+        speedSlider.addEventListener('input', function() {
+            const speed = parseInt(this.value);
+            animationSpeed = 1100 - (speed * 100);
+            
+            if (speed <= 3) {
+                speedValue.textContent = 'کند';
+            } else if (speed <= 7) {
+                speedValue.textContent = 'متوسط';
+            } else {
+                speedValue.textContent = 'سریع';
+            }
+        });
+        
+        // تولید درخت تصادفی
+        function generateTree() {
+            if (isAnimating) return;
+            
+            treeContainer.innerHTML = '';
+            queueItems.innerHTML = '';
+            tree = [];
+            edges = [];
+            
+            const nodeCount = parseInt(nodeCountSlider.value);
+            const treeType = treeTypeSelect.value;
+            
+            // ایجاد گره ریشه
+            const rootNode = {
+                id: 0,
+                value: 'A',
+                x: treeContainer.clientWidth / 2,
+                y: 80,
+                visited: false,
+                children: []
+            };
+            tree.push(rootNode);
+            
+            // ایجاد گره‌های دیگر بر اساس نوع درخت
+            if (treeType === 'binary') {
+                generateBinaryTree(nodeCount);
+            } else if (treeType === 'balanced') {
+                generateBalancedTree(nodeCount);
+            } else {
+                generateRandomTree(nodeCount);
+            }
+            
+            // رسم درخت
+            renderTree();
+        }
+        
+        // تولید درخت دودویی
+        function generateBinaryTree(nodeCount) {
+            let nodeId = 1;
+            let queue = [0]; // اندیس گره‌ها در آرایه tree
+            
+            while (queue.length > 0 && nodeId < nodeCount) {
+                const currentIndex = queue.shift();
+                const currentNode = tree[currentIndex];
+                
+                // ایجاد فرزند چپ
+                if (nodeId < nodeCount) {
+                    const leftChild = {
+                        id: nodeId,
+                        value: String.fromCharCode(65 + nodeId),
+                        x: 0,
+                        y: 0,
+                        visited: false,
+                        children: []
+                    };
+                    tree.push(leftChild);
+                    currentNode.children.push(nodeId);
+                    edges.push({ from: currentIndex, to: nodeId });
+                    queue.push(nodeId);
+                    nodeId++;
+                }
+                
+                // ایجاد فرزند راست
+                if (nodeId < nodeCount) {
+                    const rightChild = {
+                        id: nodeId,
+                        value: String.fromCharCode(65 + nodeId),
+                        x: 0,
+                        y: 0,
+                        visited: false,
+                        children: []
+                    };
+                    tree.push(rightChild);
+                    currentNode.children.push(nodeId);
+                    edges.push({ from: currentIndex, to: nodeId });
+                    queue.push(nodeId);
+                    nodeId++;
+                }
+            }
+            
+            // محاسبه موقعیت گره‌ها
+            calculateNodePositions(0, treeContainer.clientWidth / 2, 80, treeContainer.clientWidth / (nodeCount / 2));
+        }
+        
+        // تولید درخت متعادل
+        function generateBalancedTree(nodeCount) {
+            let nodeId = 1;
+            let queue = [0];
+            
+            while (queue.length > 0 && nodeId < nodeCount) {
+                const currentIndex = queue.shift();
+                const currentNode = tree[currentIndex];
+                
+                // ایجاد 2-3 فرزند برای هر گره
+                const childCount = Math.min(2 + Math.floor(Math.random() * 2), nodeCount - nodeId);
+                
+                for (let i = 0; i < childCount; i++) {
+                    if (nodeId >= nodeCount) break;
+                    
+                    const child = {
+                        id: nodeId,
+                        value: String.fromCharCode(65 + nodeId),
+                        x: 0,
+                        y: 0,
+                        visited: false,
+                        children: []
+                    };
+                    tree.push(child);
+                    currentNode.children.push(nodeId);
+                    edges.push({ from: currentIndex, to: nodeId });
+                    queue.push(nodeId);
+                    nodeId++;
+                }
+            }
+            
+            // محاسبه موقعیت گره‌ها
+            calculateNodePositions(0, treeContainer.clientWidth / 2, 80, treeContainer.clientWidth / (nodeCount / 2));
+        }
+        
+        // تولید درخت تصادفی
+        function generateRandomTree(nodeCount) {
+            let nodeId = 1;
+            
+            while (nodeId < nodeCount) {
+                // انتخاب گره تصادفی به عنوان والد
+                const parentIndex = Math.floor(Math.random() * nodeId);
+                const parentNode = tree[parentIndex];
+                
+                // ایجاد گره فرزند
+                const child = {
+                    id: nodeId,
+                    value: String.fromCharCode(65 + nodeId),
+                    x: 0,
+                    y: 0,
+                    visited: false,
+                    children: []
+                };
+                tree.push(child);
+                parentNode.children.push(nodeId);
+                edges.push({ from: parentIndex, to: nodeId });
+                nodeId++;
+            }
+            
+            // محاسبه موقعیت گره‌ها
+            calculateNodePositions(0, treeContainer.clientWidth / 2, 80, treeContainer.clientWidth / (nodeCount / 2));
+        }
+        
+        // محاسبه موقعیت گره‌ها برای نمایش
+        function calculateNodePositions(nodeIndex, x, y, horizontalSpacing) {
+            const node = tree[nodeIndex];
+            node.x = x;
+            node.y = y;
+            
+            if (node.children.length === 0) return;
+            
+            const childCount = node.children.length;
+            const totalWidth = horizontalSpacing * (childCount - 1);
+            const startX = x - totalWidth / 2;
+            
+            for (let i = 0; i < childCount; i++) {
+                const childIndex = node.children[i];
+                const childX = startX + i * horizontalSpacing;
+                const childY = y + 100;
+                calculateNodePositions(childIndex, childX, childY, horizontalSpacing / 2);
+            }
+        }
+        
+        // رسم درخت
+        function renderTree() {
+            // رسم یال‌ها
+            edges.forEach(edge => {
+                const fromNode = tree[edge.from];
+                const toNode = tree[edge.to];
+                
+                const edgeElement = document.createElement('div');
+                edgeElement.className = 'edge';
+                edgeElement.style.width = `${Math.sqrt(
+                    Math.pow(toNode.x - fromNode.x, 2) + 
+                    Math.pow(toNode.y - fromNode.y, 2)
+                )}px`;
+                edgeElement.style.left = `${fromNode.x}px`;
+                edgeElement.style.top = `${fromNode.y}px`;
+                edgeElement.style.transform = `rotate(${Math.atan2(
+                    toNode.y - fromNode.y, 
+                    toNode.x - fromNode.x
+                )}rad)`;
+                
+                treeContainer.appendChild(edgeElement);
+            });
+            
+            // رسم گره‌ها
+            tree.forEach(node => {
+                const nodeElement = document.createElement('div');
+                nodeElement.className = 'node default';
+                nodeElement.id = `node-${node.id}`;
+                nodeElement.textContent = node.value;
+                nodeElement.style.left = `${node.x - 25}px`;
+                nodeElement.style.top = `${node.y - 25}px`;
+                
+                treeContainer.appendChild(nodeElement);
+            });
+        }
+        
+        // اجرای الگوریتم BFS
+        async function runBFS() {
+            if (isAnimating) return;
+            
+            isAnimating = true;
+            startBfsBtn.disabled = true;
+            generateTreeBtn.disabled = true;
+            resetBtn.disabled = true;
+            
+            // بازنشانی وضعیت گره‌ها
+            tree.forEach(node => {
+                node.visited = false;
+                const nodeElement = document.getElementById(`node-${node.id}`);
+                nodeElement.className = 'node default';
+            });
+            
+            // بازنشانی صف نمایش
+            queueItems.innerHTML = '';
+            
+            // الگوریتم BFS
+            const queue = [0]; // شروع از ریشه
+            tree[0].visited = true;
+            
+            while (queue.length > 0) {
+                // به‌روزرسانی نمایش صف
+                updateQueueDisplay(queue);
+                
+                // پردازش گره فعلی
+                const currentNodeIndex = queue[0];
+                const currentNode = tree[currentNodeIndex];
+                
+                // برجسته کردن گره فعلی
+                const currentNodeElement = document.getElementById(`node-${currentNode.id}`);
+                currentNodeElement.className = 'node current';
+                
+                // تأخیر برای انیمیشن
+                await new Promise(resolve => setTimeout(resolve, animationSpeed));
+                
+                // علامت‌گذاری گره به عنوان بازدید شده
+                currentNodeElement.className = 'node visited';
+                
+                // اضافه کردن فرزندان به صف
+                currentNode.children.forEach(childIndex => {
+                    if (!tree[childIndex].visited) {
+                        tree[childIndex].visited = true;
+                        queue.push(childIndex);
+                        
+                        // برجسته کردن گره‌های اضافه شده به صف
+                        const childNodeElement = document.getElementById(`node-${childIndex}`);
+                        childNodeElement.className = 'node queued';
+                    }
+                });
+                
+                // حذف گره فعلی از صف
+                queue.shift();
+                
+                // به‌روزرسانی نمایش صف
+                updateQueueDisplay(queue);
+            }
+            
+            isAnimating = false;
+            startBfsBtn.disabled = false;
+            generateTreeBtn.disabled = false;
+            resetBtn.disabled = false;
+        }
+        
+        // به‌روزرسانی نمایش صف
+        function updateQueueDisplay(queue) {
+            queueItems.innerHTML = '';
+            
+            queue.forEach((nodeIndex, index) => {
+                const queueItem = document.createElement('div');
+                queueItem.className = index === 0 ? 'queue-item current' : 'queue-item';
+                queueItem.textContent = tree[nodeIndex].value;
+                queueItems.appendChild(queueItem);
+            });
+        }
+        
+        // بازنشانی انیمیشن
+        function resetAnimation() {
+            if (isAnimating) return;
+            
+            tree.forEach(node => {
+                node.visited = false;
+                const nodeElement = document.getElementById(`node-${node.id}`);
+                if (nodeElement) {
+                    nodeElement.className = 'node default';
+                }
+            });
+            
+            queueItems.innerHTML = '';
+            startBfsBtn.disabled = false;
+        }
+        
+        // رویدادهای دکمه‌ها
+        generateTreeBtn.addEventListener('click', generateTree);
+        startBfsBtn.addEventListener('click', runBFS);
+        resetBtn.addEventListener('click', resetAnimation);
+        
+        // تولید درخت اولیه
+        generateTree();
+    </script>
+</body>
+</html>
