@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BFS Algorithm Visualization with Pause/Resume</title>
+    <title>DFS Algorithm Visualization with Pause/Resume</title>
     <style>
         :root {
             --primary: #6c5ce7;
@@ -229,7 +229,7 @@
             height: 4px;
         }
         
-        .queue-display {
+        .stack-display {
             margin-top: 20px;
             padding: 15px;
             background: rgba(0, 0, 0, 0.2);
@@ -237,19 +237,19 @@
             min-height: 100px;
         }
         
-        .queue-title {
+        .stack-title {
             font-weight: 600;
             margin-bottom: 10px;
             color: var(--secondary);
         }
         
-        .queue-items {
+        .stack-items {
             display: flex;
             flex-wrap: wrap;
             gap: 10px;
         }
         
-        .queue-item {
+        .stack-item {
             width: 40px;
             height: 40px;
             border-radius: 50%;
@@ -261,7 +261,7 @@
             color: var(--dark);
         }
         
-        .queue-item.current {
+        .stack-item.current {
             background: var(--accent);
             color: white;
             transform: scale(1.2);
@@ -465,8 +465,8 @@
 <body>
     <div class="container">
         <header>
-            <h1>BFS Algorithm Visualization with Pause/Resume</h1>
-            <p class="subtitle">Visual simulation of BFS algorithm with step-by-step control</p>
+            <h1>DFS Algorithm Visualization with Pause/Resume</h1>
+            <p class="subtitle">Visual simulation of DFS algorithm with step-by-step control</p>
         </header>
         
         <div class="content">
@@ -492,13 +492,22 @@
                     <span id="speed-value">Medium</span>
                 </div>
                 
+                <div class="control-group">
+                    <label for="dfs-type">DFS Type:</label>
+                    <select id="dfs-type">
+                        <option value="preorder">Preorder</option>
+                        <option value="inorder">Inorder</option>
+                        <option value="postorder">Postorder</option>
+                    </select>
+                </div>
+                
                 <div class="control-buttons">
                     <button id="generate-tree">
                         <span>Generate Tree</span>
                     </button>
                     
-                    <button id="start-bfs">
-                        <span>Start BFS</span>
+                    <button id="start-dfs">
+                        <span>Start DFS</span>
                     </button>
                     
                     <button id="pause-btn" disabled>
@@ -523,15 +532,15 @@
                     <span id="status-text">Ready</span>
                 </div>
                 
-                <div class="queue-display">
-                    <div class="queue-title">BFS Queue:</div>
-                    <div class="queue-items" id="queue-items"></div>
+                <div class="stack-display">
+                    <div class="stack-title">DFS Stack:</div>
+                    <div class="stack-items" id="stack-items"></div>
                 </div>
                 
                 <div class="info-panel">
-                    <div class="info-title">About BFS Algorithm:</div>
+                    <div class="info-title">About DFS Algorithm:</div>
                     <div class="info-content">
-                        Breadth-First Search (BFS) is a graph traversal algorithm that uses a queue to store nodes. It starts at the root and explores all neighbor nodes at the present depth before moving on to nodes at the next depth level.
+                        Depth-First Search (DFS) is a graph traversal algorithm that uses a stack to store nodes. It starts at the root and explores as far as possible along each branch before backtracking. DFS can be implemented in three ways: Preorder, Inorder, and Postorder.
                     </div>
                 </div>
             </div>
@@ -541,7 +550,7 @@
             </div>
             
             <div class="panel code-panel">
-                <div class="code-title">BFS JavaScript Code</div>
+                <div class="code-title">DFS JavaScript Code</div>
                 <div class="code-container-wrapper">
                     <div class="code-container" id="code-container">
                         <!-- Code will be inserted by JavaScript -->
@@ -565,7 +574,7 @@
             </div>
             <div class="legend-item">
                 <div class="legend-color legend-queued"></div>
-                <span>Queued Node</span>
+                <span>Stacked Node</span>
             </div>
         </div>
     </div>
@@ -578,13 +587,14 @@
         const speedSlider = document.getElementById('speed');
         const speedValue = document.getElementById('speed-value');
         const generateTreeBtn = document.getElementById('generate-tree');
-        const startBfsBtn = document.getElementById('start-bfs');
+        const startDfsBtn = document.getElementById('start-dfs');
         const pauseBtn = document.getElementById('pause-btn');
         const resumeBtn = document.getElementById('resume-btn');
         const stepBtn = document.getElementById('step-btn');
         const resetBtn = document.getElementById('reset');
-        const queueItems = document.getElementById('queue-items');
+        const stackItems = document.getElementById('stack-items');
         const treeTypeSelect = document.getElementById('tree-type');
+        const dfsTypeSelect = document.getElementById('dfs-type');
         const codeContainer = document.getElementById('code-container');
         const statusIndicator = document.getElementById('status-indicator');
         const statusText = document.getElementById('status-text');
@@ -595,48 +605,87 @@
         let isPaused = false;
         let animationSpeed = 500;
         let currentCodeLine = -1;
-        let bfsQueue = [];
+        let dfsStack = [];
         let currentNodeIndex = 0;
         let currentStep = 0;
         let resumeResolve = null;
         
-        // BFS algorithm code for display
-        const bfsCode = [
-            { line: 1, code: "<span class='code-keyword'>function</span> <span class='code-function'>bfs</span>(root) {", state: "initial" },
-            { line: 2, code: "  <span class='code-keyword'>const</span> <span class='code-variable'>queue</span> = [root];", state: "initial" },
-            { line: 3, code: "  root.visited = <span class='code-keyword'>true</span>;", state: "initial" },
-            { line: 4, code: "  ", state: "initial" },
-            { line: 5, code: "  <span class='code-keyword'>while</span> (queue.length > <span class='code-number'>0</span>) {", state: "loop-start" },
-            { line: 6, code: "    <span class='code-keyword'>const</span> <span class='code-variable'>currentNode</span> = queue[<span class='code-number'>0</span>];", state: "get-current" },
-            { line: 7, code: "    highlightCurrentNode(currentNode);", state: "highlight-current" },
-            { line: 8, code: "    ", state: "initial" },
-            { line: 9, code: "    <span class='code-comment'>// Process current node after delay</span>", state: "initial" },
-            { line: 10, code: "    <span class='code-keyword'>await</span> <span class='code-function'>delay</span>(animationSpeed);", state: "delay" },
-            { line: 11, code: "    ", state: "initial" },
-            { line: 12, code: "    markNodeVisited(currentNode);", state: "mark-visited" },
-            { line: 13, code: "    ", state: "initial" },
-            { line: 14, code: "    <span class='code-comment'>// Add children to queue</span>", state: "initial" },
-            { line: 15, code: "    <span class='code-keyword'>for</span> (<span class='code-keyword'>const</span> <span class='code-variable'>childIndex</span> <span class='code-keyword'>of</span> currentNode.children) {", state: "children-loop" },
-            { line: 16, code: "      <span class='code-keyword'>const</span> <span class='code-variable'>childNode</span> = tree[childIndex];", state: "get-child" },
-            { line: 17, code: "      ", state: "initial" },
-            { line: 18, code: "      <span class='code-keyword'>if</span> (!childNode.visited) {", state: "check-visited" },
-            { line: 19, code: "        childNode.visited = <span class='code-keyword'>true</span>;", state: "mark-child-visited" },
-            { line: 20, code: "        queue.push(childIndex);", state: "add-to-queue" },
-            { line: 21, code: "        highlightQueuedNode(childNode);", state: "highlight-queued" },
-            { line: 22, code: "      }", state: "initial" },
-            { line: 23, code: "    }", state: "initial" },
-            { line: 24, code: "    ", state: "initial" },
-            { line: 25, code: "    <span class='code-comment'>// Remove current node from queue</span>", state: "initial" },
-            { line: 26, code: "    queue.shift();", state: "remove-from-queue" },
-            { line: 27, code: "    updateQueueDisplay(queue);", state: "update-queue" },
-            { line: 28, code: "  }", state: "loop-end" },
-            { line: 29, code: "}", state: "function-end" }
-        ];
+        // DFS algorithm code for display
+        const dfsCode = {
+            preorder: [
+                { line: 1, code: "<span class='code-keyword'>function</span> <span class='code-function'>dfsPreorder</span>(root) {", state: "initial" },
+                { line: 2, code: "  <span class='code-keyword'>const</span> <span class='code-variable'>stack</span> = [root];", state: "initial" },
+                { line: 3, code: "  ", state: "initial" },
+                { line: 4, code: "  <span class='code-keyword'>while</span> (stack.length > <span class='code-number'>0</span>) {", state: "loop-start" },
+                { line: 5, code: "    <span class='code-keyword'>const</span> <span class='code-variable'>currentNode</span> = stack.pop();", state: "get-current" },
+                { line: 6, code: "    highlightCurrentNode(currentNode);", state: "highlight-current" },
+                { line: 7, code: "    ", state: "initial" },
+                { line: 8, code: "    <span class='code-comment'>// Process current node after delay</span>", state: "initial" },
+                { line: 9, code: "    <span class='code-keyword'>await</span> <span class='code-function'>delay</span>(animationSpeed);", state: "delay" },
+                { line: 10, code: "    ", state: "initial" },
+                { line: 11, code: "    markNodeVisited(currentNode);", state: "mark-visited" },
+                { line: 12, code: "    ", state: "initial" },
+                { line: 13, code: "    <span class='code-comment'>// Add children to stack in reverse order</span>", state: "initial" },
+                { line: 14, code: "    <span class='code-keyword'>for</span> (<span class='code-keyword'>let</span> <span class='code-variable'>i</span> = currentNode.children.length - <span class='code-number'>1</span>; i >= <span class='code-number'>0</span>; i--) {", state: "children-loop" },
+                { line: 15, code: "      <span class='code-keyword'>const</span> <span class='code-variable'>childIndex</span> = currentNode.children[i];", state: "get-child" },
+                { line: 16, code: "      <span class='code-keyword'>const</span> <span class='code-variable'>childNode</span> = tree[childIndex];", state: "get-child" },
+                { line: 17, code: "      ", state: "initial" },
+                { line: 18, code: "      <span class='code-keyword'>if</span> (!childNode.visited) {", state: "check-visited" },
+                { line: 19, code: "        childNode.visited = <span class='code-keyword'>true</span>;", state: "mark-child-visited" },
+                { line: 20, code: "        stack.push(childIndex);", state: "add-to-stack" },
+                { line: 21, code: "        highlightStackedNode(childNode);", state: "highlight-stacked" },
+                { line: 22, code: "      }", state: "initial" },
+                { line: 23, code: "    }", state: "initial" },
+                { line: 24, code: "    ", state: "initial" },
+                { line: 25, code: "    updateStackDisplay(stack);", state: "update-stack" },
+                { line: 26, code: "  }", state: "loop-end" },
+                { line: 27, code: "}", state: "function-end" }
+            ],
+            inorder: [
+                { line: 1, code: "<span class='code-keyword'>function</span> <span class='code-function'>dfsInorder</span>(node) {", state: "initial" },
+                { line: 2, code: "  <span class='code-keyword'>if</span> (node === <span class='code-keyword'>null</span>) <span class='code-keyword'>return</span>;", state: "base-case" },
+                { line: 3, code: "  ", state: "initial" },
+                { line: 4, code: "  <span class='code-comment'>// Traverse left subtree first</span>", state: "initial" },
+                { line: 5, code: "  <span class='code-keyword'>if</span> (node.children[<span class='code-number'>0</span>] !== <span class='code-keyword'>undefined</span>) {", state: "check-left" },
+                { line: 6, code: "    <span class='code-keyword'>const</span> <span class='code-variable'>leftChild</span> = tree[node.children[<span class='code-number'>0</span>]];", state: "get-left" },
+                { line: 7, code: "    <span class='code-keyword'>await</span> <span class='code-function'>dfsInorder</span>(leftChild);", state: "recurse-left" },
+                { line: 8, code: "  }", state: "initial" },
+                { line: 9, code: "  ", state: "initial" },
+                { line: 10, code: "  highlightCurrentNode(node);", state: "highlight-current" },
+                { line: 11, code: "  <span class='code-keyword'>await</span> <span class='code-function'>delay</span>(animationSpeed);", state: "delay" },
+                { line: 12, code: "  markNodeVisited(node);", state: "mark-visited" },
+                { line: 13, code: "  ", state: "initial" },
+                { line: 14, code: "  <span class='code-comment'>// Traverse right subtree</span>", state: "initial" },
+                { line: 15, code: "  <span class='code-keyword'>if</span> (node.children[<span class='code-number'>1</span>] !== <span class='code-keyword'>undefined</span>) {", state: "check-right" },
+                { line: 16, code: "    <span class='code-keyword'>const</span> <span class='code-variable'>rightChild</span> = tree[node.children[<span class='code-number'>1</span>]];", state: "get-right" },
+                { line: 17, code: "    <span class='code-keyword'>await</span> <span class='code-function'>dfsInorder</span>(rightChild);", state: "recurse-right" },
+                { line: 18, code: "  }", state: "initial" },
+                { line: 19, code: "}", state: "function-end" }
+            ],
+            postorder: [
+                { line: 1, code: "<span class='code-keyword'>function</span> <span class='code-function'>dfsPostorder</span>(node) {", state: "initial" },
+                { line: 2, code: "  <span class='code-keyword'>if</span> (node === <span class='code-keyword'>null</span>) <span class='code-keyword'>return</span>;", state: "base-case" },
+                { line: 3, code: "  ", state: "initial" },
+                { line: 4, code: "  <span class='code-comment'>// Traverse all children first</span>", state: "initial" },
+                { line: 5, code: "  <span class='code-keyword'>for</span> (<span class='code-keyword'>const</span> <span class='code-variable'>childIndex</span> <span class='code-keyword'>of</span> node.children) {", state: "children-loop" },
+                { line: 6, code: "    <span class='code-keyword'>const</span> <span class='code-variable'>childNode</span> = tree[childIndex];", state: "get-child" },
+                { line: 7, code: "    <span class='code-keyword'>await</span> <span class='code-function'>dfsPostorder</span>(childNode);", state: "recurse-child" },
+                { line: 8, code: "  }", state: "initial" },
+                { line: 9, code: "  ", state: "initial" },
+                { line: 10, code: "  highlightCurrentNode(node);", state: "highlight-current" },
+                { line: 11, code: "  <span class='code-keyword'>await</span> <span class='code-function'>delay</span>(animationSpeed);", state: "delay" },
+                { line: 12, code: "  markNodeVisited(node);", state: "mark-visited" },
+                { line: 13, code: "}", state: "function-end" }
+            ]
+        };
         
         // Initialize code display
         function initializeCodeDisplay() {
             codeContainer.innerHTML = '';
-            bfsCode.forEach(item => {
+            const dfsType = dfsTypeSelect.value;
+            const code = dfsCode[dfsType];
+            
+            code.forEach(item => {
                 const codeLine = document.createElement('div');
                 codeLine.className = 'code-line';
                 codeLine.id = `code-line-${item.line}`;
@@ -703,6 +752,11 @@
             }
         });
         
+        // Update code display when DFS type changes
+        dfsTypeSelect.addEventListener('change', function() {
+            initializeCodeDisplay();
+        });
+        
         // Wait for resume or step
         async function waitForResume() {
             if (!isPaused) return;
@@ -717,10 +771,10 @@
             if (isAnimating && !isPaused) return;
             
             treeContainer.innerHTML = '';
-            queueItems.innerHTML = '';
+            stackItems.innerHTML = '';
             tree = [];
             edges = [];
-            bfsQueue = [];
+            dfsStack = [];
             currentStep = 0;
             
             const nodeCount = parseInt(nodeCountSlider.value);
@@ -754,7 +808,7 @@
             updateStatus('idle', 'Ready');
             
             // Enable/disable buttons
-            startBfsBtn.disabled = false;
+            startDfsBtn.disabled = false;
             pauseBtn.disabled = true;
             resumeBtn.disabled = true;
             stepBtn.disabled = true;
@@ -927,13 +981,13 @@
             });
         }
         
-        // Run BFS algorithm
-        async function runBFS() {
+        // Run DFS algorithm
+        async function runDFS() {
             if (isAnimating && !isPaused) return;
             
             isAnimating = true;
             isPaused = false;
-            startBfsBtn.disabled = true;
+            startDfsBtn.disabled = true;
             generateTreeBtn.disabled = true;
             pauseBtn.disabled = false;
             resumeBtn.disabled = true;
@@ -947,61 +1001,78 @@
                     nodeElement.className = 'node default';
                 });
                 
-                // Reset queue display
-                queueItems.innerHTML = '';
+                // Reset stack display
+                stackItems.innerHTML = '';
                 
-                // Initialize BFS
-                bfsQueue = [0]; // Start from root
-                tree[0].visited = true;
-                
-                updateStatus('running', 'BFS Running');
+                updateStatus('running', 'DFS Running');
                 
                 // Initialize code highlighting
-                highlightCodeLine(1);
-                await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
-                await waitForResume();
+                initializeCodeDisplay();
                 
-                highlightCodeLine(2);
-                await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
-                await waitForResume();
+                const dfsType = dfsTypeSelect.value;
                 
-                highlightCodeLine(3);
-                await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
-                await waitForResume();
+                if (dfsType === 'preorder') {
+                    await runPreorderDFS();
+                } else if (dfsType === 'inorder') {
+                    await runInorderDFS();
+                } else if (dfsType === 'postorder') {
+                    await runPostorderDFS();
+                }
+            }
+            
+            isAnimating = false;
+            isPaused = false;
+            startDfsBtn.disabled = false;
+            generateTreeBtn.disabled = false;
+            pauseBtn.disabled = true;
+            resumeBtn.disabled = true;
+            stepBtn.disabled = true;
+            updateStatus('idle', 'DFS Complete');
+        }
+        
+        // Preorder DFS implementation
+        async function runPreorderDFS() {
+            highlightCodeLine(1);
+            await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+            await waitForResume();
+            
+            // Initialize stack with root
+            dfsStack = [0];
+            tree[0].visited = true;
+            
+            highlightCodeLine(2);
+            await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+            await waitForResume();
+            
+            highlightCodeLine(4);
+            await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+            await waitForResume();
+            
+            // Main DFS loop
+            while (dfsStack.length > 0) {
+                if (isPaused) {
+                    updateStatus('paused', 'DFS Paused');
+                    await waitForResume();
+                    updateStatus('running', 'DFS Running');
+                }
                 
                 highlightCodeLine(5);
                 await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
                 await waitForResume();
-            }
-            
-            // BFS algorithm main loop
-            while (bfsQueue.length > 0) {
-                if (isPaused) {
-                    updateStatus('paused', 'BFS Paused');
-                    await waitForResume();
-                    updateStatus('running', 'BFS Running');
-                }
                 
-                // Update queue display
-                updateQueueDisplay(bfsQueue);
-                
-                // Process current node
-                currentNodeIndex = bfsQueue[0];
+                // Get current node from stack
+                currentNodeIndex = dfsStack.pop();
                 const currentNode = tree[currentNodeIndex];
-                
-                highlightCodeLine(6);
-                await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
-                await waitForResume();
                 
                 // Highlight current node
                 const currentNodeElement = document.getElementById(`node-${currentNode.id}`);
                 currentNodeElement.className = 'node current';
                 
-                highlightCodeLine(7);
+                highlightCodeLine(6);
                 await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
                 await waitForResume();
                 
-                highlightCodeLine(10);
+                highlightCodeLine(9);
                 // Delay for animation
                 await new Promise(resolve => setTimeout(resolve, animationSpeed));
                 await waitForResume();
@@ -1009,7 +1080,11 @@
                 // Mark node as visited
                 currentNodeElement.className = 'node visited';
                 
-                highlightCodeLine(12);
+                highlightCodeLine(11);
+                await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+                await waitForResume();
+                
+                highlightCodeLine(13);
                 await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
                 await waitForResume();
                 
@@ -1017,12 +1092,14 @@
                 await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
                 await waitForResume();
                 
-                highlightCodeLine(15);
-                await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
-                await waitForResume();
-                
-                // Add children to queue
-                for (const childIndex of currentNode.children) {
+                // Add children to stack in reverse order (for preorder)
+                for (let i = currentNode.children.length - 1; i >= 0; i--) {
+                    highlightCodeLine(15);
+                    await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+                    await waitForResume();
+                    
+                    const childIndex = currentNode.children[i];
+                    
                     highlightCodeLine(16);
                     await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
                     await waitForResume();
@@ -1044,18 +1121,18 @@
                         await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
                         await waitForResume();
                         
-                        bfsQueue.push(childIndex);
+                        dfsStack.push(childIndex);
                         
                         highlightCodeLine(21);
                         await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
                         await waitForResume();
                         
-                        // Highlight queued nodes
+                        // Highlight stacked nodes
                         const childNodeElement = document.getElementById(`node-${childIndex}`);
                         childNodeElement.className = 'node queued';
                     }
                     
-                    highlightCodeLine(15);
+                    highlightCodeLine(14);
                     await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
                     await waitForResume();
                 }
@@ -1064,58 +1141,211 @@
                 await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
                 await waitForResume();
                 
+                // Update stack display
+                updateStackDisplay(dfsStack);
+                
                 highlightCodeLine(25);
                 await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
                 await waitForResume();
                 
-                // Remove current node from queue
-                bfsQueue.shift();
-                
-                highlightCodeLine(26);
-                await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
-                await waitForResume();
-                
-                // Update queue display
-                updateQueueDisplay(bfsQueue);
-                
-                highlightCodeLine(27);
-                await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
-                await waitForResume();
-                
-                highlightCodeLine(5);
+                highlightCodeLine(4);
                 await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
                 await waitForResume();
                 
                 currentStep++;
             }
             
-            highlightCodeLine(28);
+            highlightCodeLine(26);
             await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
             await waitForResume();
             
-            highlightCodeLine(29);
-            
-            isAnimating = false;
-            isPaused = false;
-            startBfsBtn.disabled = false;
-            generateTreeBtn.disabled = false;
-            pauseBtn.disabled = true;
-            resumeBtn.disabled = true;
-            stepBtn.disabled = true;
-            updateStatus('idle', 'BFS Complete');
+            highlightCodeLine(27);
         }
         
-        // Pause BFS execution
-        function pauseBFS() {
+        // Inorder DFS implementation (for binary trees)
+        async function runInorderDFS() {
+            highlightCodeLine(1);
+            await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+            await waitForResume();
+            
+            await inorderTraversal(tree[0]);
+            
+            highlightCodeLine(19);
+        }
+        
+        async function inorderTraversal(node) {
+            if (isPaused) {
+                updateStatus('paused', 'DFS Paused');
+                await waitForResume();
+                updateStatus('running', 'DFS Running');
+            }
+            
+            highlightCodeLine(2);
+            await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+            await waitForResume();
+            
+            if (!node) return;
+            
+            highlightCodeLine(4);
+            await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+            await waitForResume();
+            
+            // Traverse left subtree first
+            if (node.children[0] !== undefined) {
+                highlightCodeLine(5);
+                await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+                await waitForResume();
+                
+                highlightCodeLine(6);
+                await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+                await waitForResume();
+                
+                const leftChild = tree[node.children[0]];
+                
+                highlightCodeLine(7);
+                await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+                await waitForResume();
+                
+                await inorderTraversal(leftChild);
+            }
+            
+            // Process current node
+            highlightCodeLine(10);
+            await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+            await waitForResume();
+            
+            // Highlight current node
+            const currentNodeElement = document.getElementById(`node-${node.id}`);
+            currentNodeElement.className = 'node current';
+            
+            highlightCodeLine(11);
+            // Delay for animation
+            await new Promise(resolve => setTimeout(resolve, animationSpeed));
+            await waitForResume();
+            
+            // Mark node as visited
+            currentNodeElement.className = 'node visited';
+            
+            highlightCodeLine(12);
+            await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+            await waitForResume();
+            
+            highlightCodeLine(14);
+            await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+            await waitForResume();
+            
+            // Traverse right subtree
+            if (node.children[1] !== undefined) {
+                highlightCodeLine(15);
+                await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+                await waitForResume();
+                
+                highlightCodeLine(16);
+                await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+                await waitForResume();
+                
+                const rightChild = tree[node.children[1]];
+                
+                highlightCodeLine(17);
+                await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+                await waitForResume();
+                
+                await inorderTraversal(rightChild);
+            }
+            
+            highlightCodeLine(18);
+            await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+            await waitForResume();
+        }
+        
+        // Postorder DFS implementation
+        async function runPostorderDFS() {
+            highlightCodeLine(1);
+            await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+            await waitForResume();
+            
+            await postorderTraversal(tree[0]);
+            
+            highlightCodeLine(13);
+        }
+        
+        async function postorderTraversal(node) {
+            if (isPaused) {
+                updateStatus('paused', 'DFS Paused');
+                await waitForResume();
+                updateStatus('running', 'DFS Running');
+            }
+            
+            highlightCodeLine(2);
+            await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+            await waitForResume();
+            
+            if (!node) return;
+            
+            highlightCodeLine(4);
+            await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+            await waitForResume();
+            
+            highlightCodeLine(5);
+            await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+            await waitForResume();
+            
+            // Traverse all children first
+            for (const childIndex of node.children) {
+                highlightCodeLine(6);
+                await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+                await waitForResume();
+                
+                const childNode = tree[childIndex];
+                
+                highlightCodeLine(7);
+                await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+                await waitForResume();
+                
+                await postorderTraversal(childNode);
+                
+                highlightCodeLine(5);
+                await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+                await waitForResume();
+            }
+            
+            highlightCodeLine(8);
+            await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+            await waitForResume();
+            
+            // Process current node
+            highlightCodeLine(10);
+            await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+            await waitForResume();
+            
+            // Highlight current node
+            const currentNodeElement = document.getElementById(`node-${node.id}`);
+            currentNodeElement.className = 'node current';
+            
+            highlightCodeLine(11);
+            // Delay for animation
+            await new Promise(resolve => setTimeout(resolve, animationSpeed));
+            await waitForResume();
+            
+            // Mark node as visited
+            currentNodeElement.className = 'node visited';
+            
+            highlightCodeLine(12);
+            await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+            await waitForResume();
+        }
+        
+        // Pause DFS execution
+        function pauseDFS() {
             isPaused = true;
             pauseBtn.disabled = true;
             resumeBtn.disabled = false;
             stepBtn.disabled = false;
-            updateStatus('paused', 'BFS Paused');
+            updateStatus('paused', 'DFS Paused');
         }
         
-        // Resume BFS execution
-        function resumeBFS() {
+        // Resume DFS execution
+        function resumeDFS() {
             isPaused = false;
             pauseBtn.disabled = false;
             resumeBtn.disabled = true;
@@ -1135,16 +1365,17 @@
             }
         }
         
-        // Update queue display
-        function updateQueueDisplay(queue) {
-            queueItems.innerHTML = '';
+        // Update stack display
+        function updateStackDisplay(stack) {
+            stackItems.innerHTML = '';
             
-            queue.forEach((nodeIndex, index) => {
-                const queueItem = document.createElement('div');
-                queueItem.className = index === 0 ? 'queue-item current' : 'queue-item';
-                queueItem.textContent = tree[nodeIndex].value;
-                queueItems.appendChild(queueItem);
-            });
+            // Display stack from top to bottom (reverse order)
+            for (let i = stack.length - 1; i >= 0; i--) {
+                const stackItem = document.createElement('div');
+                stackItem.className = i === stack.length - 1 ? 'stack-item current' : 'stack-item';
+                stackItem.textContent = tree[stack[i]].value;
+                stackItems.appendChild(stackItem);
+            }
         }
         
         // Reset animation
@@ -1152,7 +1383,7 @@
             isAnimating = false;
             isPaused = false;
             currentStep = 0;
-            bfsQueue = [];
+            dfsStack = [];
             
             tree.forEach(node => {
                 node.visited = false;
@@ -1162,8 +1393,8 @@
                 }
             });
             
-            queueItems.innerHTML = '';
-            startBfsBtn.disabled = false;
+            stackItems.innerHTML = '';
+            startDfsBtn.disabled = false;
             pauseBtn.disabled = true;
             resumeBtn.disabled = true;
             stepBtn.disabled = true;
@@ -1178,9 +1409,9 @@
         
         // Button event handlers
         generateTreeBtn.addEventListener('click', generateTree);
-        startBfsBtn.addEventListener('click', runBFS);
-        pauseBtn.addEventListener('click', pauseBFS);
-        resumeBtn.addEventListener('click', resumeBFS);
+        startDfsBtn.addEventListener('click', runDFS);
+        pauseBtn.addEventListener('click', pauseDFS);
+        resumeBtn.addEventListener('click', resumeDFS);
         stepBtn.addEventListener('click', nextStep);
         resetBtn.addEventListener('click', resetAnimation);
         

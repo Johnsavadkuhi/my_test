@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BFS Algorithm Visualization with Pause/Resume</title>
+    <title>Dijkstra's Algorithm Visualization</title>
     <style>
         :root {
             --primary: #6c5ce7;
@@ -174,7 +174,7 @@
             background: rgba(0, 0, 0, 0.2);
         }
         
-        .tree-container {
+        .graph-container {
             width: 100%;
             height: 100%;
             position: relative;
@@ -196,8 +196,16 @@
             cursor: pointer;
         }
         
-        .node.visited {
+        .node.start {
             background: var(--success);
+        }
+        
+        .node.end {
+            background: var(--danger);
+        }
+        
+        .node.visited {
+            background: var(--secondary);
             transform: scale(1.1);
         }
         
@@ -205,10 +213,6 @@
             background: var(--accent);
             box-shadow: 0 0 0 5px rgba(253, 121, 168, 0.5);
             animation: pulse 1.5s infinite;
-        }
-        
-        .node.queued {
-            background: var(--warning);
         }
         
         .node.default {
@@ -229,7 +233,22 @@
             height: 4px;
         }
         
-        .queue-display {
+        .edge.current {
+            background: var(--accent);
+            height: 4px;
+        }
+        
+        .edge-weight {
+            position: absolute;
+            background: var(--dark);
+            color: white;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-size: 0.8rem;
+            z-index: 15;
+        }
+        
+        .priority-queue-display {
             margin-top: 20px;
             padding: 15px;
             background: rgba(0, 0, 0, 0.2);
@@ -250,9 +269,8 @@
         }
         
         .queue-item {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
+            padding: 8px 12px;
+            border-radius: 20px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -264,7 +282,7 @@
         .queue-item.current {
             background: var(--accent);
             color: white;
-            transform: scale(1.2);
+            transform: scale(1.1);
         }
         
         .code-panel {
@@ -373,16 +391,20 @@
             background: var(--primary);
         }
         
-        .legend-visited {
+        .legend-start {
             background: var(--success);
+        }
+        
+        .legend-end {
+            background: var(--danger);
+        }
+        
+        .legend-visited {
+            background: var(--secondary);
         }
         
         .legend-current {
             background: var(--accent);
-        }
-        
-        .legend-queued {
-            background: var(--warning);
         }
         
         .info-panel {
@@ -465,25 +487,24 @@
 <body>
     <div class="container">
         <header>
-            <h1>BFS Algorithm Visualization with Pause/Resume</h1>
-            <p class="subtitle">Visual simulation of BFS algorithm with step-by-step control</p>
+            <h1>Dijkstra's Algorithm Visualization</h1>
+            <p class="subtitle">Find the shortest path between nodes in a weighted graph</p>
         </header>
         
         <div class="content">
             <div class="panel controls">
                 <div class="control-group">
-                    <label for="tree-type">Tree Type:</label>
-                    <select id="tree-type">
-                        <option value="binary">Binary Tree</option>
-                        <option value="balanced">Balanced Tree</option>
-                        <option value="random">Random Tree</option>
+                    <label for="graph-type">Graph Type:</label>
+                    <select id="graph-type">
+                        <option value="grid">Grid Graph</option>
+                        <option value="random">Random Graph</option>
                     </select>
                 </div>
                 
                 <div class="control-group">
                     <label for="node-count">Number of Nodes:</label>
-                    <input type="range" id="node-count" min="5" max="20" value="10">
-                    <span id="node-count-value">10</span>
+                    <input type="range" id="node-count" min="5" max="15" value="8">
+                    <span id="node-count-value">8</span>
                 </div>
                 
                 <div class="control-group">
@@ -493,12 +514,12 @@
                 </div>
                 
                 <div class="control-buttons">
-                    <button id="generate-tree">
-                        <span>Generate Tree</span>
+                    <button id="generate-graph">
+                        <span>Generate Graph</span>
                     </button>
                     
-                    <button id="start-bfs">
-                        <span>Start BFS</span>
+                    <button id="start-dijkstra">
+                        <span>Start Dijkstra</span>
                     </button>
                     
                     <button id="pause-btn" disabled>
@@ -523,25 +544,25 @@
                     <span id="status-text">Ready</span>
                 </div>
                 
-                <div class="queue-display">
-                    <div class="queue-title">BFS Queue:</div>
+                <div class="priority-queue-display">
+                    <div class="queue-title">Priority Queue:</div>
                     <div class="queue-items" id="queue-items"></div>
                 </div>
                 
                 <div class="info-panel">
-                    <div class="info-title">About BFS Algorithm:</div>
+                    <div class="info-title">About Dijkstra's Algorithm:</div>
                     <div class="info-content">
-                        Breadth-First Search (BFS) is a graph traversal algorithm that uses a queue to store nodes. It starts at the root and explores all neighbor nodes at the present depth before moving on to nodes at the next depth level.
+                        Dijkstra's algorithm finds the shortest path between nodes in a graph with non-negative edge weights. It uses a priority queue to always expand the most promising node first, guaranteeing the shortest path when all edge weights are non-negative.
                     </div>
                 </div>
             </div>
             
             <div class="panel visualization">
-                <div class="tree-container" id="tree-container"></div>
+                <div class="graph-container" id="graph-container"></div>
             </div>
             
             <div class="panel code-panel">
-                <div class="code-title">BFS JavaScript Code</div>
+                <div class="code-title">Dijkstra's Algorithm Code</div>
                 <div class="code-container-wrapper">
                     <div class="code-container" id="code-container">
                         <!-- Code will be inserted by JavaScript -->
@@ -556,6 +577,14 @@
                 <span>Normal Node</span>
             </div>
             <div class="legend-item">
+                <div class="legend-color legend-start"></div>
+                <span>Start Node</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color legend-end"></div>
+                <span>End Node</span>
+            </div>
+            <div class="legend-item">
                 <div class="legend-color legend-visited"></div>
                 <span>Visited Node</span>
             </div>
@@ -563,80 +592,87 @@
                 <div class="legend-color legend-current"></div>
                 <span>Current Node</span>
             </div>
-            <div class="legend-item">
-                <div class="legend-color legend-queued"></div>
-                <span>Queued Node</span>
-            </div>
         </div>
     </div>
 
     <script>
         // Initial settings
-        const treeContainer = document.getElementById('tree-container');
+        const graphContainer = document.getElementById('graph-container');
         const nodeCountSlider = document.getElementById('node-count');
         const nodeCountValue = document.getElementById('node-count-value');
         const speedSlider = document.getElementById('speed');
         const speedValue = document.getElementById('speed-value');
-        const generateTreeBtn = document.getElementById('generate-tree');
-        const startBfsBtn = document.getElementById('start-bfs');
+        const generateGraphBtn = document.getElementById('generate-graph');
+        const startDijkstraBtn = document.getElementById('start-dijkstra');
         const pauseBtn = document.getElementById('pause-btn');
         const resumeBtn = document.getElementById('resume-btn');
         const stepBtn = document.getElementById('step-btn');
         const resetBtn = document.getElementById('reset');
         const queueItems = document.getElementById('queue-items');
-        const treeTypeSelect = document.getElementById('tree-type');
+        const graphTypeSelect = document.getElementById('graph-type');
         const codeContainer = document.getElementById('code-container');
         const statusIndicator = document.getElementById('status-indicator');
         const statusText = document.getElementById('status-text');
         
-        let tree = [];
+        let nodes = [];
         let edges = [];
         let isAnimating = false;
         let isPaused = false;
         let animationSpeed = 500;
         let currentCodeLine = -1;
-        let bfsQueue = [];
-        let currentNodeIndex = 0;
+        let priorityQueue = [];
+        let distances = {};
+        let previousNodes = {};
+        let startNode = null;
+        let endNode = null;
         let currentStep = 0;
         let resumeResolve = null;
         
-        // BFS algorithm code for display
-        const bfsCode = [
-            { line: 1, code: "<span class='code-keyword'>function</span> <span class='code-function'>bfs</span>(root) {", state: "initial" },
-            { line: 2, code: "  <span class='code-keyword'>const</span> <span class='code-variable'>queue</span> = [root];", state: "initial" },
-            { line: 3, code: "  root.visited = <span class='code-keyword'>true</span>;", state: "initial" },
-            { line: 4, code: "  ", state: "initial" },
-            { line: 5, code: "  <span class='code-keyword'>while</span> (queue.length > <span class='code-number'>0</span>) {", state: "loop-start" },
-            { line: 6, code: "    <span class='code-keyword'>const</span> <span class='code-variable'>currentNode</span> = queue[<span class='code-number'>0</span>];", state: "get-current" },
-            { line: 7, code: "    highlightCurrentNode(currentNode);", state: "highlight-current" },
-            { line: 8, code: "    ", state: "initial" },
-            { line: 9, code: "    <span class='code-comment'>// Process current node after delay</span>", state: "initial" },
-            { line: 10, code: "    <span class='code-keyword'>await</span> <span class='code-function'>delay</span>(animationSpeed);", state: "delay" },
-            { line: 11, code: "    ", state: "initial" },
-            { line: 12, code: "    markNodeVisited(currentNode);", state: "mark-visited" },
-            { line: 13, code: "    ", state: "initial" },
-            { line: 14, code: "    <span class='code-comment'>// Add children to queue</span>", state: "initial" },
-            { line: 15, code: "    <span class='code-keyword'>for</span> (<span class='code-keyword'>const</span> <span class='code-variable'>childIndex</span> <span class='code-keyword'>of</span> currentNode.children) {", state: "children-loop" },
-            { line: 16, code: "      <span class='code-keyword'>const</span> <span class='code-variable'>childNode</span> = tree[childIndex];", state: "get-child" },
-            { line: 17, code: "      ", state: "initial" },
-            { line: 18, code: "      <span class='code-keyword'>if</span> (!childNode.visited) {", state: "check-visited" },
-            { line: 19, code: "        childNode.visited = <span class='code-keyword'>true</span>;", state: "mark-child-visited" },
-            { line: 20, code: "        queue.push(childIndex);", state: "add-to-queue" },
-            { line: 21, code: "        highlightQueuedNode(childNode);", state: "highlight-queued" },
-            { line: 22, code: "      }", state: "initial" },
-            { line: 23, code: "    }", state: "initial" },
-            { line: 24, code: "    ", state: "initial" },
-            { line: 25, code: "    <span class='code-comment'>// Remove current node from queue</span>", state: "initial" },
-            { line: 26, code: "    queue.shift();", state: "remove-from-queue" },
-            { line: 27, code: "    updateQueueDisplay(queue);", state: "update-queue" },
-            { line: 28, code: "  }", state: "loop-end" },
-            { line: 29, code: "}", state: "function-end" }
+        // Dijkstra's algorithm code for display
+        const dijkstraCode = [
+            { line: 1, code: "<span class='code-keyword'>function</span> <span class='code-function'>dijkstra</span>(graph, start) {", state: "initial" },
+            { line: 2, code: "  <span class='code-keyword'>const</span> <span class='code-variable'>distances</span> = {};", state: "initial" },
+            { line: 3, code: "  <span class='code-keyword'>const</span> <span class='code-variable'>previous</span> = {};", state: "initial" },
+            { line: 4, code: "  <span class='code-keyword'>const</span> <span class='code-variable'>queue</span> = <span class='code-keyword'>new</span> <span class='code-function'>PriorityQueue</span>();", state: "initial" },
+            { line: 5, code: "  ", state: "initial" },
+            { line: 6, code: "  <span class='code-comment'>// Initialize distances</span>", state: "initial" },
+            { line: 7, code: "  <span class='code-keyword'>for</span> (<span class='code-keyword'>const</span> <span class='code-variable'>node</span> <span class='code-keyword'>of</span> graph.nodes) {", state: "init-loop" },
+            { line: 8, code: "    distances[node.id] = <span class='code-number'>Infinity</span>;", state: "set-infinity" },
+            { line: 9, code: "    previous[node.id] = <span class='code-keyword'>null</span>;", state: "set-null" },
+            { line: 10, code: "  }", state: "init-loop-end" },
+            { line: 11, code: "  ", state: "initial" },
+            { line: 12, code: "  distances[start] = <span class='code-number'>0</span>;", state: "set-start-distance" },
+            { line: 13, code: "  queue.enqueue(start, <span class='code-number'>0</span>);", state: "enqueue-start" },
+            { line: 14, code: "  ", state: "initial" },
+            { line: 15, code: "  <span class='code-keyword'>while</span> (!queue.isEmpty()) {", state: "main-loop-start" },
+            { line: 16, code: "    <span class='code-keyword'>const</span> <span class='code-variable'>currentNode</span> = queue.dequeue();", state: "dequeue" },
+            { line: 17, code: "    ", state: "initial" },
+            { line: 18, code: "    <span class='code-comment'>// If we reached the end node, we're done</span>", state: "initial" },
+            { line: 19, code: "    <span class='code-keyword'>if</span> (currentNode === endNode) {", state: "check-end" },
+            { line: 20, code: "      <span class='code-keyword'>break</span>;", state: "break" },
+            { line: 21, code: "    }", state: "check-end-end" },
+            { line: 22, code: "    ", state: "initial" },
+            { line: 23, code: "    <span class='code-comment'>// Process neighbors</span>", state: "initial" },
+            { line: 24, code: "    <span class='code-keyword'>for</span> (<span class='code-keyword'>const</span> <span class='code-variable'>edge</span> <span class='code-keyword'>of</span> getNeighbors(currentNode)) {", state: "neighbors-loop" },
+            { line: 25, code: "      <span class='code-keyword'>const</span> <span class='code-variable'>neighbor</span> = edge.to;", state: "get-neighbor" },
+            { line: 26, code: "      <span class='code-keyword'>const</span> <span class='code-variable'>alt</span> = distances[currentNode] + edge.weight;", state: "calculate-alt" },
+            { line: 27, code: "      ", state: "initial" },
+            { line: 28, code: "      <span class='code-keyword'>if</span> (alt < distances[neighbor]) {", state: "check-distance" },
+            { line: 29, code: "        distances[neighbor] = alt;", state: "update-distance" },
+            { line: 30, code: "        previous[neighbor] = currentNode;", state: "update-previous" },
+            { line: 31, code: "        queue.enqueue(neighbor, alt);", state: "enqueue-neighbor" },
+            { line: 32, code: "      }", state: "check-distance-end" },
+            { line: 33, code: "    }", state: "neighbors-loop-end" },
+            { line: 34, code: "  }", state: "main-loop-end" },
+            { line: 35, code: "  ", state: "initial" },
+            { line: 36, code: "  <span class='code-keyword'>return</span> { distances, previous };", state: "return" },
+            { line: 37, code: "}", state: "function-end" }
         ];
         
         // Initialize code display
         function initializeCodeDisplay() {
             codeContainer.innerHTML = '';
-            bfsCode.forEach(item => {
+            dijkstraCode.forEach(item => {
                 const codeLine = document.createElement('div');
                 codeLine.className = 'code-line';
                 codeLine.id = `code-line-${item.line}`;
@@ -712,194 +748,147 @@
             });
         }
         
-        // Generate random tree
-        function generateTree() {
+        // Generate graph
+        function generateGraph() {
             if (isAnimating && !isPaused) return;
             
-            treeContainer.innerHTML = '';
+            graphContainer.innerHTML = '';
             queueItems.innerHTML = '';
-            tree = [];
+            nodes = [];
             edges = [];
-            bfsQueue = [];
+            priorityQueue = [];
+            distances = {};
+            previousNodes = {};
             currentStep = 0;
             
             const nodeCount = parseInt(nodeCountSlider.value);
-            const treeType = treeTypeSelect.value;
+            const graphType = graphTypeSelect.value;
             
-            // Create root node
-            const rootNode = {
-                id: 0,
-                value: 'A',
-                x: treeContainer.clientWidth / 2,
-                y: 80,
-                visited: false,
-                children: []
-            };
-            tree.push(rootNode);
-            
-            // Create other nodes based on tree type
-            if (treeType === 'binary') {
-                generateBinaryTree(nodeCount);
-            } else if (treeType === 'balanced') {
-                generateBalancedTree(nodeCount);
+            if (graphType === 'grid') {
+                generateGridGraph(nodeCount);
             } else {
-                generateRandomTree(nodeCount);
+                generateRandomGraph(nodeCount);
             }
             
-            // Draw the tree
-            renderTree();
+            // Draw the graph
+            renderGraph();
             
             // Reset code highlighting
             highlightCodeLine(-1);
             updateStatus('idle', 'Ready');
             
             // Enable/disable buttons
-            startBfsBtn.disabled = false;
+            startDijkstraBtn.disabled = false;
             pauseBtn.disabled = true;
             resumeBtn.disabled = true;
             stepBtn.disabled = true;
         }
         
-        // Generate binary tree
-        function generateBinaryTree(nodeCount) {
-            let nodeId = 1;
-            let queue = [0]; // Node indices in the tree array
+        // Generate grid graph
+        function generateGridGraph(nodeCount) {
+            const rows = Math.ceil(Math.sqrt(nodeCount));
+            const cols = Math.ceil(nodeCount / rows);
             
-            while (queue.length > 0 && nodeId < nodeCount) {
-                const currentIndex = queue.shift();
-                const currentNode = tree[currentIndex];
+            // Create nodes in a grid
+            for (let i = 0; i < nodeCount; i++) {
+                const row = Math.floor(i / cols);
+                const col = i % cols;
                 
-                // Create left child
-                if (nodeId < nodeCount) {
-                    const leftChild = {
-                        id: nodeId,
-                        value: String.fromCharCode(65 + nodeId),
-                        x: 0,
-                        y: 0,
-                        visited: false,
-                        children: []
-                    };
-                    tree.push(leftChild);
-                    currentNode.children.push(nodeId);
-                    edges.push({ from: currentIndex, to: nodeId });
-                    queue.push(nodeId);
-                    nodeId++;
-                }
+                const x = (col + 1) * (graphContainer.clientWidth / (cols + 1));
+                const y = (row + 1) * (graphContainer.clientHeight / (rows + 1));
                 
-                // Create right child
-                if (nodeId < nodeCount) {
-                    const rightChild = {
-                        id: nodeId,
-                        value: String.fromCharCode(65 + nodeId),
-                        x: 0,
-                        y: 0,
-                        visited: false,
-                        children: []
-                    };
-                    tree.push(rightChild);
-                    currentNode.children.push(nodeId);
-                    edges.push({ from: currentIndex, to: nodeId });
-                    queue.push(nodeId);
-                    nodeId++;
-                }
-            }
-            
-            // Calculate node positions
-            calculateNodePositions(0, treeContainer.clientWidth / 2, 80, treeContainer.clientWidth / (nodeCount / 2));
-        }
-        
-        // Generate balanced tree
-        function generateBalancedTree(nodeCount) {
-            let nodeId = 1;
-            let queue = [0];
-            
-            while (queue.length > 0 && nodeId < nodeCount) {
-                const currentIndex = queue.shift();
-                const currentNode = tree[currentIndex];
-                
-                // Create 2-3 children for each node
-                const childCount = Math.min(2 + Math.floor(Math.random() * 2), nodeCount - nodeId);
-                
-                for (let i = 0; i < childCount; i++) {
-                    if (nodeId >= nodeCount) break;
-                    
-                    const child = {
-                        id: nodeId,
-                        value: String.fromCharCode(65 + nodeId),
-                        x: 0,
-                        y: 0,
-                        visited: false,
-                        children: []
-                    };
-                    tree.push(child);
-                    currentNode.children.push(nodeId);
-                    edges.push({ from: currentIndex, to: nodeId });
-                    queue.push(nodeId);
-                    nodeId++;
-                }
-            }
-            
-            // Calculate node positions
-            calculateNodePositions(0, treeContainer.clientWidth / 2, 80, treeContainer.clientWidth / (nodeCount / 2));
-        }
-        
-        // Generate random tree
-        function generateRandomTree(nodeCount) {
-            let nodeId = 1;
-            
-            while (nodeId < nodeCount) {
-                // Select random node as parent
-                const parentIndex = Math.floor(Math.random() * nodeId);
-                const parentNode = tree[parentIndex];
-                
-                // Create child node
-                const child = {
-                    id: nodeId,
-                    value: String.fromCharCode(65 + nodeId),
-                    x: 0,
-                    y: 0,
+                nodes.push({
+                    id: i,
+                    value: String.fromCharCode(65 + i),
+                    x: x,
+                    y: y,
                     visited: false,
-                    children: []
-                };
-                tree.push(child);
-                parentNode.children.push(nodeId);
-                edges.push({ from: parentIndex, to: nodeId });
-                nodeId++;
+                    isStart: i === 0,
+                    isEnd: i === nodeCount - 1
+                });
             }
             
-            // Calculate node positions
-            calculateNodePositions(0, treeContainer.clientWidth / 2, 80, treeContainer.clientWidth / (nodeCount / 2));
-        }
-        
-        // Calculate node positions for display
-        function calculateNodePositions(nodeIndex, x, y, horizontalSpacing) {
-            const node = tree[nodeIndex];
-            node.x = x;
-            node.y = y;
-            
-            if (node.children.length === 0) return;
-            
-            const childCount = node.children.length;
-            const totalWidth = horizontalSpacing * (childCount - 1);
-            const startX = x - totalWidth / 2;
-            
-            for (let i = 0; i < childCount; i++) {
-                const childIndex = node.children[i];
-                const childX = startX + i * horizontalSpacing;
-                const childY = y + 100;
-                calculateNodePositions(childIndex, childX, childY, horizontalSpacing / 2);
+            // Create edges between adjacent nodes
+            for (let i = 0; i < nodeCount; i++) {
+                const row = Math.floor(i / cols);
+                const col = i % cols;
+                
+                // Right neighbor
+                if (col < cols - 1 && i + 1 < nodeCount) {
+                    const weight = Math.floor(Math.random() * 9) + 1;
+                    edges.push({
+                        from: i,
+                        to: i + 1,
+                        weight: weight
+                    });
+                }
+                
+                // Bottom neighbor
+                if (row < rows - 1 && i + cols < nodeCount) {
+                    const weight = Math.floor(Math.random() * 9) + 1;
+                    edges.push({
+                        from: i,
+                        to: i + cols,
+                        weight: weight
+                    });
+                }
             }
+            
+            startNode = 0;
+            endNode = nodeCount - 1;
         }
         
-        // Draw the tree
-        function renderTree() {
+        // Generate random graph
+        function generateRandomGraph(nodeCount) {
+            // Create nodes at random positions
+            for (let i = 0; i < nodeCount; i++) {
+                const x = 50 + Math.random() * (graphContainer.clientWidth - 100);
+                const y = 50 + Math.random() * (graphContainer.clientHeight - 100);
+                
+                nodes.push({
+                    id: i,
+                    value: String.fromCharCode(65 + i),
+                    x: x,
+                    y: y,
+                    visited: false,
+                    isStart: i === 0,
+                    isEnd: i === nodeCount - 1
+                });
+            }
+            
+            // Create random edges (each node connects to 2-3 others)
+            for (let i = 0; i < nodeCount; i++) {
+                const edgeCount = Math.floor(Math.random() * 2) + 2;
+                
+                for (let j = 0; j < edgeCount; j++) {
+                    const target = Math.floor(Math.random() * nodeCount);
+                    if (target !== i && !edges.some(e => 
+                        (e.from === i && e.to === target) || (e.from === target && e.to === i)
+                    )) {
+                        const weight = Math.floor(Math.random() * 9) + 1;
+                        edges.push({
+                            from: i,
+                            to: target,
+                            weight: weight
+                        });
+                    }
+                }
+            }
+            
+            startNode = 0;
+            endNode = nodeCount - 1;
+        }
+        
+        // Draw the graph
+        function renderGraph() {
             // Draw edges
             edges.forEach(edge => {
-                const fromNode = tree[edge.from];
-                const toNode = tree[edge.to];
+                const fromNode = nodes[edge.from];
+                const toNode = nodes[edge.to];
                 
                 const edgeElement = document.createElement('div');
                 edgeElement.className = 'edge';
+                edgeElement.id = `edge-${edge.from}-${edge.to}`;
                 edgeElement.style.width = `${Math.sqrt(
                     Math.pow(toNode.x - fromNode.x, 2) + 
                     Math.pow(toNode.y - fromNode.y, 2)
@@ -911,50 +900,109 @@
                     toNode.x - fromNode.x
                 )}rad)`;
                 
-                treeContainer.appendChild(edgeElement);
+                // Add weight label
+                const weightElement = document.createElement('div');
+                weightElement.className = 'edge-weight';
+                weightElement.textContent = edge.weight;
+                weightElement.style.left = `${(fromNode.x + toNode.x) / 2 - 10}px`;
+                weightElement.style.top = `${(fromNode.y + toNode.y) / 2 - 10}px`;
+                
+                graphContainer.appendChild(edgeElement);
+                graphContainer.appendChild(weightElement);
             });
             
             // Draw nodes
-            tree.forEach(node => {
+            nodes.forEach(node => {
                 const nodeElement = document.createElement('div');
-                nodeElement.className = 'node default';
+                nodeElement.className = node.isStart ? 'node start' : 
+                                      node.isEnd ? 'node end' : 'node default';
                 nodeElement.id = `node-${node.id}`;
                 nodeElement.textContent = node.value;
                 nodeElement.style.left = `${node.x - 25}px`;
                 nodeElement.style.top = `${node.y - 25}px`;
                 
-                treeContainer.appendChild(nodeElement);
+                graphContainer.appendChild(nodeElement);
             });
         }
         
-        // Run BFS algorithm
-        async function runBFS() {
+        // Get neighbors of a node
+        function getNeighbors(nodeId) {
+            return edges.filter(edge => 
+                edge.from === nodeId || edge.to === nodeId
+            ).map(edge => ({
+                to: edge.from === nodeId ? edge.to : edge.from,
+                weight: edge.weight
+            }));
+        }
+        
+        // Simple priority queue implementation
+        class PriorityQueue {
+            constructor() {
+                this.values = [];
+            }
+            
+            enqueue(value, priority) {
+                this.values.push({ value, priority });
+                this.sort();
+            }
+            
+            dequeue() {
+                return this.values.shift().value;
+            }
+            
+            sort() {
+                this.values.sort((a, b) => a.priority - b.priority);
+            }
+            
+            isEmpty() {
+                return this.values.length === 0;
+            }
+            
+            getValues() {
+                return this.values.map(item => item.value);
+            }
+        }
+        
+        // Run Dijkstra's algorithm
+        async function runDijkstra() {
             if (isAnimating && !isPaused) return;
             
             isAnimating = true;
             isPaused = false;
-            startBfsBtn.disabled = true;
-            generateTreeBtn.disabled = true;
+            startDijkstraBtn.disabled = true;
+            generateGraphBtn.disabled = true;
             pauseBtn.disabled = false;
             resumeBtn.disabled = true;
             stepBtn.disabled = false;
             
             // Reset node states if starting fresh
             if (currentStep === 0) {
-                tree.forEach(node => {
+                nodes.forEach(node => {
                     node.visited = false;
                     const nodeElement = document.getElementById(`node-${node.id}`);
-                    nodeElement.className = 'node default';
+                    if (nodeElement) {
+                        nodeElement.className = node.isStart ? 'node start' : 
+                                              node.isEnd ? 'node end' : 'node default';
+                    }
+                });
+                
+                // Reset edge states
+                edges.forEach(edge => {
+                    const edgeElement = document.getElementById(`edge-${edge.from}-${edge.to}`);
+                    if (edgeElement) {
+                        edgeElement.className = 'edge';
+                    }
                 });
                 
                 // Reset queue display
                 queueItems.innerHTML = '';
                 
-                // Initialize BFS
-                bfsQueue = [0]; // Start from root
-                tree[0].visited = true;
+                // Initialize Dijkstra's algorithm
+                distances = {};
+                previousNodes = {};
+                priorityQueue = new PriorityQueue();
                 
-                updateStatus('running', 'BFS Running');
+                updateStatus('running', 'Dijkstra Running');
                 
                 // Initialize code highlighting
                 highlightCodeLine(1);
@@ -969,51 +1017,154 @@
                 await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
                 await waitForResume();
                 
-                highlightCodeLine(5);
+                highlightCodeLine(4);
                 await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
                 await waitForResume();
-            }
-            
-            // BFS algorithm main loop
-            while (bfsQueue.length > 0) {
-                if (isPaused) {
-                    updateStatus('paused', 'BFS Paused');
-                    await waitForResume();
-                    updateStatus('running', 'BFS Running');
-                }
-                
-                // Update queue display
-                updateQueueDisplay(bfsQueue);
-                
-                // Process current node
-                currentNodeIndex = bfsQueue[0];
-                const currentNode = tree[currentNodeIndex];
-                
-                highlightCodeLine(6);
-                await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
-                await waitForResume();
-                
-                // Highlight current node
-                const currentNodeElement = document.getElementById(`node-${currentNode.id}`);
-                currentNodeElement.className = 'node current';
                 
                 highlightCodeLine(7);
                 await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
                 await waitForResume();
                 
-                highlightCodeLine(10);
-                // Delay for animation
-                await new Promise(resolve => setTimeout(resolve, animationSpeed));
-                await waitForResume();
+                // Initialize distances
+                for (const node of nodes) {
+                    highlightCodeLine(8);
+                    await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+                    await waitForResume();
+                    
+                    distances[node.id] = Infinity;
+                    
+                    highlightCodeLine(9);
+                    await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+                    await waitForResume();
+                    
+                    previousNodes[node.id] = null;
+                    
+                    highlightCodeLine(7);
+                    await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+                    await waitForResume();
+                }
                 
-                // Mark node as visited
-                currentNodeElement.className = 'node visited';
+                highlightCodeLine(10);
+                await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+                await waitForResume();
                 
                 highlightCodeLine(12);
                 await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
                 await waitForResume();
                 
-                highlightCodeLine(14);
+                distances[startNode] = 0;
+                
+                highlightCodeLine(13);
+                await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+                await waitForResume();
+                
+                priorityQueue.enqueue(startNode, 0);
+                updateQueueDisplay(priorityQueue.getValues());
+                
+                highlightCodeLine(15);
+                await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+                await waitForResume();
+            }
+            
+            // Dijkstra's algorithm main loop
+            while (!priorityQueue.isEmpty()) {
+                if (isPaused) {
+                    updateStatus('paused', 'Dijkstra Paused');
+                    await waitForResume();
+                    updateStatus('running', 'Dijkstra Running');
+                }
+                
+                highlightCodeLine(16);
+                await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+                await waitForResume();
+                
+                const currentNode = priorityQueue.dequeue();
+                
+                // Highlight current node
+                const currentNodeElement = document.getElementById(`node-${currentNode}`);
+                currentNodeElement.className = 'node current';
+                
+                highlightCodeLine(19);
+                await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+                await waitForResume();
+                
+                // If we reached the end node, we're done
+                if (currentNode === endNode) {
+                    highlightCodeLine(20);
+                    await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+                    await waitForResume();
+                    
+                    break;
+                }
+                
+                highlightCodeLine(21);
+                await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+                await waitForResume();
+                
+                highlightCodeLine(24);
+                await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+                await waitForResume();
+                
+                // Process neighbors
+                const neighbors = getNeighbors(currentNode);
+                for (const edge of neighbors) {
+                    highlightCodeLine(25);
+                    await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+                    await waitForResume();
+                    
+                    const neighbor = edge.to;
+                    
+                    highlightCodeLine(26);
+                    await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+                    await waitForResume();
+                    
+                    const alt = distances[currentNode] + edge.weight;
+                    
+                    highlightCodeLine(28);
+                    await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+                    await waitForResume();
+                    
+                    if (alt < distances[neighbor]) {
+                        highlightCodeLine(29);
+                        await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+                        await waitForResume();
+                        
+                        distances[neighbor] = alt;
+                        
+                        highlightCodeLine(30);
+                        await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+                        await waitForResume();
+                        
+                        previousNodes[neighbor] = currentNode;
+                        
+                        highlightCodeLine(31);
+                        await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+                        await waitForResume();
+                        
+                        priorityQueue.enqueue(neighbor, alt);
+                        updateQueueDisplay(priorityQueue.getValues());
+                        
+                        // Highlight queued nodes
+                        const neighborElement = document.getElementById(`node-${neighbor}`);
+                        if (!neighborElement.classList.contains('start') && 
+                            !neighborElement.classList.contains('end')) {
+                            neighborElement.className = 'node visited';
+                        }
+                        
+                        // Highlight edge
+                        const edgeElement = document.getElementById(`edge-${currentNode}-${neighbor}`) || 
+                                          document.getElementById(`edge-${neighbor}-${currentNode}`);
+                        if (edgeElement) {
+                            edgeElement.className = 'edge visited';
+                        }
+                        
+                        highlightCodeLine(24);
+                        await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+                        await waitForResume();
+                    }
+                }
+                
+                highlightCodeLine(33);
                 await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
                 await waitForResume();
                 
@@ -1021,101 +1172,53 @@
                 await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
                 await waitForResume();
                 
-                // Add children to queue
-                for (const childIndex of currentNode.children) {
-                    highlightCodeLine(16);
-                    await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
-                    await waitForResume();
-                    
-                    const childNode = tree[childIndex];
-                    
-                    highlightCodeLine(18);
-                    await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
-                    await waitForResume();
-                    
-                    if (!childNode.visited) {
-                        highlightCodeLine(19);
-                        await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
-                        await waitForResume();
-                        
-                        childNode.visited = true;
-                        
-                        highlightCodeLine(20);
-                        await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
-                        await waitForResume();
-                        
-                        bfsQueue.push(childIndex);
-                        
-                        highlightCodeLine(21);
-                        await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
-                        await waitForResume();
-                        
-                        // Highlight queued nodes
-                        const childNodeElement = document.getElementById(`node-${childIndex}`);
-                        childNodeElement.className = 'node queued';
-                    }
-                    
-                    highlightCodeLine(15);
-                    await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
-                    await waitForResume();
-                }
-                
-                highlightCodeLine(23);
-                await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
-                await waitForResume();
-                
-                highlightCodeLine(25);
-                await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
-                await waitForResume();
-                
-                // Remove current node from queue
-                bfsQueue.shift();
-                
-                highlightCodeLine(26);
-                await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
-                await waitForResume();
-                
-                // Update queue display
-                updateQueueDisplay(bfsQueue);
-                
-                highlightCodeLine(27);
-                await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
-                await waitForResume();
-                
-                highlightCodeLine(5);
-                await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
-                await waitForResume();
-                
                 currentStep++;
             }
             
-            highlightCodeLine(28);
+            highlightCodeLine(34);
             await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
             await waitForResume();
             
-            highlightCodeLine(29);
+            highlightCodeLine(36);
+            await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+            await waitForResume();
+            
+            highlightCodeLine(37);
+            
+            // Highlight the shortest path
+            let pathNode = endNode;
+            while (pathNode !== null && previousNodes[pathNode] !== null) {
+                const fromNode = previousNodes[pathNode];
+                const edgeElement = document.getElementById(`edge-${fromNode}-${pathNode}`) || 
+                                  document.getElementById(`edge-${pathNode}-${fromNode}`);
+                if (edgeElement) {
+                    edgeElement.className = 'edge current';
+                }
+                
+                pathNode = fromNode;
+            }
             
             isAnimating = false;
             isPaused = false;
-            startBfsBtn.disabled = false;
-            generateTreeBtn.disabled = false;
+            startDijkstraBtn.disabled = false;
+            generateGraphBtn.disabled = false;
             pauseBtn.disabled = true;
             resumeBtn.disabled = true;
             stepBtn.disabled = true;
-            updateStatus('idle', 'BFS Complete');
+            updateStatus('idle', 'Dijkstra Complete');
         }
         
-        // Pause BFS execution
-        function pauseBFS() {
+        // Pause Dijkstra execution
+        function pauseDijkstra() {
             isPaused = true;
             pauseBtn.disabled = true;
             resumeBtn.disabled = false;
             stepBtn.disabled = false;
-            updateStatus('paused', 'BFS Paused');
+            updateStatus('paused', 'Dijkstra Paused');
         }
         
-        // Resume BFS execution
-        function resumeBFS() {
+        // Resume Dijkstra execution
+        function resumeDijkstra() {
             isPaused = false;
             pauseBtn.disabled = false;
             resumeBtn.disabled = true;
@@ -1139,10 +1242,10 @@
         function updateQueueDisplay(queue) {
             queueItems.innerHTML = '';
             
-            queue.forEach((nodeIndex, index) => {
+            queue.forEach((nodeId, index) => {
                 const queueItem = document.createElement('div');
-                queueItem.className = index === 0 ? 'queue-item current' : 'queue-item';
-                queueItem.textContent = tree[nodeIndex].value;
+                queueItem.className = 'queue-item';
+                queueItem.textContent = nodes[nodeId].value;
                 queueItems.appendChild(queueItem);
             });
         }
@@ -1152,18 +1255,26 @@
             isAnimating = false;
             isPaused = false;
             currentStep = 0;
-            bfsQueue = [];
+            priorityQueue = new PriorityQueue();
             
-            tree.forEach(node => {
+            nodes.forEach(node => {
                 node.visited = false;
                 const nodeElement = document.getElementById(`node-${node.id}`);
                 if (nodeElement) {
-                    nodeElement.className = 'node default';
+                    nodeElement.className = node.isStart ? 'node start' : 
+                                          node.isEnd ? 'node end' : 'node default';
+                }
+            });
+            
+            edges.forEach(edge => {
+                const edgeElement = document.getElementById(`edge-${edge.from}-${edge.to}`);
+                if (edgeElement) {
+                    edgeElement.className = 'edge';
                 }
             });
             
             queueItems.innerHTML = '';
-            startBfsBtn.disabled = false;
+            startDijkstraBtn.disabled = false;
             pauseBtn.disabled = true;
             resumeBtn.disabled = true;
             stepBtn.disabled = true;
@@ -1177,16 +1288,16 @@
         }
         
         // Button event handlers
-        generateTreeBtn.addEventListener('click', generateTree);
-        startBfsBtn.addEventListener('click', runBFS);
-        pauseBtn.addEventListener('click', pauseBFS);
-        resumeBtn.addEventListener('click', resumeBFS);
+        generateGraphBtn.addEventListener('click', generateGraph);
+        startDijkstraBtn.addEventListener('click', runDijkstra);
+        pauseBtn.addEventListener('click', pauseDijkstra);
+        resumeBtn.addEventListener('click', resumeDijkstra);
         stepBtn.addEventListener('click', nextStep);
         resetBtn.addEventListener('click', resetAnimation);
         
-        // Initialize code display and generate initial tree
+        // Initialize code display and generate initial graph
         initializeCodeDisplay();
-        generateTree();
+        generateGraph();
     </script>
 </body>
 </html>
