@@ -1,0 +1,1181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BFS Algorithm Visualization with Pause/Resume</title>
+    <style>
+        :root {
+            --primary: #6c5ce7;
+            --secondary: #a29bfe;
+            --accent: #fd79a8;
+            --dark: #2d3436;
+            --light: #dfe6e9;
+            --success: #00b894;
+            --warning: #fdcb6e;
+            --danger: #e17055;
+            --background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            --code-bg: #1e1e3f;
+            --code-highlight: rgba(253, 121, 168, 0.2);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: var(--background);
+            color: var(--light);
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            color: var(--secondary);
+            margin-bottom: 20px;
+        }
+        
+        .content {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .panel {
+            flex: 1;
+            min-width: 300px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        label {
+            font-weight: 600;
+            color: var(--secondary);
+        }
+        
+        input, select, button {
+            padding: 12px 15px;
+            border-radius: 8px;
+            border: none;
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--light);
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px var(--primary);
+        }
+        
+        button {
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(108, 92, 231, 0.4);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .control-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .control-buttons button {
+            flex: 1;
+            min-width: 120px;
+        }
+        
+        #pause-btn {
+            background: linear-gradient(90deg, var(--warning), #e67e22);
+        }
+        
+        #resume-btn {
+            background: linear-gradient(90deg, var(--success), #27ae60);
+        }
+        
+        #step-btn {
+            background: linear-gradient(90deg, var(--secondary), #3498db);
+        }
+        
+        .visualization {
+            flex: 2;
+            min-width: 500px;
+            height: 600px;
+            position: relative;
+            overflow: hidden;
+            border-radius: 15px;
+            background: rgba(0, 0, 0, 0.2);
+        }
+        
+        .tree-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+        
+        .node {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            z-index: 10;
+            transition: all 0.5s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+        }
+        
+        .node.visited {
+            background: var(--success);
+            transform: scale(1.1);
+        }
+        
+        .node.current {
+            background: var(--accent);
+            box-shadow: 0 0 0 5px rgba(253, 121, 168, 0.5);
+            animation: pulse 1.5s infinite;
+        }
+        
+        .node.queued {
+            background: var(--warning);
+        }
+        
+        .node.default {
+            background: var(--primary);
+        }
+        
+        .edge {
+            position: absolute;
+            height: 3px;
+            background: var(--secondary);
+            transform-origin: 0 0;
+            z-index: 5;
+            transition: all 0.5s ease;
+        }
+        
+        .edge.visited {
+            background: var(--success);
+            height: 4px;
+        }
+        
+        .queue-display {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            min-height: 100px;
+        }
+        
+        .queue-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--secondary);
+        }
+        
+        .queue-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .queue-item {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--warning);
+            font-weight: bold;
+            color: var(--dark);
+        }
+        
+        .queue-item.current {
+            background: var(--accent);
+            color: white;
+            transform: scale(1.2);
+        }
+        
+        .code-panel {
+            flex: 1;
+            min-width: 300px;
+            background: var(--code-bg);
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            max-height: 600px;
+        }
+        
+        .code-title {
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: var(--secondary);
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+        
+        .code-container-wrapper {
+            flex: 1;
+            overflow: hidden;
+            border-radius: 10px;
+        }
+        
+        .code-container {
+            background: #0d0d21;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            height: 100%;
+            overflow-y: auto;
+            overflow-x: auto;
+        }
+        
+        .code-line {
+            padding: 5px 10px;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+            margin-bottom: 2px;
+            min-height: 24px;
+        }
+        
+        .code-line.active {
+            background: var(--code-highlight);
+            box-shadow: 0 0 0 1px var(--accent);
+        }
+        
+        .code-line:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .code-keyword {
+            color: #ff79c6;
+        }
+        
+        .code-function {
+            color: #50fa7b;
+        }
+        
+        .code-variable {
+            color: #8be9fd;
+        }
+        
+        .code-string {
+            color: #f1fa8c;
+        }
+        
+        .code-comment {
+            color: #6272a4;
+        }
+        
+        .code-number {
+            color: #bd93f9;
+        }
+        
+        .legend {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+            justify-content: center;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.9rem;
+        }
+        
+        .legend-color {
+            width: 15px;
+            height: 15px;
+            border-radius: 3px;
+        }
+        
+        .legend-default {
+            background: var(--primary);
+        }
+        
+        .legend-visited {
+            background: var(--success);
+        }
+        
+        .legend-current {
+            background: var(--accent);
+        }
+        
+        .legend-queued {
+            background: var(--warning);
+        }
+        
+        .info-panel {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+        }
+        
+        .info-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--secondary);
+        }
+        
+        .info-content {
+            line-height: 1.6;
+        }
+        
+        .status-panel {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--success);
+        }
+        
+        .status-indicator.paused {
+            background: var(--warning);
+            animation: none;
+        }
+        
+        .status-indicator.running {
+            background: var(--success);
+            animation: pulse 1.5s infinite;
+        }
+        
+        .status-indicator.idle {
+            background: var(--secondary);
+            animation: none;
+        }
+        
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(253, 121, 168, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(253, 121, 168, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(253, 121, 168, 0);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .content {
+                flex-direction: column;
+            }
+            
+            .visualization {
+                min-width: 100%;
+                height: 400px;
+            }
+            
+            .code-panel {
+                min-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>BFS Algorithm Visualization with Pause/Resume</h1>
+            <p class="subtitle">Visual simulation of BFS algorithm with step-by-step control</p>
+        </header>
+        
+        <div class="content">
+            <div class="panel controls">
+                <div class="control-group">
+                    <label for="tree-type">Tree Type:</label>
+                    <select id="tree-type">
+                        <option value="binary">Binary Tree</option>
+                        <option value="balanced">Balanced Tree</option>
+                        <option value="random">Random Tree</option>
+                    </select>
+                </div>
+                
+                <div class="control-group">
+                    <label for="node-count">Number of Nodes:</label>
+                    <input type="range" id="node-count" min="5" max="20" value="10">
+                    <span id="node-count-value">10</span>
+                </div>
+                
+                <div class="control-group">
+                    <label for="speed">Animation Speed:</label>
+                    <input type="range" id="speed" min="1" max="10" value="5">
+                    <span id="speed-value">Medium</span>
+                </div>
+                
+                <div class="control-buttons">
+                    <button id="generate-tree">
+                        <span>Generate Tree</span>
+                    </button>
+                    
+                    <button id="start-bfs">
+                        <span>Start BFS</span>
+                    </button>
+                    
+                    <button id="pause-btn" disabled>
+                        <span>Pause</span>
+                    </button>
+                    
+                    <button id="resume-btn" disabled>
+                        <span>Resume</span>
+                    </button>
+                    
+                    <button id="step-btn" disabled>
+                        <span>Next Step</span>
+                    </button>
+                    
+                    <button id="reset">
+                        <span>Reset</span>
+                    </button>
+                </div>
+                
+                <div class="status-panel">
+                    <div class="status-indicator idle" id="status-indicator"></div>
+                    <span id="status-text">Ready</span>
+                </div>
+                
+                <div class="queue-display">
+                    <div class="queue-title">BFS Queue:</div>
+                    <div class="queue-items" id="queue-items"></div>
+                </div>
+                
+                <div class="info-panel">
+                    <div class="info-title">About BFS Algorithm:</div>
+                    <div class="info-content">
+                        Breadth-First Search (BFS) is a graph traversal algorithm that uses a queue to store nodes. It starts at the root and explores all neighbor nodes at the present depth before moving on to nodes at the next depth level.
+                    </div>
+                </div>
+            </div>
+            
+            <div class="panel visualization">
+                <div class="tree-container" id="tree-container"></div>
+            </div>
+            
+            <div class="panel code-panel">
+                <div class="code-title">BFS JavaScript Code</div>
+                <div class="code-container-wrapper">
+                    <div class="code-container" id="code-container">
+                        <!-- Code will be inserted by JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color legend-default"></div>
+                <span>Normal Node</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color legend-visited"></div>
+                <span>Visited Node</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color legend-current"></div>
+                <span>Current Node</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color legend-queued"></div>
+                <span>Queued Node</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initial settings
+        const treeContainer = document.getElementById('tree-container');
+        const nodeCountSlider = document.getElementById('node-count');
+        const nodeCountValue = document.getElementById('node-count-value');
+        const speedSlider = document.getElementById('speed');
+        const speedValue = document.getElementById('speed-value');
+        const generateTreeBtn = document.getElementById('generate-tree');
+        const startBfsBtn = document.getElementById('start-bfs');
+        const pauseBtn = document.getElementById('pause-btn');
+        const resumeBtn = document.getElementById('resume-btn');
+        const stepBtn = document.getElementById('step-btn');
+        const resetBtn = document.getElementById('reset');
+        const queueItems = document.getElementById('queue-items');
+        const treeTypeSelect = document.getElementById('tree-type');
+        const codeContainer = document.getElementById('code-container');
+        const statusIndicator = document.getElementById('status-indicator');
+        const statusText = document.getElementById('status-text');
+        
+        let tree = [];
+        let edges = [];
+        let isAnimating = false;
+        let isPaused = false;
+        let animationSpeed = 500;
+        let currentCodeLine = -1;
+        let bfsQueue = [];
+        let currentNodeIndex = 0;
+        let currentStep = 0;
+        let resumeResolve = null;
+        
+        // BFS algorithm code for display
+        const bfsCode = [
+            { line: 1, code: "<span class='code-keyword'>function</span> <span class='code-function'>bfs</span>(root) {", state: "initial" },
+            { line: 2, code: "  <span class='code-keyword'>const</span> <span class='code-variable'>queue</span> = [root];", state: "initial" },
+            { line: 3, code: "  root.visited = <span class='code-keyword'>true</span>;", state: "initial" },
+            { line: 4, code: "  ", state: "initial" },
+            { line: 5, code: "  <span class='code-keyword'>while</span> (queue.length > <span class='code-number'>0</span>) {", state: "loop-start" },
+            { line: 6, code: "    <span class='code-keyword'>const</span> <span class='code-variable'>currentNode</span> = queue[<span class='code-number'>0</span>];", state: "get-current" },
+            { line: 7, code: "    highlightCurrentNode(currentNode);", state: "highlight-current" },
+            { line: 8, code: "    ", state: "initial" },
+            { line: 9, code: "    <span class='code-comment'>// Process current node after delay</span>", state: "initial" },
+            { line: 10, code: "    <span class='code-keyword'>await</span> <span class='code-function'>delay</span>(animationSpeed);", state: "delay" },
+            { line: 11, code: "    ", state: "initial" },
+            { line: 12, code: "    markNodeVisited(currentNode);", state: "mark-visited" },
+            { line: 13, code: "    ", state: "initial" },
+            { line: 14, code: "    <span class='code-comment'>// Add children to queue</span>", state: "initial" },
+            { line: 15, code: "    <span class='code-keyword'>for</span> (<span class='code-keyword'>const</span> <span class='code-variable'>childIndex</span> <span class='code-keyword'>of</span> currentNode.children) {", state: "children-loop" },
+            { line: 16, code: "      <span class='code-keyword'>const</span> <span class='code-variable'>childNode</span> = tree[childIndex];", state: "get-child" },
+            { line: 17, code: "      ", state: "initial" },
+            { line: 18, code: "      <span class='code-keyword'>if</span> (!childNode.visited) {", state: "check-visited" },
+            { line: 19, code: "        childNode.visited = <span class='code-keyword'>true</span>;", state: "mark-child-visited" },
+            { line: 20, code: "        queue.push(childIndex);", state: "add-to-queue" },
+            { line: 21, code: "        highlightQueuedNode(childNode);", state: "highlight-queued" },
+            { line: 22, code: "      }", state: "initial" },
+            { line: 23, code: "    }", state: "initial" },
+            { line: 24, code: "    ", state: "initial" },
+            { line: 25, code: "    <span class='code-comment'>// Remove current node from queue</span>", state: "initial" },
+            { line: 26, code: "    queue.shift();", state: "remove-from-queue" },
+            { line: 27, code: "    updateQueueDisplay(queue);", state: "update-queue" },
+            { line: 28, code: "  }", state: "loop-end" },
+            { line: 29, code: "}", state: "function-end" }
+        ];
+        
+        // Initialize code display
+        function initializeCodeDisplay() {
+            codeContainer.innerHTML = '';
+            bfsCode.forEach(item => {
+                const codeLine = document.createElement('div');
+                codeLine.className = 'code-line';
+                codeLine.id = `code-line-${item.line}`;
+                codeLine.innerHTML = item.code;
+                codeContainer.appendChild(codeLine);
+            });
+        }
+        
+        // Update status display
+        function updateStatus(status, text) {
+            statusIndicator.className = `status-indicator ${status}`;
+            statusText.textContent = text;
+        }
+        
+        // Highlight current code line
+        function highlightCodeLine(lineNumber) {
+            // Remove active class from all lines
+            document.querySelectorAll('.code-line').forEach(line => {
+                line.classList.remove('active');
+            });
+            
+            // Add active class to current line
+            if (lineNumber >= 0) {
+                const currentLine = document.getElementById(`code-line-${lineNumber}`);
+                if (currentLine) {
+                    currentLine.classList.add('active');
+                    // Scroll the code container, not the whole page
+                    currentLine.scrollIntoView({ 
+                        behavior: 'smooth', 
+                        block: 'center',
+                        inline: 'nearest'
+                    });
+                }
+            }
+            
+            currentCodeLine = lineNumber;
+        }
+        
+        // Update node count display
+        nodeCountSlider.addEventListener('input', function() {
+            nodeCountValue.textContent = this.value;
+        });
+        
+        // Update speed display
+        speedSlider.addEventListener('input', function() {
+            const speed = parseInt(this.value);
+            animationSpeed = 1100 - (speed * 100);
+            
+            if (speed <= 3) {
+                speedValue.textContent = 'Slow';
+            } else if (speed <= 7) {
+                speedValue.textContent = 'Medium';
+            } else {
+                speedValue.textContent = 'Fast';
+            }
+        });
+        
+        // Wait for resume or step
+        async function waitForResume() {
+            if (!isPaused) return;
+            
+            return new Promise(resolve => {
+                resumeResolve = resolve;
+            });
+        }
+        
+        // Generate random tree
+        function generateTree() {
+            if (isAnimating && !isPaused) return;
+            
+            treeContainer.innerHTML = '';
+            queueItems.innerHTML = '';
+            tree = [];
+            edges = [];
+            bfsQueue = [];
+            currentStep = 0;
+            
+            const nodeCount = parseInt(nodeCountSlider.value);
+            const treeType = treeTypeSelect.value;
+            
+            // Create root node
+            const rootNode = {
+                id: 0,
+                value: 'A',
+                x: treeContainer.clientWidth / 2,
+                y: 80,
+                visited: false,
+                children: []
+            };
+            tree.push(rootNode);
+            
+            // Create other nodes based on tree type
+            if (treeType === 'binary') {
+                generateBinaryTree(nodeCount);
+            } else if (treeType === 'balanced') {
+                generateBalancedTree(nodeCount);
+            } else {
+                generateRandomTree(nodeCount);
+            }
+            
+            // Draw the tree
+            renderTree();
+            
+            // Reset code highlighting
+            highlightCodeLine(-1);
+            updateStatus('idle', 'Ready');
+            
+            // Enable/disable buttons
+            startBfsBtn.disabled = false;
+            pauseBtn.disabled = true;
+            resumeBtn.disabled = true;
+            stepBtn.disabled = true;
+        }
+        
+        // Generate binary tree
+        function generateBinaryTree(nodeCount) {
+            let nodeId = 1;
+            let queue = [0]; // Node indices in the tree array
+            
+            while (queue.length > 0 && nodeId < nodeCount) {
+                const currentIndex = queue.shift();
+                const currentNode = tree[currentIndex];
+                
+                // Create left child
+                if (nodeId < nodeCount) {
+                    const leftChild = {
+                        id: nodeId,
+                        value: String.fromCharCode(65 + nodeId),
+                        x: 0,
+                        y: 0,
+                        visited: false,
+                        children: []
+                    };
+                    tree.push(leftChild);
+                    currentNode.children.push(nodeId);
+                    edges.push({ from: currentIndex, to: nodeId });
+                    queue.push(nodeId);
+                    nodeId++;
+                }
+                
+                // Create right child
+                if (nodeId < nodeCount) {
+                    const rightChild = {
+                        id: nodeId,
+                        value: String.fromCharCode(65 + nodeId),
+                        x: 0,
+                        y: 0,
+                        visited: false,
+                        children: []
+                    };
+                    tree.push(rightChild);
+                    currentNode.children.push(nodeId);
+                    edges.push({ from: currentIndex, to: nodeId });
+                    queue.push(nodeId);
+                    nodeId++;
+                }
+            }
+            
+            // Calculate node positions
+            calculateNodePositions(0, treeContainer.clientWidth / 2, 80, treeContainer.clientWidth / (nodeCount / 2));
+        }
+        
+        // Generate balanced tree
+        function generateBalancedTree(nodeCount) {
+            let nodeId = 1;
+            let queue = [0];
+            
+            while (queue.length > 0 && nodeId < nodeCount) {
+                const currentIndex = queue.shift();
+                const currentNode = tree[currentIndex];
+                
+                // Create 2-3 children for each node
+                const childCount = Math.min(2 + Math.floor(Math.random() * 2), nodeCount - nodeId);
+                
+                for (let i = 0; i < childCount; i++) {
+                    if (nodeId >= nodeCount) break;
+                    
+                    const child = {
+                        id: nodeId,
+                        value: String.fromCharCode(65 + nodeId),
+                        x: 0,
+                        y: 0,
+                        visited: false,
+                        children: []
+                    };
+                    tree.push(child);
+                    currentNode.children.push(nodeId);
+                    edges.push({ from: currentIndex, to: nodeId });
+                    queue.push(nodeId);
+                    nodeId++;
+                }
+            }
+            
+            // Calculate node positions
+            calculateNodePositions(0, treeContainer.clientWidth / 2, 80, treeContainer.clientWidth / (nodeCount / 2));
+        }
+        
+        // Generate random tree
+        function generateRandomTree(nodeCount) {
+            let nodeId = 1;
+            
+            while (nodeId < nodeCount) {
+                // Select random node as parent
+                const parentIndex = Math.floor(Math.random() * nodeId);
+                const parentNode = tree[parentIndex];
+                
+                // Create child node
+                const child = {
+                    id: nodeId,
+                    value: String.fromCharCode(65 + nodeId),
+                    x: 0,
+                    y: 0,
+                    visited: false,
+                    children: []
+                };
+                tree.push(child);
+                parentNode.children.push(nodeId);
+                edges.push({ from: parentIndex, to: nodeId });
+                nodeId++;
+            }
+            
+            // Calculate node positions
+            calculateNodePositions(0, treeContainer.clientWidth / 2, 80, treeContainer.clientWidth / (nodeCount / 2));
+        }
+        
+        // Calculate node positions for display
+        function calculateNodePositions(nodeIndex, x, y, horizontalSpacing) {
+            const node = tree[nodeIndex];
+            node.x = x;
+            node.y = y;
+            
+            if (node.children.length === 0) return;
+            
+            const childCount = node.children.length;
+            const totalWidth = horizontalSpacing * (childCount - 1);
+            const startX = x - totalWidth / 2;
+            
+            for (let i = 0; i < childCount; i++) {
+                const childIndex = node.children[i];
+                const childX = startX + i * horizontalSpacing;
+                const childY = y + 100;
+                calculateNodePositions(childIndex, childX, childY, horizontalSpacing / 2);
+            }
+        }
+        
+        // Draw the tree
+        function renderTree() {
+            // Draw edges
+            edges.forEach(edge => {
+                const fromNode = tree[edge.from];
+                const toNode = tree[edge.to];
+                
+                const edgeElement = document.createElement('div');
+                edgeElement.className = 'edge';
+                edgeElement.style.width = `${Math.sqrt(
+                    Math.pow(toNode.x - fromNode.x, 2) + 
+                    Math.pow(toNode.y - fromNode.y, 2)
+                )}px`;
+                edgeElement.style.left = `${fromNode.x}px`;
+                edgeElement.style.top = `${fromNode.y}px`;
+                edgeElement.style.transform = `rotate(${Math.atan2(
+                    toNode.y - fromNode.y, 
+                    toNode.x - fromNode.x
+                )}rad)`;
+                
+                treeContainer.appendChild(edgeElement);
+            });
+            
+            // Draw nodes
+            tree.forEach(node => {
+                const nodeElement = document.createElement('div');
+                nodeElement.className = 'node default';
+                nodeElement.id = `node-${node.id}`;
+                nodeElement.textContent = node.value;
+                nodeElement.style.left = `${node.x - 25}px`;
+                nodeElement.style.top = `${node.y - 25}px`;
+                
+                treeContainer.appendChild(nodeElement);
+            });
+        }
+        
+        // Run BFS algorithm
+        async function runBFS() {
+            if (isAnimating && !isPaused) return;
+            
+            isAnimating = true;
+            isPaused = false;
+            startBfsBtn.disabled = true;
+            generateTreeBtn.disabled = true;
+            pauseBtn.disabled = false;
+            resumeBtn.disabled = true;
+            stepBtn.disabled = false;
+            
+            // Reset node states if starting fresh
+            if (currentStep === 0) {
+                tree.forEach(node => {
+                    node.visited = false;
+                    const nodeElement = document.getElementById(`node-${node.id}`);
+                    nodeElement.className = 'node default';
+                });
+                
+                // Reset queue display
+                queueItems.innerHTML = '';
+                
+                // Initialize BFS
+                bfsQueue = [0]; // Start from root
+                tree[0].visited = true;
+                
+                updateStatus('running', 'BFS Running');
+                
+                // Initialize code highlighting
+                highlightCodeLine(1);
+                await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+                await waitForResume();
+                
+                highlightCodeLine(2);
+                await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+                await waitForResume();
+                
+                highlightCodeLine(3);
+                await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+                await waitForResume();
+                
+                highlightCodeLine(5);
+                await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+                await waitForResume();
+            }
+            
+            // BFS algorithm main loop
+            while (bfsQueue.length > 0) {
+                if (isPaused) {
+                    updateStatus('paused', 'BFS Paused');
+                    await waitForResume();
+                    updateStatus('running', 'BFS Running');
+                }
+                
+                // Update queue display
+                updateQueueDisplay(bfsQueue);
+                
+                // Process current node
+                currentNodeIndex = bfsQueue[0];
+                const currentNode = tree[currentNodeIndex];
+                
+                highlightCodeLine(6);
+                await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+                await waitForResume();
+                
+                // Highlight current node
+                const currentNodeElement = document.getElementById(`node-${currentNode.id}`);
+                currentNodeElement.className = 'node current';
+                
+                highlightCodeLine(7);
+                await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+                await waitForResume();
+                
+                highlightCodeLine(10);
+                // Delay for animation
+                await new Promise(resolve => setTimeout(resolve, animationSpeed));
+                await waitForResume();
+                
+                // Mark node as visited
+                currentNodeElement.className = 'node visited';
+                
+                highlightCodeLine(12);
+                await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+                await waitForResume();
+                
+                highlightCodeLine(14);
+                await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+                await waitForResume();
+                
+                highlightCodeLine(15);
+                await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+                await waitForResume();
+                
+                // Add children to queue
+                for (const childIndex of currentNode.children) {
+                    highlightCodeLine(16);
+                    await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+                    await waitForResume();
+                    
+                    const childNode = tree[childIndex];
+                    
+                    highlightCodeLine(18);
+                    await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+                    await waitForResume();
+                    
+                    if (!childNode.visited) {
+                        highlightCodeLine(19);
+                        await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+                        await waitForResume();
+                        
+                        childNode.visited = true;
+                        
+                        highlightCodeLine(20);
+                        await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+                        await waitForResume();
+                        
+                        bfsQueue.push(childIndex);
+                        
+                        highlightCodeLine(21);
+                        await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+                        await waitForResume();
+                        
+                        // Highlight queued nodes
+                        const childNodeElement = document.getElementById(`node-${childIndex}`);
+                        childNodeElement.className = 'node queued';
+                    }
+                    
+                    highlightCodeLine(15);
+                    await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+                    await waitForResume();
+                }
+                
+                highlightCodeLine(23);
+                await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+                await waitForResume();
+                
+                highlightCodeLine(25);
+                await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+                await waitForResume();
+                
+                // Remove current node from queue
+                bfsQueue.shift();
+                
+                highlightCodeLine(26);
+                await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+                await waitForResume();
+                
+                // Update queue display
+                updateQueueDisplay(bfsQueue);
+                
+                highlightCodeLine(27);
+                await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+                await waitForResume();
+                
+                highlightCodeLine(5);
+                await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+                await waitForResume();
+                
+                currentStep++;
+            }
+            
+            highlightCodeLine(28);
+            await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+            await waitForResume();
+            
+            highlightCodeLine(29);
+            
+            isAnimating = false;
+            isPaused = false;
+            startBfsBtn.disabled = false;
+            generateTreeBtn.disabled = false;
+            pauseBtn.disabled = true;
+            resumeBtn.disabled = true;
+            stepBtn.disabled = true;
+            updateStatus('idle', 'BFS Complete');
+        }
+        
+        // Pause BFS execution
+        function pauseBFS() {
+            isPaused = true;
+            pauseBtn.disabled = true;
+            resumeBtn.disabled = false;
+            stepBtn.disabled = false;
+            updateStatus('paused', 'BFS Paused');
+        }
+        
+        // Resume BFS execution
+        function resumeBFS() {
+            isPaused = false;
+            pauseBtn.disabled = false;
+            resumeBtn.disabled = true;
+            stepBtn.disabled = true;
+            
+            if (resumeResolve) {
+                resumeResolve();
+                resumeResolve = null;
+            }
+        }
+        
+        // Execute next step
+        function nextStep() {
+            if (isPaused && resumeResolve) {
+                resumeResolve();
+                resumeResolve = null;
+            }
+        }
+        
+        // Update queue display
+        function updateQueueDisplay(queue) {
+            queueItems.innerHTML = '';
+            
+            queue.forEach((nodeIndex, index) => {
+                const queueItem = document.createElement('div');
+                queueItem.className = index === 0 ? 'queue-item current' : 'queue-item';
+                queueItem.textContent = tree[nodeIndex].value;
+                queueItems.appendChild(queueItem);
+            });
+        }
+        
+        // Reset animation
+        function resetAnimation() {
+            isAnimating = false;
+            isPaused = false;
+            currentStep = 0;
+            bfsQueue = [];
+            
+            tree.forEach(node => {
+                node.visited = false;
+                const nodeElement = document.getElementById(`node-${node.id}`);
+                if (nodeElement) {
+                    nodeElement.className = 'node default';
+                }
+            });
+            
+            queueItems.innerHTML = '';
+            startBfsBtn.disabled = false;
+            pauseBtn.disabled = true;
+            resumeBtn.disabled = true;
+            stepBtn.disabled = true;
+            highlightCodeLine(-1);
+            updateStatus('idle', 'Ready');
+            
+            if (resumeResolve) {
+                resumeResolve();
+                resumeResolve = null;
+            }
+        }
+        
+        // Button event handlers
+        generateTreeBtn.addEventListener('click', generateTree);
+        startBfsBtn.addEventListener('click', runBFS);
+        pauseBtn.addEventListener('click', pauseBFS);
+        resumeBtn.addEventListener('click', resumeBFS);
+        stepBtn.addEventListener('click', nextStep);
+        resetBtn.addEventListener('click', resetAnimation);
+        
+        // Initialize code display and generate initial tree
+        initializeCodeDisplay();
+        generateTree();
+    </script>
+</body>
+</html>
