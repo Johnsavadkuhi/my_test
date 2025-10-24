@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fixed Binary Sort Visualization</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            padding: 20px 0;
+            margin-bottom: 30px;
+            position: relative;
+        }
+        
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 0 0 15px #00eeff, 0 0 25px #00eeff;
+            background: linear-gradient(90deg, #ff2d95, #00eeff, #ff2d95);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: titleGlow 3s infinite alternate;
+        }
+        
+        @keyframes titleGlow {
+            0% { text-shadow: 0 0 10px #ff2d95, 0 0 20px #ff2d95; }
+            100% { text-shadow: 0 0 15px #00eeff, 0 0 25px #00eeff; }
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            color: #a0e7ff;
+        }
+        
+        .simulation-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .controls {
+            flex: 1;
+            min-width: 300px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 0 20px rgba(0, 238, 255, 0.2);
+        }
+        
+        .visualization {
+            flex: 2;
+            min-width: 500px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 0 20px rgba(255, 45, 149, 0.2);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .control-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #00eeff;
+        }
+        
+        input, select, button {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.3);
+            color: #fff;
+            font-size: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: #00eeff;
+            box-shadow: 0 0 10px #00eeff;
+        }
+        
+        button {
+            background: linear-gradient(90deg, #ff2d95, #00eeff);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+            margin-top: 5px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(255, 45, 149, 0.4);
+        }
+        
+        button:disabled {
+            background: #555;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .array-container {
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            height: 350px;
+            margin-top: 20px;
+            gap: 8px;
+            padding: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .array-bar {
+            width: 45px;
+            background: linear-gradient(to top, #ff2d95, #00eeff);
+            border-radius: 5px 5px 0 0;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            color: white;
+            font-weight: bold;
+            padding-top: 8px;
+            position: relative;
+            box-shadow: 0 0 10px rgba(0, 238, 255, 0.5);
+            transform-origin: bottom;
+        }
+        
+        .array-bar.comparing {
+            background: linear-gradient(to top, #ffeb3b, #ff9800);
+            box-shadow: 0 0 15px #ffeb3b;
+            animation: pulse 0.8s infinite alternate;
+        }
+        
+        .array-bar.sorted {
+            background: linear-gradient(to top, #00ff00, #00b300);
+            box-shadow: 0 0 15px #00ff00;
+        }
+        
+        .array-bar.pivot {
+            background: linear-gradient(to top, #ff0000, #ff6600);
+            box-shadow: 0 0 20px #ff0000;
+            animation: rotate 1.5s infinite linear;
+        }
+        
+        .array-bar.swapping {
+            animation: swapAnimation 0.8s forwards;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scaleY(1); }
+            100% { transform: scaleY(1.1); }
+        }
+        
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @keyframes swapAnimation {
+            0% { transform: translateY(0); }
+            50% { transform: translateY(-100px); }
+            100% { transform: translateY(0); }
+        }
+        
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            min-height: 60px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 1.1rem;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .status::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            animation: shimmer 3s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+        
+        .complexity {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .complexity-box {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            flex: 1;
+            min-width: 150px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s;
+        }
+        
+        .complexity-box:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 238, 255, 0.3);
+        }
+        
+        .complexity-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-top: 5px;
+            color: #00eeff;
+        }
+        
+        .steps {
+            margin-top: 20px;
+            max-height: 200px;
+            overflow-y: auto;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .step {
+            margin-bottom: 8px;
+            padding: 8px;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.05);
+            border-left: 3px solid #00eeff;
+            transition: all 0.3s;
+        }
+        
+        .step:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(5px);
+        }
+        
+        .hologram-effect {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, 
+                transparent 0%, 
+                rgba(0, 238, 255, 0.1) 50%, 
+                transparent 100%);
+            opacity: 0;
+            pointer-events: none;
+            animation: hologram 8s infinite;
+        }
+        
+        @keyframes hologram {
+            0%, 100% { opacity: 0; transform: translateY(0); }
+            50% { opacity: 0.5; transform: translateY(10px); }
+        }
+        
+        .particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: #00eeff;
+            border-radius: 50%;
+            animation: float 5s infinite linear;
+        }
+        
+        @keyframes float {
+            0% { transform: translateY(100vh) translateX(0); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-100px) translateX(20px); opacity: 0; }
+        }
+        
+        .explanation {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .explanation h3 {
+            color: #00eeff;
+            margin-bottom: 10px;
+        }
+        
+        .explanation p {
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+        
+        @media (max-width: 768px) {
+            .simulation-container {
+                flex-direction: column;
+            }
+            
+            .controls, .visualization {
+                min-width: 100%;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Fixed Binary Sort Visualization</h1>
+            <p class="subtitle">Now working correctly with proper sorting algorithm implementation!</p>
+        </header>
+        
+        <div class="simulation-container">
+            <div class="controls">
+                <div class="hologram-effect"></div>
+                <div class="control-group">
+                    <label for="arraySize">Array Size</label>
+                    <input type="range" id="arraySize" min="5" max="25" value="15">
+                    <span id="arraySizeValue">15</span>
+                </div>
+                
+                <div class="control-group">
+                    <label for="speed">Animation Speed</label>
+                    <input type="range" id="speed" min="1" max="10" value="5">
+                    <span id="speedValue">5</span>
+                </div>
+                
+                <div class="control-group">
+                    <label for="dataType">Data Type</label>
+                    <select id="dataType">
+                        <option value="random">Random</option>
+                        <option value="sorted">Sorted</option>
+                        <option value="reverse">Reverse Sorted</option>
+                        <option value="nearly">Nearly Sorted</option>
+                    </select>
+                </div>
+                
+                <button id="generateBtn">Generate New Array</button>
+                <button id="startBtn">Start Sorting</button>
+                <button id="resetBtn" disabled>Reset</button>
+                
+                <div class="complexity">
+                    <div class="complexity-box">
+                        <div>Time Complexity</div>
+                        <div class="complexity-value">O(n log n)</div>
+                    </div>
+                    <div class="complexity-box">
+                        <div>Space Complexity</div>
+                        <div class="complexity-value">O(n)</div>
+                    </div>
+                </div>
+                
+                <div class="explanation">
+                    <h3>How Binary Sort Works</h3>
+                    <p>Binary Sort (QuickSort) works by:</p>
+                    <p>1. Selecting a "pivot" element</p>
+                    <p>2. Partitioning: Moving elements smaller than pivot to left, larger to right</p>
+                    <p>3. Recursively applying the same to left and right partitions</p>
+                    <p><strong>Fixed Issues:</strong> Proper partition logic and correct step visualization</p>
+                </div>
+            </div>
+            
+            <div class="visualization">
+                <h2>Visualization</h2>
+                <div class="array-container" id="arrayContainer">
+                    <!-- Array bars will be generated here -->
+                    <div class="particles" id="particles"></div>
+                </div>
+                
+                <div class="status" id="status">
+                    Click "Generate New Array" to create an array, then "Start Sorting" to begin the visualization.
+                </div>
+                
+                <div class="steps" id="steps">
+                    <!-- Algorithm steps will be displayed here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM elements
+        const arrayContainer = document.getElementById('arrayContainer');
+        const arraySizeSlider = document.getElementById('arraySize');
+        const arraySizeValue = document.getElementById('arraySizeValue');
+        const speedSlider = document.getElementById('speed');
+        const speedValue = document.getElementById('speedValue');
+        const dataTypeSelect = document.getElementById('dataType');
+        const generateBtn = document.getElementById('generateBtn');
+        const startBtn = document.getElementById('startBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const statusElement = document.getElementById('status');
+        const stepsElement = document.getElementById('steps');
+        const particlesContainer = document.getElementById('particles');
+        
+        // Global variables
+        let array = [];
+        let animationSpeed = 500;
+        let isSorting = false;
+        let steps = [];
+        
+        // Create floating particles
+        function createParticles() {
+            particlesContainer.innerHTML = '';
+            for (let i = 0; i < 30; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = `${Math.random() * 100}%`;
+                particle.style.animationDelay = `${Math.random() * 5}s`;
+                particle.style.animationDuration = `${3 + Math.random() * 4}s`;
+                particlesContainer.appendChild(particle);
+            }
+        }
+        
+        // Initialize the simulation
+        function init() {
+            updateArraySize();
+            generateArray();
+            createParticles();
+            
+            // Event listeners
+            arraySizeSlider.addEventListener('input', updateArraySize);
+            speedSlider.addEventListener('input', updateSpeed);
+            generateBtn.addEventListener('click', generateArray);
+            startBtn.addEventListener('click', startSorting);
+            resetBtn.addEventListener('click', resetSimulation);
+        }
+        
+        // Update array size display
+        function updateArraySize() {
+            arraySizeValue.textContent = arraySizeSlider.value;
+        }
+        
+        // Update animation speed
+        function updateSpeed() {
+            speedValue.textContent = speedSlider.value;
+            animationSpeed = 1100 - (speedSlider.value * 100);
+        }
+        
+        // Generate a new array based on selected type
+        function generateArray() {
+            if (isSorting) return;
+            
+            const size = parseInt(arraySizeSlider.value);
+            const type = dataTypeSelect.value;
+            
+            array = [];
+            stepsElement.innerHTML = '';
+            statusElement.textContent = 'New array generated. Click "Start Sorting" to begin.';
+            
+            switch(type) {
+                case 'random':
+                    for (let i = 0; i < size; i++) {
+                        array.push(Math.floor(Math.random() * 95) + 5);
+                    }
+                    break;
+                case 'sorted':
+                    for (let i = 0; i < size; i++) {
+                        array.push(5 + Math.floor(i * 90 / size));
+                    }
+                    break;
+                case 'reverse':
+                    for (let i = 0; i < size; i++) {
+                        array.push(95 - Math.floor(i * 90 / size));
+                    }
+                    break;
+                case 'nearly':
+                    for (let i = 0; i < size; i++) {
+                        array.push(5 + Math.floor(i * 90 / size));
+                    }
+                    // Swap some elements to make it nearly sorted
+                    for (let i = 0; i < size / 5; i++) {
+                        const idx1 = Math.floor(Math.random() * size);
+                        const idx2 = Math.floor(Math.random() * size);
+                        [array[idx1], array[idx2]] = [array[idx2], array[idx1]];
+                    }
+                    break;
+            }
+            
+            renderArray();
+            resetBtn.disabled = false;
+        }
+        
+        // Render the array as bars
+        function renderArray() {
+            arrayContainer.innerHTML = '';
+            const maxValue = Math.max(...array);
+            
+            array.forEach((value, index) => {
+                const bar = document.createElement('div');
+                bar.className = 'array-bar';
+                bar.style.height = `${(value / maxValue) * 100}%`;
+                bar.textContent = value;
+                bar.setAttribute('data-index', index);
+                arrayContainer.appendChild(bar);
+            });
+            
+            // Add particles back
+            const particles = document.createElement('div');
+            particles.className = 'particles';
+            particles.id = 'particles';
+            arrayContainer.appendChild(particles);
+            createParticles();
+        }
+        
+        // Update a specific bar with a class
+        function updateBar(index, className) {
+            const bars = arrayContainer.getElementsByClassName('array-bar');
+            if (index >= 0 && index < bars.length) {
+                bars[index].className = `array-bar ${className}`;
+            }
+        }
+        
+        // Reset all bars to default state
+        function resetBars() {
+            const bars = arrayContainer.getElementsByClassName('array-bar');
+            for (let i = 0; i < bars.length; i++) {
+                bars[i].className = 'array-bar';
+            }
+        }
+        
+        // Start the sorting process
+        function startSorting() {
+            if (isSorting) return;
+            
+            isSorting = true;
+            generateBtn.disabled = true;
+            startBtn.disabled = true;
+            resetBtn.disabled = false;
+            
+            steps = [];
+            stepsElement.innerHTML = '';
+            statusElement.textContent = 'Sorting in progress...';
+            
+            // Create a copy of the array for sorting
+            const sortingArray = [...array];
+            
+            // Perform binary sort and capture steps
+            quickSort(sortingArray, 0, sortingArray.length - 1);
+            
+            // Animate the steps
+            animateSteps();
+        }
+        
+        // QuickSort algorithm implementation (corrected)
+        function quickSort(arr, low, high) {
+            if (low < high) {
+                const pivotIndex = partition(arr, low, high);
+                
+                // Recursively sort elements before and after partition
+                quickSort(arr, low, pivotIndex - 1);
+                quickSort(arr, pivotIndex + 1, high);
+            }
+        }
+        
+        // Partition function for quicksort (corrected)
+        function partition(arr, low, high) {
+            const pivot = arr[high];
+            steps.push({type: 'pivot', index: high, value: pivot});
+            
+            let i = low - 1;
+            
+            for (let j = low; j < high; j++) {
+                steps.push({type: 'compare', indices: [j, high]});
+                
+                if (arr[j] < pivot) {
+                    i++;
+                    if (i !== j) {
+                        [arr[i], arr[j]] = [arr[j], arr[i]];
+                        steps.push({type: 'swap', indices: [i, j]});
+                    }
+                }
+            }
+            
+            if (i + 1 !== high) {
+                [arr[i + 1], arr[high]] = [arr[high], arr[i + 1]];
+                steps.push({type: 'swap', indices: [i + 1, high]});
+            }
+            
+            steps.push({type: 'pivotPosition', index: i + 1});
+            return i + 1;
+        }
+        
+        // Animate the sorting steps
+        function animateSteps() {
+            if (steps.length === 0) {
+                finishSorting();
+                return;
+            }
+            
+            const step = steps.shift();
+            const stepElement = document.createElement('div');
+            stepElement.className = 'step';
+            
+            switch(step.type) {
+                case 'compare':
+                    updateBar(step.indices[0], 'comparing');
+                    updateBar(step.indices[1], 'comparing');
+                    stepElement.textContent = `Comparing ${array[step.indices[0]]} and ${array[step.indices[1]]} (pivot)`;
+                    break;
+                    
+                case 'swap':
+                    // Swap values in the array
+                    [array[step.indices[0]], array[step.indices[1]]] = [array[step.indices[1]], array[step.indices[0]]];
+                    renderArray(); // Re-render to show updated values
+                    stepElement.textContent = `Swapping ${array[step.indices[1]]} and ${array[step.indices[0]]}`;
+                    break;
+                    
+                case 'pivot':
+                    updateBar(step.index, 'pivot');
+                    stepElement.textContent = `Selecting pivot: ${step.value}`;
+                    break;
+                    
+                case 'pivotPosition':
+                    updateBar(step.index, 'sorted');
+                    stepElement.textContent = `Pivot ${array[step.index]} placed in final position`;
+                    break;
+            }
+            
+            stepsElement.appendChild(stepElement);
+            stepsElement.scrollTop = stepsElement.scrollHeight;
+            
+            setTimeout(() => {
+                if (step.type !== 'swap') {
+                    resetBars();
+                }
+                animateSteps();
+            }, animationSpeed);
+        }
+        
+        // Finish sorting
+        function finishSorting() {
+            isSorting = false;
+            generateBtn.disabled = false;
+            startBtn.disabled = false;
+            
+            // Mark all bars as sorted
+            const bars = arrayContainer.getElementsByClassName('array-bar');
+            for (let i = 0; i < bars.length; i++) {
+                bars[i].className = 'array-bar sorted';
+            }
+            
+            statusElement.textContent = 'Sorting completed! Array is now sorted.';
+            
+            // Add completion message to steps
+            const stepElement = document.createElement('div');
+            stepElement.className = 'step';
+            stepElement.textContent = 'Array is now completely sorted!';
+            stepElement.style.background = 'rgba(0, 255, 0, 0.2)';
+            stepElement.style.borderLeftColor = '#00ff00';
+            stepsElement.appendChild(stepElement);
+            
+            // Verify that array is actually sorted
+            const isSorted = checkSorted(array);
+            if (!isSorted) {
+                const errorElement = document.createElement('div');
+                errorElement.className = 'step';
+                errorElement.textContent = 'ERROR: Array is not properly sorted!';
+                errorElement.style.background = 'rgba(255, 0, 0, 0.2)';
+                errorElement.style.borderLeftColor = '#ff0000';
+                stepsElement.appendChild(errorElement);
+            }
+            
+            // Create particle explosion for celebration
+            createParticleExplosion();
+        }
+        
+        // Check if array is sorted
+        function checkSorted(arr) {
+            for (let i = 1; i < arr.length; i++) {
+                if (arr[i - 1] > arr[i]) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        
+        // Create particle explosion for celebration
+        function createParticleExplosion() {
+            for (let i = 0; i < 50; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = `${50 + (Math.random() - 0.5) * 30}%`;
+                particle.style.top = `${50 + (Math.random() - 0.5) * 30}%`;
+                particle.style.animation = `float 2s forwards`;
+                particle.style.animationDelay = '0s';
+                particle.style.background = ['#ff2d95', '#00eeff', '#ffeb3b', '#00ff00'][Math.floor(Math.random() * 4)];
+                particlesContainer.appendChild(particle);
+                
+                // Remove particle after animation
+                setTimeout(() => {
+                    if (particle.parentNode) {
+                        particle.parentNode.removeChild(particle);
+                    }
+                }, 2000);
+            }
+        }
+        
+        // Reset the simulation
+        function resetSimulation() {
+            if (isSorting) return;
+            
+            generateArray();
+            resetBars();
+            statusElement.textContent = 'Simulation reset. Click "Start Sorting" to begin.';
+            stepsElement.innerHTML = '';
+        }
+        
+        // Initialize the simulation when the page loads
+        window.onload = init;
+    </script>
+</body>
+</html>

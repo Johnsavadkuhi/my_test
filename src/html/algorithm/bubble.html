@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bubble Sort Visualization</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1000px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            font-size: 2.5rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .description {
+            text-align: center;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+            font-size: 1.1rem;
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+
+        button {
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 50px;
+            background: linear-gradient(to right, #4facfe, #00f2fe);
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        button:active {
+            transform: translateY(1px);
+        }
+
+        button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .slider-container label {
+            font-weight: bold;
+        }
+
+        input[type="range"] {
+            width: 200px;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 2rem;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1rem;
+            border-radius: 10px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #4facfe;
+        }
+
+        .visualization {
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            height: 300px;
+            gap: 4px;
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+        }
+
+        .bar {
+            width: 40px;
+            background: linear-gradient(to top, #4facfe, #00f2fe);
+            border-radius: 5px 5px 0 0;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            position: relative;
+        }
+
+        .bar.comparing {
+            background: linear-gradient(to top, #ff9a9e, #fad0c4);
+        }
+
+        .bar.swapping {
+            background: linear-gradient(to top, #a1ffce, #faffd1);
+            color: #333;
+        }
+
+        .bar.sorted {
+            background: linear-gradient(to top, #56ab2f, #a8e063);
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 1rem;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+
+        .code-preview {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-top: 2rem;
+            font-family: 'Courier New', monospace;
+            line-height: 1.5;
+            overflow-x: auto;
+        }
+
+        .code-line {
+            margin-bottom: 0.5rem;
+        }
+
+        .code-line.highlight {
+            background: rgba(79, 172, 254, 0.3);
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .stats {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .bar {
+                width: 25px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Bubble Sort Visualization</h1>
+        
+        <div class="description">
+            <p>Bubble Sort is a simple sorting algorithm that repeatedly steps through the list, compares adjacent elements and swaps them if they are in the wrong order.</p>
+            <p>Watch as the algorithm compares and swaps elements until the entire array is sorted!</p>
+        </div>
+        
+        <div class="controls">
+            <button id="generateBtn">Generate New Array</button>
+            <button id="sortBtn">Start Sorting</button>
+            <button id="resetBtn">Reset</button>
+            <button id="stepBtn">Step Forward</button>
+        </div>
+        
+        <div class="slider-container">
+            <label for="speedSlider">Animation Speed:</label>
+            <input type="range" id="speedSlider" min="1" max="10" value="5">
+            <span id="speedValue">Medium</span>
+        </div>
+        
+        <div class="slider-container">
+            <label for="sizeSlider">Array Size:</label>
+            <input type="range" id="sizeSlider" min="5" max="20" value="10">
+            <span id="sizeValue">10</span>
+        </div>
+        
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-label">Comparisons</div>
+                <div id="comparisons" class="stat-value">0</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">Swaps</div>
+                <div id="swaps" class="stat-value">0</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">Passes</div>
+                <div id="passes" class="stat-value">0</div>
+            </div>
+        </div>
+        
+        <div class="visualization" id="visualization">
+            <!-- Bars will be generated here -->
+        </div>
+        
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background: linear-gradient(to top, #4facfe, #00f2fe);"></div>
+                <span>Unsorted</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: linear-gradient(to top, #ff9a9e, #fad0c4);"></div>
+                <span>Comparing</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: linear-gradient(to top, #a1ffce, #faffd1);"></div>
+                <span>Swapping</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: linear-gradient(to top, #56ab2f, #a8e063);"></div>
+                <span>Sorted</span>
+            </div>
+        </div>
+        
+        <div class="code-preview">
+            <div class="code-line">function bubbleSort(arr) {</div>
+            <div class="code-line" id="line1">  let n = arr.length;</div>
+            <div class="code-line" id="line2">  for (let i = 0; i < n-1; i++) {</div>
+            <div class="code-line" id="line3">    for (let j = 0; j < n-i-1; j++) {</div>
+            <div class="code-line" id="line4">      if (arr[j] > arr[j+1]) {</div>
+            <div class="code-line" id="line5">        // Swap arr[j] and arr[j+1]</div>
+            <div class="code-line" id="line6">        let temp = arr[j];</div>
+            <div class="code-line" id="line7">        arr[j] = arr[j+1];</div>
+            <div class="code-line" id="line8">        arr[j+1] = temp;</div>
+            <div class="code-line" id="line9">      }</div>
+            <div class="code-line" id="line10">    }</div>
+            <div class="code-line" id="line11">  }</div>
+            <div class="code-line">}</div>
+        </div>
+    </div>
+
+    <script>
+        // DOM elements
+        const visualization = document.getElementById('visualization');
+        const generateBtn = document.getElementById('generateBtn');
+        const sortBtn = document.getElementById('sortBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const stepBtn = document.getElementById('stepBtn');
+        const speedSlider = document.getElementById('speedSlider');
+        const sizeSlider = document.getElementById('sizeSlider');
+        const speedValue = document.getElementById('speedValue');
+        const sizeValue = document.getElementById('sizeValue');
+        const comparisonsEl = document.getElementById('comparisons');
+        const swapsEl = document.getElementById('swaps');
+        const passesEl = document.getElementById('passes');
+
+        // Algorithm state
+        let array = [];
+        let isSorting = false;
+        let isPaused = false;
+        let animationSpeed = 500;
+        let comparisons = 0;
+        let swaps = 0;
+        let passes = 0;
+        let currentStep = 0;
+        let sortingSteps = [];
+
+        // Initialize
+        generateArray();
+        updateSpeedDisplay();
+
+        // Event listeners
+        generateBtn.addEventListener('click', () => {
+            if (!isSorting) {
+                generateArray();
+                resetStats();
+            }
+        });
+
+        sortBtn.addEventListener('click', () => {
+            if (!isSorting) {
+                startSorting();
+            } else if (isPaused) {
+                resumeSorting();
+            } else {
+                pauseSorting();
+            }
+        });
+
+        resetBtn.addEventListener('click', resetSorting);
+        stepBtn.addEventListener('click', stepForward);
+
+        speedSlider.addEventListener('input', updateSpeed);
+        sizeSlider.addEventListener('input', updateSize);
+
+        // Functions
+        function generateArray() {
+            const size = parseInt(sizeSlider.value);
+            array = [];
+            for (let i = 0; i < size; i++) {
+                array.push(Math.floor(Math.random() * 90) + 10); // Values between 10 and 100
+            }
+            renderBars();
+        }
+
+        function renderBars() {
+            visualization.innerHTML = '';
+            const maxValue = Math.max(...array);
+            
+            array.forEach((value, index) => {
+                const bar = document.createElement('div');
+                bar.className = 'bar';
+                bar.style.height = `${(value / maxValue) * 100}%`;
+                bar.textContent = value;
+                bar.dataset.index = index;
+                visualization.appendChild(bar);
+            });
+        }
+
+        function updateBars() {
+            const bars = document.querySelectorAll('.bar');
+            bars.forEach((bar, index) => {
+                const value = array[index];
+                const maxValue = Math.max(...array);
+                bar.style.height = `${(value / maxValue) * 100}%`;
+                bar.textContent = value;
+            });
+        }
+
+        function updateSpeed() {
+            const speed = parseInt(speedSlider.value);
+            animationSpeed = 1100 - (speed * 100); // Convert to milliseconds (100-1000ms)
+            updateSpeedDisplay();
+        }
+
+        function updateSpeedDisplay() {
+            const speed = parseInt(speedSlider.value);
+            const speeds = ['Very Slow', 'Slow', 'Medium Slow', 'Medium', 'Medium Fast', 'Fast', 'Very Fast', 'Ultra Fast', 'Lightning', 'Instant'];
+            speedValue.textContent = speeds[speed - 1] || 'Medium';
+        }
+
+        function updateSize() {
+            const size = parseInt(sizeSlider.value);
+            sizeValue.textContent = size;
+            if (!isSorting) {
+                generateArray();
+                resetStats();
+            }
+        }
+
+        function resetStats() {
+            comparisons = 0;
+            swaps = 0;
+            passes = 0;
+            updateStats();
+        }
+
+        function updateStats() {
+            comparisonsEl.textContent = comparisons;
+            swapsEl.textContent = swaps;
+            passesEl.textContent = passes;
+        }
+
+        function startSorting() {
+            if (isSorting) return;
+            
+            isSorting = true;
+            isPaused = false;
+            sortBtn.textContent = 'Pause';
+            stepBtn.disabled = true;
+            generateBtn.disabled = true;
+            resetBtn.disabled = true;
+            
+            // Generate sorting steps
+            sortingSteps = generateSortingSteps([...array]);
+            currentStep = 0;
+            
+            // Start animation
+            animateSorting();
+        }
+
+        function pauseSorting() {
+            isPaused = true;
+            sortBtn.textContent = 'Resume';
+            stepBtn.disabled = false;
+        }
+
+        function resumeSorting() {
+            isPaused = false;
+            sortBtn.textContent = 'Pause';
+            stepBtn.disabled = true;
+            animateSorting();
+        }
+
+        function resetSorting() {
+            isSorting = false;
+            isPaused = false;
+            sortBtn.textContent = 'Start Sorting';
+            stepBtn.disabled = false;
+            generateBtn.disabled = false;
+            resetBtn.disabled = false;
+            
+            // Reset to original array
+            generateArray();
+            resetStats();
+            resetCodeHighlight();
+        }
+
+        function stepForward() {
+            if (isPaused && currentStep < sortingSteps.length) {
+                executeStep(sortingSteps[currentStep]);
+                currentStep++;
+                
+                if (currentStep >= sortingSteps.length) {
+                    finishSorting();
+                }
+            }
+        }
+
+        function animateSorting() {
+            if (isPaused || currentStep >= sortingSteps.length) {
+                if (currentStep >= sortingSteps.length) {
+                    finishSorting();
+                }
+                return;
+            }
+            
+            executeStep(sortingSteps[currentStep]);
+            currentStep++;
+            
+            setTimeout(() => {
+                animateSorting();
+            }, animationSpeed);
+        }
+
+        function executeStep(step) {
+            const { type, i, j, array: newArray, comparisons: comps, swaps: swps, passes: pss } = step;
+            
+            // Update array
+            array = [...newArray];
+            
+            // Update stats
+            comparisons = comps;
+            swaps = swps;
+            passes = pss;
+            updateStats();
+            
+            // Update visualization
+            updateBars();
+            
+            // Highlight bars
+            const bars = document.querySelectorAll('.bar');
+            bars.forEach(bar => bar.classList.remove('comparing', 'swapping', 'sorted'));
+            
+            if (type === 'compare') {
+                if (bars[j]) bars[j].classList.add('comparing');
+                if (bars[j + 1]) bars[j + 1].classList.add('comparing');
+                highlightCodeLine(4);
+            } else if (type === 'swap') {
+                if (bars[j]) bars[j].classList.add('swapping');
+                if (bars[j + 1]) bars[j + 1].classList.add('swapping');
+                highlightCodeLine(6);
+            } else if (type === 'pass') {
+                // Mark elements that are in their final position
+                for (let k = newArray.length - i; k < newArray.length; k++) {
+                    if (bars[k]) bars[k].classList.add('sorted');
+                }
+                highlightCodeLine(2);
+            }
+        }
+
+        function generateSortingSteps(arr) {
+            const steps = [];
+            let n = arr.length;
+            let comps = 0;
+            let swps = 0;
+            let pss = 0;
+            let tempArr = [...arr];
+            
+            for (let i = 0; i < n - 1; i++) {
+                pss++;
+                let swapped = false;
+                
+                for (let j = 0; j < n - i - 1; j++) {
+                    comps++;
+                    steps.push({
+                        type: 'compare',
+                        i: i,
+                        j: j,
+                        array: [...tempArr],
+                        comparisons: comps,
+                        swaps: swps,
+                        passes: pss
+                    });
+                    
+                    if (tempArr[j] > tempArr[j + 1]) {
+                        // Swap elements
+                        let temp = tempArr[j];
+                        tempArr[j] = tempArr[j + 1];
+                        tempArr[j + 1] = temp;
+                        swps++;
+                        swapped = true;
+                        
+                        steps.push({
+                            type: 'swap',
+                            i: i,
+                            j: j,
+                            array: [...tempArr],
+                            comparisons: comps,
+                            swaps: swps,
+                            passes: pss
+                        });
+                    }
+                }
+                
+                steps.push({
+                    type: 'pass',
+                    i: i,
+                    j: -1,
+                    array: [...tempArr],
+                    comparisons: comps,
+                    swaps: swps,
+                    passes: pss
+                });
+                
+                if (!swapped) break;
+            }
+            
+            return steps;
+        }
+
+        function finishSorting() {
+            isSorting = false;
+            isPaused = false;
+            sortBtn.textContent = 'Start Sorting';
+            stepBtn.disabled = false;
+            generateBtn.disabled = false;
+            resetBtn.disabled = false;
+            
+            // Mark all bars as sorted
+            const bars = document.querySelectorAll('.bar');
+            bars.forEach(bar => {
+                bar.classList.remove('comparing', 'swapping');
+                bar.classList.add('sorted');
+            });
+            
+            highlightCodeLine(11);
+        }
+
+        function highlightCodeLine(lineNumber) {
+            // Remove highlight from all lines
+            for (let i = 1; i <= 11; i++) {
+                document.getElementById(`line${i}`).classList.remove('highlight');
+            }
+            
+            // Highlight the current line
+            if (lineNumber >= 1 && lineNumber <= 11) {
+                document.getElementById(`line${lineNumber}`).classList.add('highlight');
+            }
+        }
+
+        function resetCodeHighlight() {
+            for (let i = 1; i <= 11; i++) {
+                document.getElementById(`line${i}`).classList.remove('highlight');
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bitcoin Private Key Space Visualization</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #0c0c0c, #1a1a2e);
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .container {
+            max-width: 1200px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+        }
+        
+        header {
+            text-align: center;
+            padding: 20px;
+            width: 100%;
+        }
+        
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #f7931a, #ffcc00);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 0 10px rgba(247, 147, 26, 0.3);
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            color: #a0a0a0;
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+        
+        .animation-container {
+            width: 100%;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 20px;
+        }
+        
+        .key-space {
+            flex: 1;
+            min-width: 300px;
+            background: rgba(30, 30, 46, 0.7);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            border: 1px solid #33334d;
+        }
+        
+        .brute-force {
+            flex: 1;
+            min-width: 300px;
+            background: rgba(30, 30, 46, 0.7);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            border: 1px solid #33334d;
+        }
+        
+        h2 {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            color: #ffcc00;
+            border-bottom: 2px solid #33334d;
+            padding-bottom: 10px;
+        }
+        
+        .visualization {
+            height: 300px;
+            background: rgba(10, 10, 20, 0.8);
+            border-radius: 10px;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid #444466;
+        }
+        
+        .key-space-visual {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .private-key {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: #f7931a;
+            border-radius: 50%;
+            box-shadow: 0 0 8px #f7931a;
+            transition: transform 0.5s;
+        }
+        
+        .target-key {
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            background: #00ff88;
+            border-radius: 50%;
+            box-shadow: 0 0 12px #00ff88;
+            z-index: 10;
+        }
+        
+        .brute-force-visual {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .attempt {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: #ff3366;
+            border-radius: 50%;
+            opacity: 0.8;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .stat-box {
+            flex: 1;
+            min-width: 150px;
+            background: rgba(20, 20, 35, 0.8);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            border: 1px solid #444466;
+        }
+        
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin: 10px 0;
+            color: #ffcc00;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            color: #a0a0a0;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        button {
+            padding: 12px 25px;
+            background: linear-gradient(90deg, #f7931a, #ffaa00);
+            border: none;
+            border-radius: 8px;
+            color: #121212;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(247, 147, 26, 0.4);
+        }
+        
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(247, 147, 26, 0.6);
+        }
+        
+        button:active {
+            transform: translateY(1px);
+        }
+        
+        .explanation {
+            background: rgba(30, 30, 46, 0.7);
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 20px;
+            width: 100%;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            border: 1px solid #33334d;
+            line-height: 1.6;
+        }
+        
+        .explanation h2 {
+            color: #ffcc00;
+        }
+        
+        .explanation p {
+            margin-bottom: 15px;
+        }
+        
+        .comparison {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .comparison-item {
+            flex: 1;
+            min-width: 200px;
+            background: rgba(20, 20, 35, 0.8);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #444466;
+        }
+        
+        .comparison-title {
+            font-weight: bold;
+            color: #ffcc00;
+            margin-bottom: 10px;
+        }
+        
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.2rem;
+            }
+            
+            .animation-container {
+                flex-direction: column;
+            }
+            
+            .key-space, .brute-force {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Bitcoin Private Key Space</h1>
+            <p class="subtitle">Visualizing the immense size of Bitcoin's private key space and demonstrating why brute-force attacks are computationally infeasible.</p>
+        </header>
+        
+        <div class="animation-container">
+            <div class="key-space">
+                <h2>Private Key Space</h2>
+                <div class="visualization">
+                    <div class="key-space-visual" id="keySpace"></div>
+                </div>
+                <div class="stats">
+                    <div class="stat-box">
+                        <div class="stat-label">Total Possible Keys</div>
+                        <div class="stat-value" id="totalKeys">2<sup>256</sup></div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Keys Visualized</div>
+                        <div class="stat-value" id="visualizedKeys">0</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Target Key</div>
+                        <div class="stat-value" id="targetStatus">Not Found</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="brute-force">
+                <h2>Brute-Force Attack</h2>
+                <div class="visualization">
+                    <div class="brute-force-visual" id="bruteForce"></div>
+                </div>
+                <div class="stats">
+                    <div class="stat-box">
+                        <div class="stat-label">Attempts</div>
+                        <div class="stat-value" id="attemptCount">0</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Time Elapsed</div>
+                        <div class="stat-value" id="timeElapsed">0s</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Success Rate</div>
+                        <div class="stat-value" id="successRate">0%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button id="startBtn">Start Animation</button>
+            <button id="resetBtn">Reset</button>
+            <button id="speedUpBtn">Speed Up</button>
+            <button id="slowDownBtn">Slow Down</button>
+        </div>
+        
+        <div class="explanation">
+            <h2>Why Bitcoin Private Keys Are Practically Unbreakable</h2>
+            <p>A Bitcoin private key is a 256-bit number, which means there are 2<sup>256</sup> (about 10<sup>77</sup>) possible private keys. This number is astronomically large - far greater than the number of atoms in the observable universe.</p>
+            
+            <div class="comparison">
+                <div class="comparison-item">
+                    <div class="comparison-title">Bitcoin Key Space</div>
+                    <div>2<sup>256</sup> ≈ 10<sup>77</sup> possible keys</div>
+                </div>
+                <div class="comparison-item">
+                    <div class="comparison-title">Atoms in Universe</div>
+                    <div>≈ 10<sup>80</sup> atoms</div>
+                </div>
+                <div class="comparison-item">
+                    <div class="comparison-title">Sand Grains on Earth</div>
+                    <div>≈ 7.5 × 10<sup>18</sup> grains</div>
+                </div>
+            </div>
+            
+            <p>Even with the most powerful supercomputers working in parallel, it would take longer than the age of the universe to brute-force a Bitcoin private key. This animation visualizes just a tiny fraction of this immense key space.</p>
+            
+            <p>The security of Bitcoin relies on this mathematical property - while it's easy to generate a public key from a private key, the reverse process is computationally infeasible.</p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const keySpace = document.getElementById('keySpace');
+            const bruteForce = document.getElementById('bruteForce');
+            const startBtn = document.getElementById('startBtn');
+            const resetBtn = document.getElementById('resetBtn');
+            const speedUpBtn = document.getElementById('speedUpBtn');
+            const slowDownBtn = document.getElementById('slowDownBtn');
+            const visualizedKeys = document.getElementById('visualizedKeys');
+            const attemptCount = document.getElementById('attemptCount');
+            const timeElapsed = document.getElementById('timeElapsed');
+            const successRate = document.getElementById('successRate');
+            const targetStatus = document.getElementById('targetStatus');
+            
+            let animationInterval;
+            let bruteForceInterval;
+            let speed = 50; // milliseconds between frames
+            let attempts = 0;
+            let seconds = 0;
+            let isRunning = false;
+            let targetKey = null;
+            
+            // Initialize visualization
+            initializeKeySpace();
+            
+            // Event listeners
+            startBtn.addEventListener('click', startAnimation);
+            resetBtn.addEventListener('click', resetAnimation);
+            speedUpBtn.addEventListener('click', () => changeSpeed(0.5));
+            slowDownBtn.addEventListener('click', () => changeSpeed(2));
+            
+            function initializeKeySpace() {
+                keySpace.innerHTML = '';
+                bruteForce.innerHTML = '';
+                
+                // Create a target key (the one we're trying to find)
+                const containerWidth = keySpace.offsetWidth;
+                const containerHeight = keySpace.offsetHeight;
+                
+                const targetX = Math.random() * (containerWidth - 20) + 10;
+                const targetY = Math.random() * (containerHeight - 20) + 10;
+                
+                targetKey = document.createElement('div');
+                targetKey.className = 'target-key';
+                targetKey.style.left = `${targetX}px`;
+                targetKey.style.top = `${targetY}px`;
+                keySpace.appendChild(targetKey);
+                
+                // Reset stats
+                visualizedKeys.textContent = '0';
+                attemptCount.textContent = '0';
+                timeElapsed.textContent = '0s';
+                successRate.textContent = '0%';
+                targetStatus.textContent = 'Not Found';
+                targetStatus.style.color = '#ff3366';
+                
+                attempts = 0;
+                seconds = 0;
+            }
+            
+            function startAnimation() {
+                if (isRunning) return;
+                
+                isRunning = true;
+                startBtn.disabled = true;
+                
+                // Start key space visualization
+                animationInterval = setInterval(addKeyPoint, speed);
+                
+                // Start brute force visualization
+                bruteForceInterval = setInterval(bruteForceAttempt, speed * 0.5);
+                
+                // Start timer
+                setInterval(updateTimer, 1000);
+            }
+            
+            function resetAnimation() {
+                clearInterval(animationInterval);
+                clearInterval(bruteForceInterval);
+                isRunning = false;
+                startBtn.disabled = false;
+                initializeKeySpace();
+            }
+            
+            function changeSpeed(factor) {
+                speed *= factor;
+                
+                if (isRunning) {
+                    clearInterval(animationInterval);
+                    clearInterval(bruteForceInterval);
+                    
+                    animationInterval = setInterval(addKeyPoint, speed);
+                    bruteForceInterval = setInterval(bruteForceAttempt, speed * 0.5);
+                }
+            }
+            
+            function addKeyPoint() {
+                const containerWidth = keySpace.offsetWidth;
+                const containerHeight = keySpace.offsetHeight;
+                
+                const keyPoint = document.createElement('div');
+                keyPoint.className = 'private-key';
+                
+                const x = Math.random() * (containerWidth - 20) + 10;
+                const y = Math.random() * (containerHeight - 20) + 10;
+                
+                keyPoint.style.left = `${x}px`;
+                keyPoint.style.top = `${y}px`;
+                
+                keySpace.appendChild(keyPoint);
+                
+                // Update counter
+                const currentCount = parseInt(visualizedKeys.textContent);
+                visualizedKeys.textContent = (currentCount + 1).toLocaleString();
+                
+                // Limit the number of points to prevent performance issues
+                if (keySpace.children.length > 500) {
+                    keySpace.removeChild(keySpace.children[1]); // Remove oldest point (index 1 to preserve target key)
+                }
+            }
+            
+            function bruteForceAttempt() {
+                const containerWidth = bruteForce.offsetWidth;
+                const containerHeight = bruteForce.offsetHeight;
+                
+                const attempt = document.createElement('div');
+                attempt.className = 'attempt';
+                
+                const x = Math.random() * (containerWidth - 10) + 5;
+                const y = Math.random() * (containerHeight - 10) + 5;
+                
+                attempt.style.left = `${x}px`;
+                attempt.style.top = `${y}px`;
+                
+                bruteForce.appendChild(attempt);
+                
+                // Update attempts counter
+                attempts++;
+                attemptCount.textContent = attempts.toLocaleString();
+                
+                // Calculate success rate (this is purely illustrative)
+                const rate = (attempts / 1000000) * 100;
+                successRate.textContent = `${Math.min(rate, 0.001).toFixed(6)}%`;
+                
+                // Check if we found the target (this will almost never happen in reality)
+                // For demonstration, we'll simulate a "find" after a very long time
+                if (attempts === 50000) {
+                    targetStatus.textContent = 'Found!';
+                    targetStatus.style.color = '#00ff88';
+                    clearInterval(animationInterval);
+                    clearInterval(bruteForceInterval);
+                }
+                
+                // Limit the number of attempts displayed
+                if (bruteForce.children.length > 200) {
+                    bruteForce.removeChild(bruteForce.children[0]);
+                }
+            }
+            
+            function updateTimer() {
+                if (isRunning) {
+                    seconds++;
+                    timeElapsed.textContent = `${seconds}s`;
+                }
+            }
+        });
+    </script>
+</body>
+</html>

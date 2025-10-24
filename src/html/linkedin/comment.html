@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Cloud Logistics - Program Manager</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Roboto', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #0c2b4f 0%, #1a3a6a 100%);
+            color: white;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            position: relative;
+            z-index: 2;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+            position: relative;
+            overflow: hidden;
+            padding: 2rem 0;
+        }
+        
+        .logo {
+            width: 120px;
+            margin-bottom: 2rem;
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(to right, #4285F4, #34A853, #FBBC05, #EA4335);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            position: relative;
+            display: inline-block;
+            opacity: 0;
+            animation: fadeInUp 1.5s ease forwards 0.5s;
+        }
+        
+        .subtitle {
+            font-size: 1.3rem;
+            color: #ccc;
+            max-width: 800px;
+            margin: 0 auto 2rem;
+            line-height: 1.6;
+            opacity: 0;
+            animation: fadeInUp 1.5s ease forwards 1s;
+        }
+        
+        .job-title {
+            font-size: 2rem;
+            color: #FBBC05;
+            margin: 1.5rem 0;
+            position: relative;
+            display: inline-block;
+            opacity: 0;
+            animation: fadeInUp 1.5s ease forwards 1.5s;
+        }
+        
+        .job-title::before, .job-title::after {
+            content: '★';
+            color: #34A853;
+            margin: 0 10px;
+            animation: spin 3s linear infinite;
+        }
+        
+        .content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+        
+        .job-description {
+            flex: 1;
+            min-width: 300px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.3s ease;
+            opacity: 0;
+            animation: fadeInUp 1.5s ease forwards 2s;
+        }
+        
+        .job-description:hover {
+            transform: translateY(-10px);
+        }
+        
+        .requirements {
+            flex: 1;
+            min-width: 300px;
+            opacity: 0;
+            animation: fadeInUp 1.5s ease forwards 2.5s;
+        }
+        
+        h2 {
+            font-size: 1.8rem;
+            margin-bottom: 1.5rem;
+            color: #4285F4;
+            position: relative;
+            padding-bottom: 10px;
+        }
+        
+        h2::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100px;
+            height: 3px;
+            background: #34A853;
+            border-radius: 2px;
+        }
+        
+        p {
+            line-height: 1.7;
+            margin-bottom: 1.5rem;
+            font-size: 1.1rem;
+        }
+        
+        ul {
+            list-style-type: none;
+            padding-left: 1rem;
+        }
+        
+        li {
+            margin-bottom: 1rem;
+            padding-left: 2rem;
+            position: relative;
+            line-height: 1.6;
+        }
+        
+        li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            top: 0;
+            color: #34A853;
+            font-weight: bold;
+            animation: pulse 2s infinite;
+        }
+        
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(to right, #4285F4, #34A853);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.2rem;
+            margin-top: 1rem;
+            box-shadow: 0 5px 15px rgba(66, 133, 244, 0.4);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            opacity: 0;
+            animation: fadeInUp 1.5s ease forwards 3s;
+        }
+        
+        .cta-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: 0.5s;
+        }
+        
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(66, 133, 244, 0.6);
+        }
+        
+        .cta-button:hover::before {
+            left: 100%;
+        }
+        
+        .animation-area {
+            position: relative;
+            height: 200px;
+            margin: 3rem 0;
+            overflow: hidden;
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.2);
+        }
+        
+        .cloud {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            opacity: 0.1;
+        }
+        
+        .cloud:nth-child(1) {
+            width: 80px;
+            height: 30px;
+            top: 20%;
+            left: 10%;
+            animation: moveCloud 25s linear infinite;
+        }
+        
+        .cloud:nth-child(2) {
+            width: 120px;
+            height: 40px;
+            top: 50%;
+            left: 30%;
+            animation: moveCloud 30s linear infinite reverse;
+        }
+        
+        .cloud:nth-child(3) {
+            width: 100px;
+            height: 35px;
+            top: 70%;
+            left: 60%;
+            animation: moveCloud 20s linear infinite;
+        }
+        
+        .truck {
+            position: absolute;
+            bottom: 20px;
+            left: -100px;
+            width: 120px;
+            height: 60px;
+            background: #EA4335;
+            border-radius: 10px 10px 0 0;
+            animation: driveTruck 15s linear infinite;
+        }
+        
+        .truck::before {
+            content: '';
+            position: absolute;
+            top: -20px;
+            left: 10px;
+            width: 40px;
+            height: 20px;
+            background: #EA4335;
+            border-radius: 5px 5px 0 0;
+        }
+        
+        .truck::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 15px;
+            width: 30px;
+            height: 10px;
+            background: #333;
+            border-radius: 5px;
+        }
+        
+        .wheel {
+            position: absolute;
+            bottom: -15px;
+            width: 20px;
+            height: 20px;
+            background: #222;
+            border-radius: 50%;
+            border: 3px solid #555;
+        }
+        
+        .wheel.front {
+            left: 25px;
+        }
+        
+        .wheel.back {
+            left: 75px;
+        }
+        
+        .pulse-circle {
+            position: absolute;
+            border-radius: 50%;
+            border: 2px solid #4285F4;
+            animation: pulse 3s infinite;
+        }
+        
+        .pulse-circle:nth-child(1) {
+            width: 20px;
+            height: 20px;
+            top: 30%;
+            left: 20%;
+        }
+        
+        .pulse-circle:nth-child(2) {
+            width: 30px;
+            height: 30px;
+            top: 60%;
+            left: 70%;
+            animation-delay: 1s;
+        }
+        
+        .pulse-circle:nth-child(3) {
+            width: 25px;
+            height: 25px;
+            top: 80%;
+            left: 40%;
+            animation-delay: 2s;
+        }
+        
+        .data-flow {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        
+        .data-node {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: #34A853;
+            border-radius: 50%;
+            opacity: 0;
+        }
+        
+        .flow-line {
+            position: absolute;
+            height: 2px;
+            background: linear-gradient(to right, transparent, #4285F4, transparent);
+            transform-origin: left;
+            opacity: 0;
+        }
+        
+        .global-network {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+        }
+        
+        .network-node {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: #FBBC05;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #FBBC05;
+        }
+        
+        .network-connection {
+            position: absolute;
+            height: 1px;
+            background: rgba(251, 188, 5, 0.3);
+            transform-origin: left;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 2rem 0;
+            color: #aaa;
+            font-size: 0.9rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            opacity: 0;
+            animation: fadeInUp 1.5s ease forwards 3.5s;
+        }
+        
+        /* Animations */
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-15px);
+            }
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        
+        @keyframes pulse {
+            0% {
+                transform: scale(0.8);
+                opacity: 0.7;
+            }
+            50% {
+                transform: scale(1.2);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(0.8);
+                opacity: 0.7;
+            }
+        }
+        
+        @keyframes moveCloud {
+            from {
+                transform: translateX(-100px);
+            }
+            to {
+                transform: translateX(calc(100vw + 100px));
+            }
+        }
+        
+        @keyframes driveTruck {
+            from {
+                left: -100px;
+            }
+            to {
+                left: calc(100% + 100px);
+            }
+        }
+        
+        @keyframes dataFlow {
+            0% {
+                opacity: 0;
+                transform: translateX(0);
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0;
+                transform: translateX(100px);
+            }
+        }
+        
+        @keyframes nodePulse {
+            0%, 100% {
+                transform: scale(1);
+                opacity: 0.7;
+            }
+            50% {
+                transform: scale(1.5);
+                opacity: 1;
+            }
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .job-title {
+                font-size: 1.5rem;
+            }
+            
+            .content {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <!-- Google Logo -->
+            <svg class="logo" viewBox="0 0 75 24" width="75" height="24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M67.954 16.303c-1.033 0-1.867-.834-1.867-1.867s.834-1.867 1.867-1.867 1.867.834 1.867 1.867-.834 1.867-1.867 1.867zM70.92 5.686H65.1c-1.033 0-1.867.834-1.867 1.867v11.753c0 1.033.834 1.867 1.867 1.867h5.82c1.033 0 1.867-.834 1.867-1.867V7.553c0-1.033-.834-1.867-1.867-1.867z" fill="#4285F4"/>
+                <path d="M36.224 5.686h5.82c1.033 0 1.867.834 1.867 1.867v11.753c0 1.033-.834 1.867-1.867 1.867h-5.82c-1.033 0-1.867-.834-1.867-1.867V7.553c0-1.033.834-1.867 1.867-1.867z" fill="#34A853"/>
+                <path d="M48.418 5.686h5.82c1.033 0 1.867.834 1.867 1.867v11.753c0 1.033-.834 1.867-1.867 1.867h-5.82c-1.033 0-1.867-.834-1.867-1.867V7.553c0-1.033.834-1.867 1.867-1.867z" fill="#FBBC05"/>
+                <path d="M60.612 5.686h5.82c1.033 0 1.867.834 1.867 1.867v11.753c0 1.033-.834 1.867-1.867 1.867h-5.82c-1.033 0-1.867-.834-1.867-1.867V7.553c0-1.033.834-1.867 1.867-1.867z" fill="#EA4335"/>
+                <path d="M10.576 5.686H4.756c-1.033 0-1.867.834-1.867 1.867v11.753c0 1.033.834 1.867 1.867 1.867h5.82c1.033 0 1.867-.834 1.867-1.867V7.553c0-1.033-.834-1.867-1.867-1.867z" fill="#4285F4"/>
+                <path d="M22.77 5.686h-5.82c-1.033 0-1.867.834-1.867 1.867v11.753c0 1.033.834 1.867 1.867 1.867h5.82c1.033 0 1.867-.834 1.867-1.867V7.553c0-1.033.834-1.867-1.867-1.867z" fill="#34A853"/>
+            </svg>
+            
+            <h1>We're expanding the Google Cloud Logistics team!</h1>
+            <p class="subtitle">I'm hiring a <strong>Program Manager, Transportation & Logistics Enablement</strong> to help us design and implement innovative solutions that drive speed, scale, and predictability across our global supply chain.</p>
+            
+            <div class="job-title">Program Manager, Transportation & Logistics Enablement</div>
+        </header>
+        
+        <div class="animation-area">
+            <div class="cloud"></div>
+            <div class="cloud"></div>
+            <div class="cloud"></div>
+            
+            <div class="pulse-circle"></div>
+            <div class="pulse-circle"></div>
+            <div class="pulse-circle"></div>
+            
+            <div class="truck">
+                <div class="wheel front"></div>
+                <div class="wheel back"></div>
+            </div>
+            
+            <div class="data-flow" id="dataFlow"></div>
+            <div class="global-network" id="globalNetwork"></div>
+        </div>
+        
+        <div class="content">
+            <div class="job-description">
+                <h2>About This Role</h2>
+                <p>This is a critical role that requires deep experience with Transportation Management Systems (TMS) and their integrations with other core systems. If you thrive on solving complex logistics challenges and shaping the future of cloud supply chain, I want to hear from you.</p>
+                
+                <p>We're looking for someone who can design and implement innovative solutions that drive speed, scale, and predictability across our global supply chain.</p>
+                
+                <a href="https://goo.gle/42OXCSZ" class="cta-button">Click Here to Apply!</a>
+            </div>
+            
+            <div class="requirements">
+                <h2>Key Requirements</h2>
+                <ul>
+                    <li>Experience in program/project management</li>
+                    <li>Experience with Transportation Management Systems (TMS)</li>
+                    <li>Experience working across organizations and influencing multiple technical and operations teams</li>
+                    <li>Ability to solve complex logistics challenges</li>
+                    <li>Excellent communication and leadership skills</li>
+                    <li>Experience designing and implementing innovative solutions</li>
+                </ul>
+            </div>
+        </div>
+        
+        <footer>
+            <p>© 2023 Google LLC. All rights reserved.</p>
+            <p>Ready to join the cloud logistics revolution?</p>
+        </footer>
+    </div>
+
+    <script>
+        // Create dynamic clouds
+        document.addEventListener('DOMContentLoaded', function() {
+            const animationArea = document.querySelector('.animation-area');
+            
+            // Create more clouds
+            for (let i = 0; i < 5; i++) {
+                const cloud = document.createElement('div');
+                cloud.classList.add('cloud');
+                
+                // Random position and size
+                const size = Math.random() * 60 + 40;
+                const top = Math.random() * 80 + 10;
+                const left = Math.random() * 100;
+                const duration = Math.random() * 30 + 20;
+                
+                cloud.style.width = `${size}px`;
+                cloud.style.height = `${size/3}px`;
+                cloud.style.top = `${top}%`;
+                cloud.style.left = `${left}%`;
+                cloud.style.animation = `moveCloud ${duration}s linear infinite`;
+                cloud.style.animationDelay = `${Math.random() * 10}s`;
+                
+                animationArea.appendChild(cloud);
+            }
+            
+            // Create more pulse circles
+            for (let i = 0; i < 8; i++) {
+                const circle = document.createElement('div');
+                circle.classList.add('pulse-circle');
+                
+                const size = Math.random() * 30 + 10;
+                const top = Math.random() * 90 + 5;
+                const left = Math.random() * 90 + 5;
+                const delay = Math.random() * 3;
+                
+                circle.style.width = `${size}px`;
+                circle.style.height = `${size}px`;
+                circle.style.top = `${top}%`;
+                circle.style.left = `${left}%`;
+                circle.style.animationDelay = `${delay}s`;
+                
+                // Different colors
+                const colors = ['#4285F4', '#34A853', '#EA4335', '#FBBC05'];
+                circle.style.borderColor = colors[Math.floor(Math.random() * colors.length)];
+                
+                animationArea.appendChild(circle);
+            }
+            
+            // Data flow animation
+            const dataFlow = document.getElementById('dataFlow');
+            
+            function createDataFlow() {
+                const nodeCount = 5;
+                
+                for (let i = 0; i < nodeCount; i++) {
+                    const node = document.createElement('div');
+                    node.classList.add('data-node');
+                    
+                    const top = Math.random() * 80 + 10;
+                    const left = Math.random() * 20 + 10;
+                    const delay = Math.random() * 5;
+                    
+                    node.style.top = `${top}%`;
+                    node.style.left = `${left}%`;
+                    node.style.animation = `dataFlow 4s linear infinite`;
+                    node.style.animationDelay = `${delay}s`;
+                    
+                    dataFlow.appendChild(node);
+                    
+                    // Create flow line
+                    const line = document.createElement('div');
+                    line.classList.add('flow-line');
+                    
+                    const lineLength = Math.random() * 100 + 50;
+                    const lineAngle = Math.random() * 30 - 15;
+                    
+                    line.style.top = `${top}%`;
+                    line.style.left = `${left}%`;
+                    line.style.width = `${lineLength}px`;
+                    line.style.transform = `rotate(${lineAngle}deg)`;
+                    line.style.animation = `dataFlow 4s linear infinite`;
+                    line.style.animationDelay = `${delay}s`;
+                    
+                    dataFlow.appendChild(line);
+                }
+            }
+            
+            createDataFlow();
+            
+            // Global network animation
+            const globalNetwork = document.getElementById('globalNetwork');
+            const nodeCount = 15;
+            const nodes = [];
+            
+            // Create network nodes
+            for (let i = 0; i < nodeCount; i++) {
+                const node = document.createElement('div');
+                node.classList.add('network-node');
+                
+                const top = Math.random() * 90 + 5;
+                const left = Math.random() * 90 + 5;
+                const delay = Math.random() * 3;
+                
+                node.style.top = `${top}%`;
+                node.style.left = `${left}%`;
+                node.style.animation = `nodePulse 3s ease-in-out infinite`;
+                node.style.animationDelay = `${delay}s`;
+                
+                globalNetwork.appendChild(node);
+                nodes.push({top, left, element: node});
+            }
+            
+            // Create connections between nodes
+            for (let i = 0; i < nodes.length; i++) {
+                for (let j = i + 1; j < nodes.length; j++) {
+                    // Only connect some nodes (random)
+                    if (Math.random() > 0.7) {
+                        const node1 = nodes[i];
+                        const node2 = nodes[j];
+                        
+                        const line = document.createElement('div');
+                        line.classList.add('network-connection');
+                        
+                        // Calculate distance and angle between nodes
+                        const dx = node2.left - node1.left;
+                        const dy = node2.top - node1.top;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+                        
+                        line.style.top = `${node1.top}%`;
+                        line.style.left = `${node1.left}%`;
+                        line.style.width = `${distance}%`;
+                        line.style.transform = `rotate(${angle}deg)`;
+                        
+                        globalNetwork.appendChild(line);
+                    }
+                }
+            }
+            
+            // Animation for CTA button on scroll
+            const ctaButton = document.querySelector('.cta-button');
+            
+            window.addEventListener('scroll', function() {
+                const scrolled = window.pageYOffset;
+                const rate = scrolled * -0.5;
+                
+                ctaButton.style.transform = `translateY(${rate}px)`;
+            });
+        });
+    </script>
+</body>
+</html>
