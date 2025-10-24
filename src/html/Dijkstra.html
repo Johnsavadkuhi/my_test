@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dijkstra's Algorithm Visualization</title>
+    <title>Dijkstra's Algorithm Visualization - Fixed & Enhanced</title>
     <style>
         :root {
             --primary: #6c5ce7;
@@ -17,6 +17,7 @@
             --background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
             --code-bg: #1e1e3f;
             --code-highlight: rgba(253, 121, 168, 0.2);
+            --path: #00cec9;
         }
         
         * {
@@ -35,7 +36,7 @@
         }
         
         .container {
-            max-width: 1400px;
+            max-width: 1600px;
             margin: 0 auto;
         }
         
@@ -166,8 +167,8 @@
         
         .visualization {
             flex: 2;
-            min-width: 500px;
-            height: 600px;
+            min-width: 600px;
+            height: 650px;
             position: relative;
             overflow: hidden;
             border-radius: 15px;
@@ -194,18 +195,11 @@
             transition: all 0.5s ease;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
             cursor: pointer;
-        }
-        
-        .node.start {
-            background: var(--success);
-        }
-        
-        .node.end {
-            background: var(--danger);
+            border: 3px solid transparent;
         }
         
         .node.visited {
-            background: var(--secondary);
+            background: var(--success);
             transform: scale(1.1);
         }
         
@@ -215,8 +209,27 @@
             animation: pulse 1.5s infinite;
         }
         
+        .node.queued {
+            background: var(--warning);
+        }
+        
         .node.default {
             background: var(--primary);
+        }
+        
+        .node.start {
+            background: var(--success);
+            border-color: white;
+        }
+        
+        .node.end {
+            background: var(--danger);
+            border-color: white;
+        }
+        
+        .node.path {
+            background: var(--path);
+            transform: scale(1.2);
         }
         
         .edge {
@@ -238,17 +251,23 @@
             height: 4px;
         }
         
-        .edge-weight {
-            position: absolute;
-            background: var(--dark);
-            color: white;
-            padding: 2px 5px;
-            border-radius: 3px;
-            font-size: 0.8rem;
-            z-index: 15;
+        .edge.path {
+            background: var(--path);
+            height: 5px;
         }
         
-        .priority-queue-display {
+        .edge-weight {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            z-index: 15;
+            font-weight: bold;
+        }
+        
+        .queue-display {
             margin-top: 20px;
             padding: 15px;
             background: rgba(0, 0, 0, 0.2);
@@ -269,8 +288,9 @@
         }
         
         .queue-item {
-            padding: 8px 12px;
-            border-radius: 20px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -282,7 +302,38 @@
         .queue-item.current {
             background: var(--accent);
             color: white;
-            transform: scale(1.1);
+            transform: scale(1.2);
+        }
+        
+        .distance-display {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+        }
+        
+        .distance-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--secondary);
+        }
+        
+        .distance-items {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .distance-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .distance-item.current {
+            background: rgba(253, 121, 168, 0.2);
         }
         
         .code-panel {
@@ -296,7 +347,7 @@
             overflow: hidden;
             display: flex;
             flex-direction: column;
-            max-height: 600px;
+            max-height: 650px;
         }
         
         .code-title {
@@ -391,6 +442,18 @@
             background: var(--primary);
         }
         
+        .legend-visited {
+            background: var(--success);
+        }
+        
+        .legend-current {
+            background: var(--accent);
+        }
+        
+        .legend-queued {
+            background: var(--warning);
+        }
+        
         .legend-start {
             background: var(--success);
         }
@@ -399,12 +462,8 @@
             background: var(--danger);
         }
         
-        .legend-visited {
-            background: var(--secondary);
-        }
-        
-        .legend-current {
-            background: var(--accent);
+        .legend-path {
+            background: var(--path);
         }
         
         .info-panel {
@@ -456,6 +515,35 @@
             animation: none;
         }
         
+        .path-info {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+        }
+        
+        .path-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--secondary);
+        }
+        
+        .path-content {
+            line-height: 1.6;
+        }
+        
+        .node-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .node-distance {
+            font-weight: bold;
+            color: var(--accent);
+        }
+        
         @keyframes pulse {
             0% {
                 box-shadow: 0 0 0 0 rgba(253, 121, 168, 0.7);
@@ -487,8 +575,8 @@
 <body>
     <div class="container">
         <header>
-            <h1>Dijkstra's Algorithm Visualization</h1>
-            <p class="subtitle">Find the shortest path between nodes in a weighted graph</p>
+            <h1>Dijkstra's Algorithm Visualization - Fixed & Enhanced</h1>
+            <p class="subtitle">Find the shortest path in a weighted graph with interactive controls</p>
         </header>
         
         <div class="content">
@@ -498,6 +586,7 @@
                     <select id="graph-type">
                         <option value="grid">Grid Graph</option>
                         <option value="random">Random Graph</option>
+                        <option value="custom">Custom Graph</option>
                     </select>
                 </div>
                 
@@ -511,6 +600,18 @@
                     <label for="speed">Animation Speed:</label>
                     <input type="range" id="speed" min="1" max="10" value="5">
                     <span id="speed-value">Medium</span>
+                </div>
+                
+                <div class="control-group">
+                    <label>Select Nodes:</label>
+                    <div class="control-buttons">
+                        <button id="select-start">
+                            <span>Set Start Node</span>
+                        </button>
+                        <button id="select-end">
+                            <span>Set End Node</span>
+                        </button>
+                    </div>
                 </div>
                 
                 <div class="control-buttons">
@@ -544,15 +645,25 @@
                     <span id="status-text">Ready</span>
                 </div>
                 
-                <div class="priority-queue-display">
+                <div class="queue-display">
                     <div class="queue-title">Priority Queue:</div>
                     <div class="queue-items" id="queue-items"></div>
+                </div>
+                
+                <div class="distance-display">
+                    <div class="distance-title">Shortest Distances:</div>
+                    <div class="distance-items" id="distance-items"></div>
+                </div>
+                
+                <div class="path-info" id="path-info" style="display: none;">
+                    <div class="path-title">Shortest Path Found:</div>
+                    <div class="path-content" id="path-content"></div>
                 </div>
                 
                 <div class="info-panel">
                     <div class="info-title">About Dijkstra's Algorithm:</div>
                     <div class="info-content">
-                        Dijkstra's algorithm finds the shortest path between nodes in a graph with non-negative edge weights. It uses a priority queue to always expand the most promising node first, guaranteeing the shortest path when all edge weights are non-negative.
+                        Dijkstra's algorithm finds the shortest path between nodes in a weighted graph. It maintains a priority queue of nodes with their current shortest distance from the start node, always expanding the node with the smallest known distance.
                     </div>
                 </div>
             </div>
@@ -562,7 +673,7 @@
             </div>
             
             <div class="panel code-panel">
-                <div class="code-title">Dijkstra's Algorithm Code</div>
+                <div class="code-title">Dijkstra's Algorithm JavaScript Code</div>
                 <div class="code-container-wrapper">
                     <div class="code-container" id="code-container">
                         <!-- Code will be inserted by JavaScript -->
@@ -577,6 +688,18 @@
                 <span>Normal Node</span>
             </div>
             <div class="legend-item">
+                <div class="legend-color legend-visited"></div>
+                <span>Visited Node</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color legend-current"></div>
+                <span>Current Node</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color legend-queued"></div>
+                <span>Queued Node</span>
+            </div>
+            <div class="legend-item">
                 <div class="legend-color legend-start"></div>
                 <span>Start Node</span>
             </div>
@@ -585,12 +708,8 @@
                 <span>End Node</span>
             </div>
             <div class="legend-item">
-                <div class="legend-color legend-visited"></div>
-                <span>Visited Node</span>
-            </div>
-            <div class="legend-item">
-                <div class="legend-color legend-current"></div>
-                <span>Current Node</span>
+                <div class="legend-color legend-path"></div>
+                <span>Path Node</span>
             </div>
         </div>
     </div>
@@ -609,13 +728,20 @@
         const stepBtn = document.getElementById('step-btn');
         const resetBtn = document.getElementById('reset');
         const queueItems = document.getElementById('queue-items');
+        const distanceItems = document.getElementById('distance-items');
         const graphTypeSelect = document.getElementById('graph-type');
         const codeContainer = document.getElementById('code-container');
         const statusIndicator = document.getElementById('status-indicator');
         const statusText = document.getElementById('status-text');
+        const selectStartBtn = document.getElementById('select-start');
+        const selectEndBtn = document.getElementById('select-end');
+        const pathInfo = document.getElementById('path-info');
+        const pathContent = document.getElementById('path-content');
         
-        let nodes = [];
-        let edges = [];
+        let graph = {
+            nodes: [],
+            edges: []
+        };
         let isAnimating = false;
         let isPaused = false;
         let animationSpeed = 500;
@@ -623,51 +749,101 @@
         let priorityQueue = [];
         let distances = {};
         let previousNodes = {};
-        let startNode = null;
-        let endNode = null;
+        let currentNodeIndex = 0;
         let currentStep = 0;
         let resumeResolve = null;
+        let startNode = 0;
+        let endNode = 0;
+        let isSelectingStart = false;
+        let isSelectingEnd = false;
         
         // Dijkstra's algorithm code for display
         const dijkstraCode = [
             { line: 1, code: "<span class='code-keyword'>function</span> <span class='code-function'>dijkstra</span>(graph, start) {", state: "initial" },
             { line: 2, code: "  <span class='code-keyword'>const</span> <span class='code-variable'>distances</span> = {};", state: "initial" },
-            { line: 3, code: "  <span class='code-keyword'>const</span> <span class='code-variable'>previous</span> = {};", state: "initial" },
-            { line: 4, code: "  <span class='code-keyword'>const</span> <span class='code-variable'>queue</span> = <span class='code-keyword'>new</span> <span class='code-function'>PriorityQueue</span>();", state: "initial" },
-            { line: 5, code: "  ", state: "initial" },
-            { line: 6, code: "  <span class='code-comment'>// Initialize distances</span>", state: "initial" },
-            { line: 7, code: "  <span class='code-keyword'>for</span> (<span class='code-keyword'>const</span> <span class='code-variable'>node</span> <span class='code-keyword'>of</span> graph.nodes) {", state: "init-loop" },
-            { line: 8, code: "    distances[node.id] = <span class='code-number'>Infinity</span>;", state: "set-infinity" },
-            { line: 9, code: "    previous[node.id] = <span class='code-keyword'>null</span>;", state: "set-null" },
-            { line: 10, code: "  }", state: "init-loop-end" },
-            { line: 11, code: "  ", state: "initial" },
-            { line: 12, code: "  distances[start] = <span class='code-number'>0</span>;", state: "set-start-distance" },
-            { line: 13, code: "  queue.enqueue(start, <span class='code-number'>0</span>);", state: "enqueue-start" },
-            { line: 14, code: "  ", state: "initial" },
-            { line: 15, code: "  <span class='code-keyword'>while</span> (!queue.isEmpty()) {", state: "main-loop-start" },
-            { line: 16, code: "    <span class='code-keyword'>const</span> <span class='code-variable'>currentNode</span> = queue.dequeue();", state: "dequeue" },
-            { line: 17, code: "    ", state: "initial" },
-            { line: 18, code: "    <span class='code-comment'>// If we reached the end node, we're done</span>", state: "initial" },
-            { line: 19, code: "    <span class='code-keyword'>if</span> (currentNode === endNode) {", state: "check-end" },
-            { line: 20, code: "      <span class='code-keyword'>break</span>;", state: "break" },
-            { line: 21, code: "    }", state: "check-end-end" },
+            { line: 3, code: "  <span class='code-keyword'>const</span> <span class='code-variable'>visited</span> = {};", state: "initial" },
+            { line: 4, code: "  <span class='code-keyword'>const</span> <span class='code-variable'>previous</span> = {};", state: "initial" },
+            { line: 5, code: "  <span class='code-keyword'>const</span> <span class='code-variable'>queue</span> = <span class='code-keyword'>new</span> <span class='code-function'>PriorityQueue</span>();", state: "initial" },
+            { line: 6, code: "  ", state: "initial" },
+            { line: 7, code: "  <span class='code-comment'>// Initialize distances</span>", state: "initial" },
+            { line: 8, code: "  <span class='code-keyword'>for</span> (<span class='code-keyword'>let</span> <span class='code-variable'>i</span> = <span class='code-number'>0</span>; i < graph.nodes.length; i++) {", state: "init-loop" },
+            { line: 9, code: "    distances[i] = <span class='code-function'>Infinity</span>;", state: "init-dist" },
+            { line: 10, code: "    visited[i] = <span class='code-keyword'>false</span>;", state: "init-visited" },
+            { line: 11, code: "    previous[i] = <span class='code-keyword'>null</span>;", state: "init-prev" },
+            { line: 12, code: "  }", state: "init-loop-end" },
+            { line: 13, code: "  ", state: "initial" },
+            { line: 14, code: "  distances[start] = <span class='code-number'>0</span>;", state: "set-start-dist" },
+            { line: 15, code: "  queue.<span class='code-function'>enqueue</span>(start, <span class='code-number'>0</span>);", state: "enqueue-start" },
+            { line: 16, code: "  ", state: "initial" },
+            { line: 17, code: "  <span class='code-keyword'>while</span> (!queue.<span class='code-function'>isEmpty</span>()) {", state: "loop-start" },
+            { line: 18, code: "    <span class='code-keyword'>const</span> <span class='code-variable'>currentNode</span> = queue.<span class='code-function'>dequeue</span>();", state: "dequeue" },
+            { line: 19, code: "    ", state: "initial" },
+            { line: 20, code: "    <span class='code-keyword'>if</span> (visited[currentNode]) <span class='code-keyword'>continue</span>;", state: "check-visited" },
+            { line: 21, code: "    visited[currentNode] = <span class='code-keyword'>true</span>;", state: "mark-visited" },
             { line: 22, code: "    ", state: "initial" },
-            { line: 23, code: "    <span class='code-comment'>// Process neighbors</span>", state: "initial" },
-            { line: 24, code: "    <span class='code-keyword'>for</span> (<span class='code-keyword'>const</span> <span class='code-variable'>edge</span> <span class='code-keyword'>of</span> getNeighbors(currentNode)) {", state: "neighbors-loop" },
-            { line: 25, code: "      <span class='code-keyword'>const</span> <span class='code-variable'>neighbor</span> = edge.to;", state: "get-neighbor" },
-            { line: 26, code: "      <span class='code-keyword'>const</span> <span class='code-variable'>alt</span> = distances[currentNode] + edge.weight;", state: "calculate-alt" },
-            { line: 27, code: "      ", state: "initial" },
-            { line: 28, code: "      <span class='code-keyword'>if</span> (alt < distances[neighbor]) {", state: "check-distance" },
-            { line: 29, code: "        distances[neighbor] = alt;", state: "update-distance" },
-            { line: 30, code: "        previous[neighbor] = currentNode;", state: "update-previous" },
-            { line: 31, code: "        queue.enqueue(neighbor, alt);", state: "enqueue-neighbor" },
-            { line: 32, code: "      }", state: "check-distance-end" },
-            { line: 33, code: "    }", state: "neighbors-loop-end" },
-            { line: 34, code: "  }", state: "main-loop-end" },
-            { line: 35, code: "  ", state: "initial" },
-            { line: 36, code: "  <span class='code-keyword'>return</span> { distances, previous };", state: "return" },
-            { line: 37, code: "}", state: "function-end" }
+            { line: 23, code: "    highlightCurrentNode(currentNode);", state: "highlight-current" },
+            { line: 24, code: "    <span class='code-keyword'>await</span> <span class='code-function'>delay</span>(animationSpeed);", state: "delay" },
+            { line: 25, code: "    ", state: "initial" },
+            { line: 26, code: "    <span class='code-keyword'>if</span> (currentNode === endNode) {", state: "check-end" },
+            { line: 27, code: "      <span class='code-keyword'>break</span>;", state: "break" },
+            { line: 28, code: "    }", state: "check-end-end" },
+            { line: 29, code: "    ", state: "initial" },
+            { line: 30, code: "    <span class='code-comment'>// Check all neighbors</span>", state: "initial" },
+            { line: 31, code: "    <span class='code-keyword'>for</span> (<span class='code-keyword'>const</span> <span class='code-variable'>edge</span> <span class='code-keyword'>of</span> graph.edges) {", state: "edge-loop" },
+            { line: 32, code: "      <span class='code-keyword'>if</span> (edge.from === currentNode) {", state: "check-from" },
+            { line: 33, code: "        <span class='code-keyword'>const</span> <span class='code-variable'>neighbor</span> = edge.to;", state: "get-neighbor" },
+            { line: 34, code: "        ", state: "initial" },
+            { line: 35, code: "        <span class='code-keyword'>if</span> (!visited[neighbor]) {", state: "check-neighbor-visited" },
+            { line: 36, code: "          <span class='code-keyword'>const</span> <span class='code-variable'>alt</span> = distances[currentNode] + edge.weight;", state: "calc-alt" },
+            { line: 37, code: "          ", state: "initial" },
+            { line: 38, code: "          <span class='code-keyword'>if</span> (alt < distances[neighbor]) {", state: "check-distance" },
+            { line: 39, code: "            distances[neighbor] = alt;", state: "update-distance" },
+            { line: 40, code: "            previous[neighbor] = currentNode;", state: "update-previous" },
+            { line: 41, code: "            queue.<span class='code-function'>enqueue</span>(neighbor, alt);", state: "enqueue-neighbor" },
+            { line: 42, code: "            highlightQueuedNode(neighbor);", state: "highlight-queued" },
+            { line: 43, code: "          }", state: "check-distance-end" },
+            { line: 44, code: "        }", state: "check-neighbor-visited-end" },
+            { line: 45, code: "      }", state: "check-from-end" },
+            { line: 46, code: "    }", state: "edge-loop-end" },
+            { line: 47, code: "    updateQueueDisplay(queue);", state: "update-queue" },
+            { line: 48, code: "    updateDistanceDisplay(distances);", state: "update-distances" },
+            { line: 49, code: "  }", state: "loop-end" },
+            { line: 50, code: "  ", state: "initial" },
+            { line: 51, code: "  <span class='code-keyword'>return</span> { distances, previous };", state: "return" },
+            { line: 52, code: "}", state: "function-end" }
         ];
+        
+        // Priority Queue implementation for Dijkstra's algorithm
+        class PriorityQueue {
+            constructor() {
+                this.values = [];
+            }
+            
+            enqueue(val, priority) {
+                this.values.push({val, priority});
+                this.sort();
+            }
+            
+            dequeue() {
+                return this.values.shift().val;
+            }
+            
+            sort() {
+                this.values.sort((a, b) => a.priority - b.priority);
+            }
+            
+            isEmpty() {
+                return this.values.length === 0;
+            }
+            
+            getQueue() {
+                return this.values.map(item => item.val);
+            }
+            
+            getQueueWithPriority() {
+                return [...this.values];
+            }
+        }
         
         // Initialize code display
         function initializeCodeDisplay() {
@@ -748,14 +924,18 @@
             });
         }
         
-        // Generate graph
+        // Generate random graph
         function generateGraph() {
             if (isAnimating && !isPaused) return;
             
             graphContainer.innerHTML = '';
             queueItems.innerHTML = '';
-            nodes = [];
-            edges = [];
+            distanceItems.innerHTML = '';
+            pathInfo.style.display = 'none';
+            graph = {
+                nodes: [],
+                edges: []
+            };
             priorityQueue = [];
             distances = {};
             previousNodes = {};
@@ -764,11 +944,29 @@
             const nodeCount = parseInt(nodeCountSlider.value);
             const graphType = graphTypeSelect.value;
             
+            // Create nodes
+            for (let i = 0; i < nodeCount; i++) {
+                graph.nodes.push({
+                    id: i,
+                    value: String.fromCharCode(65 + i),
+                    x: 0,
+                    y: 0,
+                    visited: false
+                });
+            }
+            
+            // Create edges based on graph type
             if (graphType === 'grid') {
                 generateGridGraph(nodeCount);
-            } else {
+            } else if (graphType === 'random') {
                 generateRandomGraph(nodeCount);
+            } else {
+                generateCustomGraph(nodeCount);
             }
+            
+            // Set start and end nodes
+            startNode = 0;
+            endNode = nodeCount - 1;
             
             // Draw the graph
             renderGraph();
@@ -782,41 +980,43 @@
             pauseBtn.disabled = true;
             resumeBtn.disabled = true;
             stepBtn.disabled = true;
+            selectStartBtn.disabled = false;
+            selectEndBtn.disabled = false;
+            
+            // Reset selection modes
+            isSelectingStart = false;
+            isSelectingEnd = false;
+            selectStartBtn.textContent = 'Set Start Node';
+            selectEndBtn.textContent = 'Set End Node';
         }
         
         // Generate grid graph
         function generateGridGraph(nodeCount) {
-            const rows = Math.ceil(Math.sqrt(nodeCount));
-            const cols = Math.ceil(nodeCount / rows);
+            // Calculate grid dimensions
+            const cols = Math.ceil(Math.sqrt(nodeCount));
+            const rows = Math.ceil(nodeCount / cols);
             
-            // Create nodes in a grid
+            // Position nodes in a grid
+            const nodeWidth = graphContainer.clientWidth / (cols + 1);
+            const nodeHeight = graphContainer.clientHeight / (rows + 1);
+            
             for (let i = 0; i < nodeCount; i++) {
                 const row = Math.floor(i / cols);
                 const col = i % cols;
                 
-                const x = (col + 1) * (graphContainer.clientWidth / (cols + 1));
-                const y = (row + 1) * (graphContainer.clientHeight / (rows + 1));
-                
-                nodes.push({
-                    id: i,
-                    value: String.fromCharCode(65 + i),
-                    x: x,
-                    y: y,
-                    visited: false,
-                    isStart: i === 0,
-                    isEnd: i === nodeCount - 1
-                });
+                graph.nodes[i].x = nodeWidth * (col + 1);
+                graph.nodes[i].y = nodeHeight * (row + 1);
             }
             
-            // Create edges between adjacent nodes
+            // Create edges (connect to adjacent nodes)
             for (let i = 0; i < nodeCount; i++) {
                 const row = Math.floor(i / cols);
                 const col = i % cols;
                 
                 // Right neighbor
                 if (col < cols - 1 && i + 1 < nodeCount) {
-                    const weight = Math.floor(Math.random() * 9) + 1;
-                    edges.push({
+                    const weight = Math.floor(Math.random() * 10) + 1;
+                    graph.edges.push({
                         from: i,
                         to: i + 1,
                         weight: weight
@@ -825,66 +1025,101 @@
                 
                 // Bottom neighbor
                 if (row < rows - 1 && i + cols < nodeCount) {
-                    const weight = Math.floor(Math.random() * 9) + 1;
-                    edges.push({
+                    const weight = Math.floor(Math.random() * 10) + 1;
+                    graph.edges.push({
                         from: i,
                         to: i + cols,
                         weight: weight
                     });
                 }
             }
-            
-            startNode = 0;
-            endNode = nodeCount - 1;
         }
         
         // Generate random graph
         function generateRandomGraph(nodeCount) {
-            // Create nodes at random positions
+            // Position nodes randomly
             for (let i = 0; i < nodeCount; i++) {
-                const x = 50 + Math.random() * (graphContainer.clientWidth - 100);
-                const y = 50 + Math.random() * (graphContainer.clientHeight - 100);
-                
-                nodes.push({
-                    id: i,
-                    value: String.fromCharCode(65 + i),
-                    x: x,
-                    y: y,
-                    visited: false,
-                    isStart: i === 0,
-                    isEnd: i === nodeCount - 1
-                });
+                graph.nodes[i].x = 50 + Math.random() * (graphContainer.clientWidth - 100);
+                graph.nodes[i].y = 50 + Math.random() * (graphContainer.clientHeight - 100);
             }
             
-            // Create random edges (each node connects to 2-3 others)
-            for (let i = 0; i < nodeCount; i++) {
-                const edgeCount = Math.floor(Math.random() * 2) + 2;
+            // Create random edges
+            const edgeCount = Math.floor(nodeCount * 1.5);
+            for (let i = 0; i < edgeCount; i++) {
+                const from = Math.floor(Math.random() * nodeCount);
+                let to = Math.floor(Math.random() * nodeCount);
                 
-                for (let j = 0; j < edgeCount; j++) {
-                    const target = Math.floor(Math.random() * nodeCount);
-                    if (target !== i && !edges.some(e => 
-                        (e.from === i && e.to === target) || (e.from === target && e.to === i)
-                    )) {
-                        const weight = Math.floor(Math.random() * 9) + 1;
-                        edges.push({
+                // Ensure we don't create self-loops
+                while (to === from) {
+                    to = Math.floor(Math.random() * nodeCount);
+                }
+                
+                // Check if edge already exists
+                const edgeExists = graph.edges.some(edge => 
+                    (edge.from === from && edge.to === to) || 
+                    (edge.from === to && edge.to === from)
+                );
+                
+                if (!edgeExists) {
+                    const weight = Math.floor(Math.random() * 10) + 1;
+                    graph.edges.push({
+                        from: from,
+                        to: to,
+                        weight: weight
+                    });
+                }
+            }
+        }
+        
+        // Generate custom graph
+        function generateCustomGraph(nodeCount) {
+            // Position nodes in a circle
+            const centerX = graphContainer.clientWidth / 2;
+            const centerY = graphContainer.clientHeight / 2;
+            const radius = Math.min(centerX, centerY) * 0.8;
+            
+            for (let i = 0; i < nodeCount; i++) {
+                const angle = (i / nodeCount) * 2 * Math.PI;
+                graph.nodes[i].x = centerX + radius * Math.cos(angle);
+                graph.nodes[i].y = centerY + radius * Math.sin(angle);
+            }
+            
+            // Create edges (connect each node to a few others)
+            for (let i = 0; i < nodeCount; i++) {
+                const connections = Math.floor(Math.random() * 3) + 1;
+                
+                for (let j = 0; j < connections; j++) {
+                    let to = Math.floor(Math.random() * nodeCount);
+                    
+                    // Ensure we don't create self-loops
+                    while (to === i) {
+                        to = Math.floor(Math.random() * nodeCount);
+                    }
+                    
+                    // Check if edge already exists
+                    const edgeExists = graph.edges.some(edge => 
+                        (edge.from === i && edge.to === to) || 
+                        (edge.from === to && edge.to === i)
+                    );
+                    
+                    if (!edgeExists) {
+                        const weight = Math.floor(Math.random() * 10) + 1;
+                        graph.edges.push({
                             from: i,
-                            to: target,
+                            to: to,
                             weight: weight
                         });
                     }
                 }
             }
-            
-            startNode = 0;
-            endNode = nodeCount - 1;
         }
         
         // Draw the graph
         function renderGraph() {
             // Draw edges
-            edges.forEach(edge => {
-                const fromNode = nodes[edge.from];
-                const toNode = nodes[edge.to];
+            graph.edges.forEach(edge => {
+                const fromNode = graph.nodes[edge.from];
+                const toNode = graph.nodes[edge.to];
                 
                 const edgeElement = document.createElement('div');
                 edgeElement.className = 'edge';
@@ -904,7 +1139,7 @@
                 const weightElement = document.createElement('div');
                 weightElement.className = 'edge-weight';
                 weightElement.textContent = edge.weight;
-                weightElement.style.left = `${(fromNode.x + toNode.x) / 2 - 10}px`;
+                weightElement.style.left = `${(fromNode.x + toNode.x) / 2 - 15}px`;
                 weightElement.style.top = `${(fromNode.y + toNode.y) / 2 - 10}px`;
                 
                 graphContainer.appendChild(edgeElement);
@@ -912,54 +1147,50 @@
             });
             
             // Draw nodes
-            nodes.forEach(node => {
+            graph.nodes.forEach((node, index) => {
                 const nodeElement = document.createElement('div');
-                nodeElement.className = node.isStart ? 'node start' : 
-                                      node.isEnd ? 'node end' : 'node default';
+                nodeElement.className = index === startNode ? 'node start' : 
+                                      index === endNode ? 'node end' : 'node default';
                 nodeElement.id = `node-${node.id}`;
                 nodeElement.textContent = node.value;
                 nodeElement.style.left = `${node.x - 25}px`;
                 nodeElement.style.top = `${node.y - 25}px`;
                 
+                // Add click event for node selection
+                nodeElement.addEventListener('click', handleNodeClick);
+                
                 graphContainer.appendChild(nodeElement);
             });
         }
         
-        // Get neighbors of a node
-        function getNeighbors(nodeId) {
-            return edges.filter(edge => 
-                edge.from === nodeId || edge.to === nodeId
-            ).map(edge => ({
-                to: edge.from === nodeId ? edge.to : edge.from,
-                weight: edge.weight
-            }));
-        }
-        
-        // Simple priority queue implementation
-        class PriorityQueue {
-            constructor() {
-                this.values = [];
-            }
+        // Handle node click for selection
+        function handleNodeClick(event) {
+            const nodeId = parseInt(event.target.id.split('-')[1]);
             
-            enqueue(value, priority) {
-                this.values.push({ value, priority });
-                this.sort();
-            }
-            
-            dequeue() {
-                return this.values.shift().value;
-            }
-            
-            sort() {
-                this.values.sort((a, b) => a.priority - b.priority);
-            }
-            
-            isEmpty() {
-                return this.values.length === 0;
-            }
-            
-            getValues() {
-                return this.values.map(item => item.value);
+            if (isSelectingStart) {
+                // Update start node
+                const oldStartNode = document.getElementById(`node-${startNode}`);
+                if (oldStartNode) {
+                    oldStartNode.className = 'node default';
+                }
+                
+                startNode = nodeId;
+                event.target.className = 'node start';
+                isSelectingStart = false;
+                selectStartBtn.textContent = 'Set Start Node';
+                updateStatus('idle', `Start node set to ${graph.nodes[nodeId].value}`);
+            } else if (isSelectingEnd) {
+                // Update end node
+                const oldEndNode = document.getElementById(`node-${endNode}`);
+                if (oldEndNode) {
+                    oldEndNode.className = 'node default';
+                }
+                
+                endNode = nodeId;
+                event.target.className = 'node end';
+                isSelectingEnd = false;
+                selectEndBtn.textContent = 'Set End Node';
+                updateStatus('idle', `End node set to ${graph.nodes[nodeId].value}`);
             }
         }
         
@@ -974,32 +1205,42 @@
             pauseBtn.disabled = false;
             resumeBtn.disabled = true;
             stepBtn.disabled = false;
+            selectStartBtn.disabled = true;
+            selectEndBtn.disabled = true;
+            pathInfo.style.display = 'none';
             
             // Reset node states if starting fresh
             if (currentStep === 0) {
-                nodes.forEach(node => {
+                graph.nodes.forEach(node => {
                     node.visited = false;
                     const nodeElement = document.getElementById(`node-${node.id}`);
                     if (nodeElement) {
-                        nodeElement.className = node.isStart ? 'node start' : 
-                                              node.isEnd ? 'node end' : 'node default';
+                        if (node.id === startNode) {
+                            nodeElement.className = 'node start';
+                        } else if (node.id === endNode) {
+                            nodeElement.className = 'node end';
+                        } else {
+                            nodeElement.className = 'node default';
+                        }
                     }
                 });
                 
                 // Reset edge states
-                edges.forEach(edge => {
+                graph.edges.forEach(edge => {
                     const edgeElement = document.getElementById(`edge-${edge.from}-${edge.to}`);
                     if (edgeElement) {
                         edgeElement.className = 'edge';
                     }
                 });
                 
-                // Reset queue display
+                // Reset queue and distance displays
                 queueItems.innerHTML = '';
+                distanceItems.innerHTML = '';
                 
                 // Initialize Dijkstra's algorithm
                 distances = {};
                 previousNodes = {};
+                const visited = {};
                 priorityQueue = new PriorityQueue();
                 
                 updateStatus('running', 'Dijkstra Running');
@@ -1021,47 +1262,43 @@
                 await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
                 await waitForResume();
                 
-                highlightCodeLine(7);
+                highlightCodeLine(5);
+                await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+                await waitForResume();
+                
+                highlightCodeLine(8);
                 await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
                 await waitForResume();
                 
                 // Initialize distances
-                for (const node of nodes) {
+                for (let i = 0; i < graph.nodes.length; i++) {
+                    highlightCodeLine(9);
+                    distances[i] = Infinity;
+                    
+                    highlightCodeLine(10);
+                    visited[i] = false;
+                    
+                    highlightCodeLine(11);
+                    previousNodes[i] = null;
+                    
                     highlightCodeLine(8);
                     await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
                     await waitForResume();
-                    
-                    distances[node.id] = Infinity;
-                    
-                    highlightCodeLine(9);
-                    await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
-                    await waitForResume();
-                    
-                    previousNodes[node.id] = null;
-                    
-                    highlightCodeLine(7);
-                    await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
-                    await waitForResume();
                 }
-                
-                highlightCodeLine(10);
-                await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
-                await waitForResume();
                 
                 highlightCodeLine(12);
                 await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
                 await waitForResume();
                 
+                highlightCodeLine(14);
                 distances[startNode] = 0;
                 
-                highlightCodeLine(13);
-                await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
-                await waitForResume();
-                
-                priorityQueue.enqueue(startNode, 0);
-                updateQueueDisplay(priorityQueue.getValues());
-                
                 highlightCodeLine(15);
+                priorityQueue.enqueue(startNode, 0);
+                updateQueueDisplay(priorityQueue);
+                updateDistanceDisplay(distances);
+                
+                highlightCodeLine(17);
                 await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
                 await waitForResume();
             }
@@ -1074,129 +1311,154 @@
                     updateStatus('running', 'Dijkstra Running');
                 }
                 
-                highlightCodeLine(16);
+                highlightCodeLine(18);
+                currentNodeIndex = priorityQueue.dequeue();
+                const currentNode = graph.nodes[currentNodeIndex];
+                
+                highlightCodeLine(20);
                 await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
                 await waitForResume();
                 
-                const currentNode = priorityQueue.dequeue();
+                // Skip if already visited
+                if (graph.nodes[currentNodeIndex].visited) {
+                    highlightCodeLine(21);
+                    continue;
+                }
                 
+                highlightCodeLine(22);
+                graph.nodes[currentNodeIndex].visited = true;
+                
+                highlightCodeLine(23);
                 // Highlight current node
-                const currentNodeElement = document.getElementById(`node-${currentNode}`);
-                currentNodeElement.className = 'node current';
+                const currentNodeElement = document.getElementById(`node-${currentNode.id}`);
+                if (currentNode.id !== startNode && currentNode.id !== endNode) {
+                    currentNodeElement.className = 'node current';
+                }
                 
-                highlightCodeLine(19);
+                highlightCodeLine(24);
+                // Delay for animation
+                await new Promise(resolve => setTimeout(resolve, animationSpeed));
+                await waitForResume();
+                
+                highlightCodeLine(26);
                 await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
                 await waitForResume();
                 
-                // If we reached the end node, we're done
-                if (currentNode === endNode) {
-                    highlightCodeLine(20);
-                    await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
-                    await waitForResume();
-                    
+                // Check if we reached the end node
+                if (currentNodeIndex === endNode) {
+                    highlightCodeLine(27);
                     break;
                 }
                 
-                highlightCodeLine(21);
+                highlightCodeLine(28);
                 await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
                 await waitForResume();
                 
-                highlightCodeLine(24);
+                // Mark node as visited
+                if (currentNode.id !== startNode && currentNode.id !== endNode) {
+                    currentNodeElement.className = 'node visited';
+                }
+                
+                highlightCodeLine(31);
                 await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
                 await waitForResume();
                 
-                // Process neighbors
-                const neighbors = getNeighbors(currentNode);
-                for (const edge of neighbors) {
-                    highlightCodeLine(25);
+                // Check all edges from current node
+                for (const edge of graph.edges) {
+                    highlightCodeLine(32);
                     await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
                     await waitForResume();
                     
-                    const neighbor = edge.to;
-                    
-                    highlightCodeLine(26);
-                    await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
-                    await waitForResume();
-                    
-                    const alt = distances[currentNode] + edge.weight;
-                    
-                    highlightCodeLine(28);
-                    await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
-                    await waitForResume();
-                    
-                    if (alt < distances[neighbor]) {
-                        highlightCodeLine(29);
+                    if (edge.from === currentNodeIndex) {
+                        highlightCodeLine(33);
+                        const neighbor = edge.to;
+                        
+                        highlightCodeLine(35);
                         await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
                         await waitForResume();
                         
-                        distances[neighbor] = alt;
-                        
-                        highlightCodeLine(30);
-                        await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
-                        await waitForResume();
-                        
-                        previousNodes[neighbor] = currentNode;
-                        
-                        highlightCodeLine(31);
-                        await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
-                        await waitForResume();
-                        
-                        priorityQueue.enqueue(neighbor, alt);
-                        updateQueueDisplay(priorityQueue.getValues());
-                        
-                        // Highlight queued nodes
-                        const neighborElement = document.getElementById(`node-${neighbor}`);
-                        if (!neighborElement.classList.contains('start') && 
-                            !neighborElement.classList.contains('end')) {
-                            neighborElement.className = 'node visited';
+                        if (!graph.nodes[neighbor].visited) {
+                            highlightCodeLine(36);
+                            const alt = distances[currentNodeIndex] + edge.weight;
+                            
+                            highlightCodeLine(38);
+                            await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+                            await waitForResume();
+                            
+                            if (alt < distances[neighbor]) {
+                                highlightCodeLine(39);
+                                distances[neighbor] = alt;
+                                
+                                highlightCodeLine(40);
+                                previousNodes[neighbor] = currentNodeIndex;
+                                
+                                highlightCodeLine(41);
+                                priorityQueue.enqueue(neighbor, alt);
+                                
+                                highlightCodeLine(42);
+                                // Highlight queued nodes
+                                const neighborNodeElement = document.getElementById(`node-${neighbor}`);
+                                if (neighbor !== startNode && neighbor !== endNode) {
+                                    neighborNodeElement.className = 'node queued';
+                                }
+                                
+                                // Highlight the edge
+                                const edgeElement = document.getElementById(`edge-${edge.from}-${edge.to}`);
+                                if (edgeElement) {
+                                    edgeElement.className = 'edge current';
+                                    await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+                                }
+                            }
+                            
+                            highlightCodeLine(43);
+                            await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+                            await waitForResume();
                         }
                         
-                        // Highlight edge
-                        const edgeElement = document.getElementById(`edge-${currentNode}-${neighbor}`) || 
-                                          document.getElementById(`edge-${neighbor}-${currentNode}`);
-                        if (edgeElement) {
-                            edgeElement.className = 'edge visited';
-                        }
-                        
-                        highlightCodeLine(24);
+                        highlightCodeLine(44);
                         await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
                         await waitForResume();
                     }
+                    
+                    highlightCodeLine(45);
+                    await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+                    await waitForResume();
+                    
+                    highlightCodeLine(31);
+                    await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+                    await waitForResume();
                 }
                 
-                highlightCodeLine(33);
+                highlightCodeLine(46);
                 await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
                 await waitForResume();
                 
-                highlightCodeLine(15);
+                // Update displays
+                highlightCodeLine(47);
+                updateQueueDisplay(priorityQueue);
+                
+                highlightCodeLine(48);
+                updateDistanceDisplay(distances);
+                
+                highlightCodeLine(17);
                 await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
                 await waitForResume();
                 
                 currentStep++;
             }
             
-            highlightCodeLine(34);
+            highlightCodeLine(49);
             await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
             await waitForResume();
             
-            highlightCodeLine(36);
+            highlightCodeLine(51);
             await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
             await waitForResume();
             
-            highlightCodeLine(37);
+            highlightCodeLine(52);
             
             // Highlight the shortest path
-            let pathNode = endNode;
-            while (pathNode !== null && previousNodes[pathNode] !== null) {
-                const fromNode = previousNodes[pathNode];
-                const edgeElement = document.getElementById(`edge-${fromNode}-${pathNode}`) || 
-                                  document.getElementById(`edge-${pathNode}-${fromNode}`);
-                if (edgeElement) {
-                    edgeElement.className = 'edge current';
-                }
-                
-                pathNode = fromNode;
-            }
+            highlightShortestPath();
             
             isAnimating = false;
             isPaused = false;
@@ -1205,7 +1467,78 @@
             pauseBtn.disabled = true;
             resumeBtn.disabled = true;
             stepBtn.disabled = true;
+            selectStartBtn.disabled = false;
+            selectEndBtn.disabled = false;
             updateStatus('idle', 'Dijkstra Complete');
+        }
+        
+        // Highlight the shortest path
+        function highlightShortestPath() {
+            let currentNode = endNode;
+            const path = [];
+            let totalDistance = 0;
+            
+            // Reconstruct the path
+            while (currentNode !== null && currentNode !== undefined) {
+                path.unshift(currentNode);
+                const prevNode = previousNodes[currentNode];
+                
+                if (prevNode !== null && prevNode !== undefined) {
+                    // Find the edge between prevNode and currentNode
+                    const edge = graph.edges.find(e => 
+                        (e.from === prevNode && e.to === currentNode) || 
+                        (e.from === currentNode && e.to === prevNode)
+                    );
+                    
+                    if (edge) {
+                        totalDistance += edge.weight;
+                    }
+                }
+                
+                currentNode = prevNode;
+            }
+            
+            // Display path information
+            if (path.length > 1) {
+                pathInfo.style.display = 'block';
+                pathContent.innerHTML = `
+                    <div>Total Distance: <span class="node-distance">${totalDistance}</span></div>
+                    <div>Path: ${path.map(nodeId => graph.nodes[nodeId].value).join(' → ')}</div>
+                `;
+            } else {
+                pathInfo.style.display = 'block';
+                pathContent.innerHTML = `<div>No path found from ${graph.nodes[startNode].value} to ${graph.nodes[endNode].value}</div>`;
+            }
+            
+            // Highlight nodes and edges in the path
+            for (let i = 0; i < path.length - 1; i++) {
+                const fromNode = path[i];
+                const toNode = path[i + 1];
+                
+                // Highlight node (if not start or end)
+                if (fromNode !== startNode && fromNode !== endNode) {
+                    const nodeElement = document.getElementById(`node-${fromNode}`);
+                    nodeElement.className = 'node path';
+                }
+                
+                // Highlight edge
+                const edgeElement = document.getElementById(`edge-${fromNode}-${toNode}`);
+                if (edgeElement) {
+                    edgeElement.className = 'edge path';
+                }
+                
+                // Check for reverse edge
+                const reverseEdgeElement = document.getElementById(`edge-${toNode}-${fromNode}`);
+                if (reverseEdgeElement) {
+                    reverseEdgeElement.className = 'edge path';
+                }
+            }
+            
+            // Highlight the end node
+            if (path.length > 0 && path[path.length-1] === endNode) {
+                const endNodeElement = document.getElementById(`node-${endNode}`);
+                endNodeElement.className = 'node path';
+            }
         }
         
         // Pause Dijkstra execution
@@ -1242,11 +1575,32 @@
         function updateQueueDisplay(queue) {
             queueItems.innerHTML = '';
             
-            queue.forEach((nodeId, index) => {
+            queue.getQueueWithPriority().forEach((item, index) => {
                 const queueItem = document.createElement('div');
-                queueItem.className = 'queue-item';
-                queueItem.textContent = nodes[nodeId].value;
+                queueItem.className = index === 0 ? 'queue-item current' : 'queue-item';
+                queueItem.textContent = graph.nodes[item.val].value;
+                queueItem.title = `Distance: ${item.priority}`;
                 queueItems.appendChild(queueItem);
+            });
+        }
+        
+        // Update distance display
+        function updateDistanceDisplay(distances) {
+            distanceItems.innerHTML = '';
+            
+            Object.keys(distances).forEach(nodeIndex => {
+                const distanceItem = document.createElement('div');
+                distanceItem.className = `distance-item ${parseInt(nodeIndex) === currentNodeIndex ? 'current' : ''}`;
+                
+                const nodeLabel = document.createElement('span');
+                nodeLabel.textContent = `${graph.nodes[nodeIndex].value}:`;
+                
+                const distanceValue = document.createElement('span');
+                distanceValue.textContent = distances[nodeIndex] === Infinity ? '∞' : distances[nodeIndex];
+                
+                distanceItem.appendChild(nodeLabel);
+                distanceItem.appendChild(distanceValue);
+                distanceItems.appendChild(distanceItem);
             });
         }
         
@@ -1257,16 +1611,21 @@
             currentStep = 0;
             priorityQueue = new PriorityQueue();
             
-            nodes.forEach(node => {
+            graph.nodes.forEach(node => {
                 node.visited = false;
                 const nodeElement = document.getElementById(`node-${node.id}`);
                 if (nodeElement) {
-                    nodeElement.className = node.isStart ? 'node start' : 
-                                          node.isEnd ? 'node end' : 'node default';
+                    if (node.id === startNode) {
+                        nodeElement.className = 'node start';
+                    } else if (node.id === endNode) {
+                        nodeElement.className = 'node end';
+                    } else {
+                        nodeElement.className = 'node default';
+                    }
                 }
             });
             
-            edges.forEach(edge => {
+            graph.edges.forEach(edge => {
                 const edgeElement = document.getElementById(`edge-${edge.from}-${edge.to}`);
                 if (edgeElement) {
                     edgeElement.className = 'edge';
@@ -1274,16 +1633,48 @@
             });
             
             queueItems.innerHTML = '';
+            distanceItems.innerHTML = '';
+            pathInfo.style.display = 'none';
             startDijkstraBtn.disabled = false;
             pauseBtn.disabled = true;
             resumeBtn.disabled = true;
             stepBtn.disabled = true;
+            selectStartBtn.disabled = false;
+            selectEndBtn.disabled = false;
             highlightCodeLine(-1);
             updateStatus('idle', 'Ready');
             
             if (resumeResolve) {
                 resumeResolve();
                 resumeResolve = null;
+            }
+        }
+        
+        // Toggle start node selection mode
+        function toggleStartSelection() {
+            isSelectingStart = !isSelectingStart;
+            isSelectingEnd = false;
+            selectStartBtn.textContent = isSelectingStart ? 'Cancel Selection' : 'Set Start Node';
+            selectEndBtn.textContent = 'Set End Node';
+            
+            if (isSelectingStart) {
+                updateStatus('idle', 'Click on a node to set as start');
+            } else {
+                updateStatus('idle', 'Ready');
+            }
+        }
+        
+        // Toggle end node selection mode
+        function toggleEndSelection() {
+            isSelectingEnd = !isSelectingEnd;
+            isSelectingStart = false;
+            selectEndBtn.textContent = isSelectingEnd ? 'Cancel Selection' : 'Set End Node';
+            selectStartBtn.textContent = 'Set Start Node';
+            
+            if (isSelectingEnd) {
+                updateStatus('idle', 'Click on a node to set as end');
+            } else {
+                updateStatus('idle', 'Ready');
             }
         }
         
@@ -1294,6 +1685,8 @@
         resumeBtn.addEventListener('click', resumeDijkstra);
         stepBtn.addEventListener('click', nextStep);
         resetBtn.addEventListener('click', resetAnimation);
+        selectStartBtn.addEventListener('click', toggleStartSelection);
+        selectEndBtn.addEventListener('click', toggleEndSelection);
         
         // Initialize code display and generate initial graph
         initializeCodeDisplay();

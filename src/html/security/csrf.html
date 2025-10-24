@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSRF Attack Demonstration</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            color: #1a2a6c;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            color: #555;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .top-controls {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .auto-play-btn {
+            display: inline-block;
+            padding: 12px 30px;
+            background: linear-gradient(to right, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .auto-play-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .animation-area {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .browser-window {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            position: relative;
+            height: 450px;
+        }
+        
+        .browser-header {
+            background: #e9ecef;
+            padding: 10px 15px;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .browser-buttons {
+            display: flex;
+            gap: 6px;
+        }
+        
+        .browser-button {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+        
+        .red { background-color: #ff5f57; }
+        .yellow { background-color: #ffbd2e; }
+        .green { background-color: #28ca42; }
+        
+        .browser-url {
+            flex: 1;
+            margin: 0 10px;
+            background: white;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.85rem;
+            color: #555;
+            text-align: center;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .browser-content {
+            padding: 15px;
+            height: calc(100% - 45px);
+            overflow-y: auto;
+            position: relative;
+        }
+        
+        .bank-app {
+            background-color: #f0f9ff;
+            border-top: 5px solid #1e88e5;
+        }
+        
+        .malicious-site {
+            background-color: #fff5f5;
+            border-top: 5px solid #e53935;
+        }
+        
+        .server-console {
+            grid-column: 1 / -1;
+            background: #1a1a1a;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+            padding: 15px;
+            border-radius: 10px;
+            height: 180px;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+        
+        .console-line {
+            margin-bottom: 4px;
+            font-size: 0.85rem;
+        }
+        
+        .user-info {
+            background: #e3f2fd;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            border-left: 4px solid #1e88e5;
+            font-size: 0.9rem;
+        }
+        
+        .transaction {
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid #1e88e5;
+            font-size: 0.85rem;
+        }
+        
+        .transaction-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+        }
+        
+        .amount {
+            font-weight: bold;
+        }
+        
+        .positive {
+            color: #4caf50;
+        }
+        
+        .negative {
+            color: #e53935;
+        }
+        
+        .form-group {
+            margin-bottom: 12px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 4px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        input, button {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 0.9rem;
+        }
+        
+        button {
+            background: linear-gradient(to right, #1a2a6c, #b21f1f);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+        }
+        
+        .controls {
+            text-align: center;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .control-btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background: linear-gradient(to right, #1a2a6c, #b21f1f);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+        
+        .control-btn:hover {
+            transform: translateY(-3px);
+        }
+        
+        .control-btn:disabled {
+            background: #adb5bd;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .hidden-form {
+            background: #ffebee;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 12px;
+            border: 2px dashed #e53935;
+            font-size: 0.85rem;
+        }
+        
+        .status-message {
+            padding: 8px;
+            border-radius: 5px;
+            margin-top: 8px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        .data-packet {
+            position: absolute;
+            background: white;
+            padding: 8px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            z-index: 100;
+            border: 2px solid #1e88e5;
+            max-width: 280px;
+            font-size: 0.8rem;
+        }
+        
+        .packet-header {
+            font-weight: bold;
+            margin-bottom: 4px;
+            color: #1a2a6c;
+            font-size: 0.9rem;
+        }
+        
+        .packet-content {
+            font-family: 'Courier New', monospace;
+            font-size: 0.75rem;
+        }
+        
+        .session-cookie {
+            position: absolute;
+            background: #8d6e63;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 15px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            z-index: 10;
+        }
+        
+        .step-indicator {
+            text-align: center;
+            margin: 15px 0;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: white;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.3);
+            padding: 12px;
+            border-radius: 10px;
+        }
+        
+        .visual-flow {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 15px 0;
+            position: relative;
+            height: 80px;
+        }
+        
+        .flow-item {
+            background: white;
+            padding: 12px;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: 600;
+            width: 130px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            font-size: 0.9rem;
+        }
+        
+        .flow-arrow {
+            font-size: 1.5rem;
+            color: white;
+        }
+        
+        .highlight {
+            animation: highlight 2s infinite;
+        }
+        
+        @keyframes highlight {
+            0% { box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(255, 193, 7, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 193, 7, 0); }
+        }
+        
+        .attack-flow {
+            position: absolute;
+            height: 3px;
+            background: #e53935;
+            z-index: 5;
+        }
+        
+        .explanation-panel {
+            grid-column: 1 / -1;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .explanation-title {
+            font-weight: 700;
+            color: #1a2a6c;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+        
+        .explanation-content {
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+        
+        .arrow-container {
+            position: relative;
+            width: 100%;
+            height: 100px;
+            margin: 20px 0;
+        }
+        
+        .arrow {
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-style: solid;
+        }
+        
+        .arrow-label {
+            position: absolute;
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
+            background: rgba(0,0,0,0.5);
+            padding: 3px 8px;
+            border-radius: 10px;
+        }
+        
+        .request-arrow {
+            border-width: 10px 0 10px 20px;
+            border-color: transparent transparent transparent #4CAF50;
+        }
+        
+        .response-arrow {
+            border-width: 10px 20px 10px 0;
+            border-color: transparent #2196F3 transparent transparent;
+        }
+        
+        .malicious-arrow {
+            border-width: 10px 0 10px 20px;
+            border-color: transparent transparent transparent #e53935;
+        }
+        
+        @media (max-width: 768px) {
+            .animation-area {
+                grid-template-columns: 1fr;
+            }
+            
+            .browser-window {
+                height: 400px;
+            }
+            
+            .visual-flow {
+                flex-wrap: wrap;
+                height: auto;
+                justify-content: center;
+                gap: 10px;
+            }
+            
+            .flow-item {
+                width: 100px;
+                font-size: 0.8rem;
+                padding: 8px;
+            }
+            
+            .flow-arrow {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>CSRF Attack Demonstration</h1>
+            <p class="subtitle">A visual explanation of Cross-Site Request Forgery attacks and how to prevent them</p>
+        </header>
+        
+        <div class="top-controls">
+            <button id="autoBtn" class="auto-play-btn">Auto Play All Steps</button>
+        </div>
+        
+        <div class="step-indicator" id="stepIndicator">Step 1: User logs into the bank website</div>
+        
+        <div class="visual-flow">
+            <div class="flow-item" id="flowUser">User</div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-item" id="flowBank">Bank Website</div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-item" id="flowHacker">Hacker's Site</div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-item" id="flowAttack">CSRF Attack</div>
+        </div>
+        
+        <div class="arrow-container" id="arrowContainer">
+            <!-- Arrows will be dynamically added here -->
+        </div>
+        
+        <div class="animation-area">
+            <div class="browser-window bank-app">
+                <div class="browser-header">
+                    <div class="browser-buttons">
+                        <div class="browser-button red"></div>
+                        <div class="browser-button yellow"></div>
+                        <div class="browser-button green"></div>
+                    </div>
+                    <div class="browser-url">https://secure-bank.com</div>
+                </div>
+                <div class="browser-content">
+                    <h3>Secure Bank - Transfer Money</h3>
+                    
+                    <div class="user-info" id="userInfo">
+                        <strong>User Status:</strong> Not logged in
+                    </div>
+                    
+                    <form id="loginForm">
+                        <div class="form-group">
+                            <label for="username">Username:</label>
+                            <input type="text" id="username" value="john_doe" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="password">Password:</label>
+                            <input type="password" id="password" value="••••••••" readonly>
+                        </div>
+                        <button type="submit" id="loginBtn">Login to Bank</button>
+                    </form>
+                    
+                    <div id="loginStatus" class="status-message"></div>
+                    
+                    <div id="transferSection" style="display: none;">
+                        <h4>Make a Transfer</h4>
+                        <form id="transferForm">
+                            <div class="form-group">
+                                <label for="recipient">Recipient Account:</label>
+                                <input type="text" id="recipient" placeholder="Enter account number">
+                            </div>
+                            <div class="form-group">
+                                <label for="amount">Amount ($):</label>
+                                <input type="number" id="amount" placeholder="Enter amount">
+                            </div>
+                            <button type="submit" id="transferBtn">Transfer Money</button>
+                        </form>
+                        
+                        <div id="transferStatus" class="status-message"></div>
+                    </div>
+                    
+                    <h4>Recent Transactions</h4>
+                    <div class="transaction" id="transaction1">
+                        <div class="transaction-header">
+                            <span>Netflix Payment</span>
+                            <span class="amount negative">-$15.99</span>
+                        </div>
+                        <div>Date: 10/15/2023 | Status: Completed</div>
+                    </div>
+                    <div class="transaction" id="transaction2">
+                        <div class="transaction-header">
+                            <span>Salary Deposit</span>
+                            <span class="amount positive">+$3,500.00</span>
+                        </div>
+                        <div>Date: 10/01/2023 | Status: Completed</div>
+                    </div>
+                    <div class="transaction" id="transactionNew" style="display: none;">
+                        <div class="transaction-header">
+                            <span>Transfer to HACKER-12345</span>
+                            <span class="amount negative">-$1,000.00</span>
+                        </div>
+                        <div>Date: <span id="transactionDate"></span> | Status: <span id="transactionStatus"></span></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="browser-window malicious-site">
+                <div class="browser-header">
+                    <div class="browser-buttons">
+                        <div class="browser-button red"></div>
+                        <div class="browser-button yellow"></div>
+                        <div class="browser-button green"></div>
+                    </div>
+                    <div class="browser-url">https://free-movie-download.com</div>
+                </div>
+                <div class="browser-content">
+                    <h3>Free Movie Downloads!</h3>
+                    <p>Click the button below to download the latest movies for FREE!</p>
+                    
+                    <button id="movieButton">Download Free Movies Now!</button>
+                    
+                    <div id="movieMessage" class="status-message info" style="display: none;">
+                        Preparing your download...
+                    </div>
+                    
+                    <div class="hidden-form">
+                        <h4>Hidden CSRF Form (Invisible to User)</h4>
+                        <div class="packet-content">
+                            &lt;form id="hiddenCsrfForm" action="https://secure-bank.com/transfer" method="POST"&gt;<br>
+                            &nbsp;&nbsp;&lt;input type="hidden" name="recipient" value="HACKER-12345"&gt;<br>
+                            &nbsp;&nbsp;&lt;input type="hidden" name="amount" value="1000"&gt;<br>
+                            &lt;/form&gt;<br>
+                            &lt;script&gt;document.getElementById('hiddenCsrfForm').submit();&lt;/script&gt;
+                        </div>
+                    </div>
+                    
+                    <div id="csrfStatus" class="status-message" style="display: none; margin-top: 12px;"></div>
+                </div>
+            </div>
+            
+            <div class="server-console" id="serverConsole">
+                <div class="console-line">Bank Server Console - Ready</div>
+                <div class="console-line">> Waiting for connections...</div>
+            </div>
+            
+            <div class="explanation-panel" id="explanationPanel">
+                <div class="explanation-title">What is CSRF?</div>
+                <div class="explanation-content" id="explanationContent">
+                    Cross-Site Request Forgery (CSRF) is an attack that tricks a user into performing actions they didn't intend to perform on a web application where they're authenticated.
+                </div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button id="resetBtn" class="control-btn">Reset Animation</button>
+            <button id="prevBtn" class="control-btn">Previous Step</button>
+            <button id="nextBtn" class="control-btn">Next Step</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const resetBtn = document.getElementById('resetBtn');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const autoBtn = document.getElementById('autoBtn');
+            const loginForm = document.getElementById('loginForm');
+            const loginStatus = document.getElementById('loginStatus');
+            const transferForm = document.getElementById('transferForm');
+            const transferStatus = document.getElementById('transferStatus');
+            const userInfo = document.getElementById('userInfo');
+            const transferSection = document.getElementById('transferSection');
+            const movieButton = document.getElementById('movieButton');
+            const movieMessage = document.getElementById('movieMessage');
+            const csrfStatus = document.getElementById('csrfStatus');
+            const serverConsole = document.getElementById('serverConsole');
+            const stepIndicator = document.getElementById('stepIndicator');
+            const transactionNew = document.getElementById('transactionNew');
+            const explanationContent = document.getElementById('explanationContent');
+            const arrowContainer = document.getElementById('arrowContainer');
+            
+            const flowUser = document.getElementById('flowUser');
+            const flowBank = document.getElementById('flowBank');
+            const flowHacker = document.getElementById('flowHacker');
+            const flowAttack = document.getElementById('flowAttack');
+            
+            let currentStep = 0;
+            const totalSteps = 8;
+            let autoPlayInterval;
+            let sessionCookie = null;
+            
+            // Reset the animation
+            resetBtn.addEventListener('click', function() {
+                currentStep = 0;
+                resetAnimation();
+                clearInterval(autoPlayInterval);
+            });
+            
+            // Previous step
+            prevBtn.addEventListener('click', function() {
+                if (currentStep > 1) {
+                    currentStep--;
+                    runStep(currentStep);
+                }
+            });
+            
+            // Next step
+            nextBtn.addEventListener('click', function() {
+                if (currentStep < totalSteps) {
+                    currentStep++;
+                    runStep(currentStep);
+                }
+            });
+            
+            // Auto play
+            autoBtn.addEventListener('click', function() {
+                resetAnimation();
+                currentStep = 1;
+                
+                autoPlayInterval = setInterval(function() {
+                    if (currentStep <= totalSteps) {
+                        runStep(currentStep);
+                        currentStep++;
+                    } else {
+                        clearInterval(autoPlayInterval);
+                    }
+                }, 4000);
+            });
+            
+            function resetAnimation() {
+                // Reset UI
+                loginStatus.textContent = '';
+                loginStatus.className = 'status-message';
+                transferStatus.textContent = '';
+                transferStatus.className = 'status-message';
+                userInfo.innerHTML = '<strong>User Status:</strong> Not logged in';
+                userInfo.style.background = '#e3f2fd';
+                userInfo.style.borderLeftColor = '#1e88e5';
+                transferSection.style.display = 'none';
+                movieMessage.style.display = 'none';
+                csrfStatus.style.display = 'none';
+                transactionNew.style.display = 'none';
+                
+                // Reset server console
+                serverConsole.innerHTML = `
+                    <div class="console-line">Bank Server Console - Ready</div>
+                    <div class="console-line">> Waiting for connections...</div>
+                `;
+                
+                // Reset flow indicators
+                [flowUser, flowBank, flowHacker, flowAttack].forEach(el => {
+                    el.classList.remove('highlight');
+                });
+                
+                stepIndicator.textContent = 'Step 1: User logs into the bank website';
+                explanationContent.textContent = 'Cross-Site Request Forgery (CSRF) is an attack that tricks a user into performing actions they didn\'t intend to perform on a web application where they\'re authenticated.';
+                
+                currentStep = 0;
+                sessionCookie = null;
+                
+                // Remove any data packets, cookies, or arrows
+                document.querySelectorAll('.data-packet, .session-cookie, .attack-flow, .arrow, .arrow-label').forEach(el => {
+                    el.remove();
+                });
+            }
+            
+            function runStep(step) {
+                // Remove any existing visual elements
+                document.querySelectorAll('.data-packet, .session-cookie, .attack-flow, .arrow, .arrow-label').forEach(el => {
+                    el.remove();
+                });
+                
+                // Reset highlights
+                [flowUser, flowBank, flowHacker, flowAttack].forEach(el => {
+                    el.classList.remove('highlight');
+                });
+                
+                switch(step) {
+                    case 1:
+                        stepIndicator.textContent = 'Step 1: User logs into the bank website';
+                        explanationContent.textContent = 'The user logs into their bank account. The bank server creates a session and sends a session cookie to the browser. This cookie will be automatically included in all subsequent requests to the bank.';
+                        flowUser.classList.add('highlight');
+                        
+                        // Create login request arrow
+                        createArrow('user', 'bank', 'Login Request', 'request');
+                        
+                        // Simulate login
+                        setTimeout(() => {
+                            loginStatus.textContent = 'Logging in...';
+                            loginStatus.className = 'status-message info';
+                            
+                            setTimeout(() => {
+                                loginStatus.textContent = 'Login successful! Session created.';
+                                loginStatus.className = 'status-message success';
+                                userInfo.innerHTML = '<strong>User Status:</strong> Logged in as john_doe';
+                                transferSection.style.display = 'block';
+                                
+                                // Create session cookie
+                                sessionCookie = 'session_id=abc123xyz; user=john_doe';
+                                createSessionCookie();
+                                
+                                // Create login response arrow
+                                createArrow('bank', 'user', 'Session Cookie', 'response');
+                                
+                                // Log to server console
+                                addConsoleMessage('> User john_doe logged in successfully');
+                                addConsoleMessage('> Session cookie created: session_id=abc123xyz');
+                            }, 1500);
+                        }, 500);
+                        break;
+                        
+                    case 2:
+                        stepIndicator.textContent = 'Step 2: User visits malicious website';
+                        explanationContent.textContent = 'While still logged into the bank, the user visits a malicious website. This could happen through a phishing email, malicious ad, or by simply browsing to an untrusted site.';
+                        flowHacker.classList.add('highlight');
+                        
+                        // Create navigation arrow
+                        createArrow('user', 'hacker', 'Visit Malicious Site', 'request');
+                        
+                        // Show user browsing to malicious site
+                        addConsoleMessage('> User navigated to free-movie-download.com');
+                        
+                        // Show browser sending cookie to malicious site (but it can't access it directly)
+                        createDataPacket(
+                            'Browser sends session cookie with request',
+                            'Cookie: session_id=abc123xyz',
+                            flowBank,
+                            flowHacker
+                        );
+                        break;
+                        
+                    case 3:
+                        stepIndicator.textContent = 'Step 3: Malicious site loads hidden CSRF form';
+                        explanationContent.textContent = 'The malicious website contains a hidden form that targets the bank\'s transfer endpoint. This form is invisible to the user but will be submitted automatically by JavaScript.';
+                        
+                        // Create malicious content arrow
+                        createArrow('hacker', 'user', 'Malicious Content', 'malicious');
+                        
+                        // Show the hidden form being loaded
+                        movieMessage.textContent = 'Loading content...';
+                        movieMessage.style.display = 'block';
+                        movieMessage.className = 'status-message info';
+                        
+                        setTimeout(() => {
+                            csrfStatus.textContent = 'Hidden CSRF form loaded in background';
+                            csrfStatus.className = 'status-message warning';
+                            csrfStatus.style.display = 'block';
+                            
+                            addConsoleMessage('> Malicious site loaded hidden CSRF form');
+                        }, 1500);
+                        break;
+                        
+                    case 4:
+                        stepIndicator.textContent = 'Step 4: Malicious site auto-submits the form';
+                        explanationContent.textContent = 'The malicious JavaScript automatically submits the hidden form. The browser includes the user\'s session cookie with this request, making it appear legitimate to the bank server.';
+                        flowAttack.classList.add('highlight');
+                        
+                        // Create CSRF attack arrow
+                        createArrow('user', 'bank', 'CSRF Attack', 'malicious');
+                        
+                        // Show the form being submitted
+                        csrfStatus.textContent = 'Auto-submitting hidden form to bank...';
+                        csrfStatus.className = 'status-message error';
+                        
+                        // Create visual of form data being sent
+                        createDataPacket(
+                            'CSRF Attack Request',
+                            'POST /transfer HTTP/1.1\nHost: secure-bank.com\nCookie: session_id=abc123xyz\n\nrecipient=HACKER-12345&amount=1000',
+                            flowHacker,
+                            flowBank,
+                            true
+                        );
+                        
+                        addConsoleMessage('> Received POST /transfer request from user browser');
+                        addConsoleMessage('> Validating session: session_id=abc123xyz - VALID');
+                        break;
+                        
+                    case 5:
+                        stepIndicator.textContent = 'Step 5: Bank processes the forged request';
+                        explanationContent.textContent = 'The bank server validates the session cookie and processes the transfer request. Since the request came with a valid session, the bank assumes it was intentionally sent by the authenticated user.';
+                        
+                        // Show bank processing the request
+                        addConsoleMessage('> Processing transfer: $1000 to HACKER-12345');
+                        addConsoleMessage('> Checking account balance...');
+                        
+                        setTimeout(() => {
+                            addConsoleMessage('> Balance sufficient, processing transfer...');
+                            
+                            setTimeout(() => {
+                                addConsoleMessage('> Transfer completed successfully');
+                                
+                                // Update UI to show the unauthorized transaction
+                                const now = new Date();
+                                document.getElementById('transactionDate').textContent = now.toLocaleDateString();
+                                document.getElementById('transactionStatus').textContent = 'Completed';
+                                transactionNew.style.display = 'block';
+                                
+                                transferStatus.textContent = 'New transaction: $1000 transferred to HACKER-12345';
+                                transferStatus.className = 'status-message error';
+                            }, 1500);
+                        }, 1500);
+                        break;
+                        
+                    case 6:
+                        stepIndicator.textContent = 'Step 6: Money transferred to hacker\'s account';
+                        explanationContent.textContent = 'The bank completes the transfer, moving funds from the user\'s account to the attacker\'s account. The user may not notice this unauthorized transaction until they check their account statement.';
+                        
+                        // Create transfer confirmation arrow
+                        createArrow('bank', 'hacker', 'Transfer Confirmation', 'response');
+                        
+                        // Show successful transfer
+                        addConsoleMessage('> Funds transferred: $1000 sent to account HACKER-12345');
+                        
+                        // Visual confirmation of attack success
+                        createDataPacket(
+                            'Transfer Confirmation',
+                            'Transaction ID: TXN789123\nAmount: $1000.00\nFrom: john_doe\nTo: HACKER-12345\nStatus: COMPLETED',
+                            flowBank,
+                            flowHacker,
+                            true
+                        );
+                        break;
+                        
+                    case 7:
+                        stepIndicator.textContent = 'Step 7: User notices unauthorized transaction';
+                        explanationContent.textContent = 'The user eventually discovers the unauthorized transaction. At this point, the damage is already done, and the user must contact the bank to report the fraud and attempt to recover the funds.';
+                        
+                        // Show user discovering the fraud
+                        userInfo.innerHTML = '<strong>User Status:</strong> ❌ Unauthorized transaction detected!';
+                        userInfo.style.background = '#ffebee';
+                        userInfo.style.borderLeftColor = '#e53935';
+                        
+                        addConsoleMessage('> User reported unauthorized transaction');
+                        addConsoleMessage('> Security alert: Possible CSRF attack detected');
+                        break;
+                        
+                    case 8:
+                        stepIndicator.textContent = 'Step 8: How to prevent CSRF attacks';
+                        explanationContent.textContent = 'CSRF attacks can be prevented using several techniques: 1) CSRF tokens that are validated with each request, 2) SameSite cookie attribute to restrict cross-origin requests, 3) Requiring re-authentication for sensitive actions, and 4) Using custom headers for API requests that can\'t be sent from other origins.';
+                        
+                        // Show prevention methods
+                        addConsoleMessage('> CSRF Protection Methods:');
+                        addConsoleMessage('> 1. Use CSRF tokens in forms');
+                        addConsoleMessage('> 2. Implement SameSite cookie attribute');
+                        addConsoleMessage('> 3. Require re-authentication for sensitive actions');
+                        addConsoleMessage('> 4. Use custom request headers for API calls');
+                        
+                        csrfStatus.textContent = 'CSRF attacks can be prevented with proper security measures!';
+                        csrfStatus.className = 'status-message success';
+                        break;
+                }
+            }
+            
+            function createSessionCookie() {
+                const cookie = document.createElement('div');
+                cookie.className = 'session-cookie';
+                cookie.textContent = 'session_id=abc123xyz';
+                cookie.style.top = '50px';
+                cookie.style.right = '20px';
+                
+                document.querySelector('.bank-app .browser-content').appendChild(cookie);
+            }
+            
+            function createDataPacket(title, content, fromElement, toElement, isAttack = false) {
+                const packet = document.createElement('div');
+                packet.className = 'data-packet';
+                packet.innerHTML = `
+                    <div class="packet-header">${title}</div>
+                    <div class="packet-content">${content}</div>
+                `;
+                
+                if (isAttack) {
+                    packet.style.borderColor = '#e53935';
+                    packet.style.background = '#ffebee';
+                }
+                
+                // Position the packet
+                const fromRect = fromElement.getBoundingClientRect();
+                const toRect = toElement.getBoundingClientRect();
+                const containerRect = document.querySelector('.visual-flow').getBoundingClientRect();
+                
+                packet.style.left = `${fromRect.left + fromRect.width/2 - 140}px`;
+                packet.style.top = `${fromRect.top + fromRect.height/2 - 40}px`;
+                
+                document.body.appendChild(packet);
+                
+                // Animate the packet moving
+                setTimeout(() => {
+                    packet.style.transition = 'all 2s ease-in-out';
+                    packet.style.left = `${toRect.left + toRect.width/2 - 140}px`;
+                    packet.style.top = `${toRect.top + toRect.height/2 - 40}px`;
+                    
+                    // Remove after animation
+                    setTimeout(() => {
+                        packet.remove();
+                    }, 2000);
+                }, 500);
+                
+                // Create attack flow line
+                if (isAttack) {
+                    const attackFlow = document.createElement('div');
+                    attackFlow.className = 'attack-flow';
+                    
+                    const length = Math.sqrt(
+                        Math.pow(toRect.left - fromRect.left, 2) + 
+                        Math.pow(toRect.top - fromRect.top, 2)
+                    );
+                    const angle = Math.atan2(
+                        toRect.top - fromRect.top, 
+                        toRect.left - fromRect.left
+                    ) * 180 / Math.PI;
+                    
+                    attackFlow.style.width = `${length}px`;
+                    attackFlow.style.left = `${fromRect.left}px`;
+                    attackFlow.style.top = `${fromRect.top + fromRect.height/2}px`;
+                    attackFlow.style.transform = `rotate(${angle}deg)`;
+                    attackFlow.style.transformOrigin = '0 0';
+                    
+                    document.querySelector('.visual-flow').appendChild(attackFlow);
+                }
+            }
+            
+            function createArrow(from, to, label, type) {
+                const arrow = document.createElement('div');
+                const arrowLabel = document.createElement('div');
+                
+                arrow.className = 'arrow';
+                arrowLabel.className = 'arrow-label';
+                arrowLabel.textContent = label;
+                
+                // Set arrow type
+                if (type === 'request') {
+                    arrow.classList.add('request-arrow');
+                } else if (type === 'response') {
+                    arrow.classList.add('response-arrow');
+                } else if (type === 'malicious') {
+                    arrow.classList.add('malicious-arrow');
+                }
+                
+                // Calculate positions based on from and to
+                let fromX, fromY, toX, toY;
+                const containerRect = arrowContainer.getBoundingClientRect();
+                
+                switch(from) {
+                    case 'user':
+                        fromX = 50;
+                        fromY = 50;
+                        break;
+                    case 'bank':
+                        fromX = containerRect.width / 2;
+                        fromY = 50;
+                        break;
+                    case 'hacker':
+                        fromX = containerRect.width - 50;
+                        fromY = 50;
+                        break;
+                }
+                
+                switch(to) {
+                    case 'user':
+                        toX = 50;
+                        toY = 50;
+                        break;
+                    case 'bank':
+                        toX = containerRect.width / 2;
+                        toY = 50;
+                        break;
+                    case 'hacker':
+                        toX = containerRect.width - 50;
+                        toY = 50;
+                        break;
+                }
+                
+                // Position the arrow
+                arrow.style.left = `${fromX}px`;
+                arrow.style.top = `${fromY}px`;
+                
+                // Position the label
+                arrowLabel.style.left = `${(fromX + toX) / 2 - arrowLabel.offsetWidth / 2}px`;
+                arrowLabel.style.top = `${fromY - 25}px`;
+                
+                // Calculate rotation for the arrow
+                const angle = Math.atan2(toY - fromY, toX - fromX) * 180 / Math.PI;
+                arrow.style.transform = `rotate(${angle}deg)`;
+                
+                arrowContainer.appendChild(arrow);
+                arrowContainer.appendChild(arrowLabel);
+                
+                // Remove after some time
+                setTimeout(() => {
+                    arrow.remove();
+                    arrowLabel.remove();
+                }, 3500);
+            }
+            
+            function addConsoleMessage(message) {
+                const line = document.createElement('div');
+                line.className = 'console-line';
+                line.textContent = message;
+                serverConsole.appendChild(line);
+                serverConsole.scrollTop = serverConsole.scrollHeight;
+            }
+            
+            // Login form handler
+            loginForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                if (currentStep === 0) {
+                    currentStep = 1;
+                    runStep(1);
+                }
+            });
+            
+            // Legitimate transfer form handler
+            transferForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const recipient = document.getElementById('recipient').value;
+                const amount = document.getElementById('amount').value;
+                
+                if (recipient && amount) {
+                    transferStatus.textContent = `✅ Transfer of $${amount} to ${recipient} completed successfully!`;
+                    transferStatus.className = 'status-message success';
+                    
+                    addConsoleMessage(`> Legitimate transfer: $${amount} to ${recipient}`);
+                } else {
+                    transferStatus.textContent = 'Please fill in all fields.';
+                    transferStatus.className = 'status-message error';
+                }
+            });
+            
+            // Movie button handler
+            movieButton.addEventListener('click', function() {
+                if (currentStep >= 2 && currentStep < 4) {
+                    currentStep = 3;
+                    runStep(3);
+                    
+                    setTimeout(() => {
+                        if (currentStep === 3) {
+                            currentStep = 4;
+                            runStep(4);
+                        }
+                    }, 2000);
+                } else {
+                    movieMessage.textContent = 'This is a demo of a malicious site. In a real attack, the form would auto-submit.';
+                    movieMessage.className = 'status-message warning';
+                    movieMessage.style.display = 'block';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

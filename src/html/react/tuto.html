@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Props و State در React.js</title>
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3a0ca3;
+            --success: #4cc9f0;
+            --danger: #f72585;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --transition: all 0.3s ease;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: var(--light);
+            min-height: 100vh;
+            padding: 2rem;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+            animation: fadeIn 1s ease;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+        
+        @media (max-width: 768px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            transition: var(--transition);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            animation: slideUp 0.8s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+        }
+        
+        .card h2 {
+            font-size: 1.8rem;
+            margin-bottom: 1.5rem;
+            color: var(--success);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .card h2 i {
+            font-size: 1.5rem;
+        }
+        
+        .definition {
+            margin-bottom: 1.5rem;
+            font-size: 1.1rem;
+        }
+        
+        .characteristics {
+            margin-bottom: 1.5rem;
+        }
+        
+        .characteristics li {
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .demo-container {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+        }
+        
+        .demo-title {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            color: var(--success);
+        }
+        
+        .component {
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .component::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transform: translateX(-100%);
+        }
+        
+        .component.animated::before {
+            animation: shimmer 1.5s ease;
+        }
+        
+        .parent {
+            background: rgba(67, 97, 238, 0.2);
+        }
+        
+        .child {
+            background: rgba(76, 201, 240, 0.2);
+            margin-left: 2rem;
+        }
+        
+        .component-title {
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .props-flow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 1rem 0;
+            position: relative;
+        }
+        
+        .arrow {
+            font-size: 2rem;
+            color: var(--success);
+            animation: bounce 2s infinite;
+        }
+        
+        .data-flow {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .data-item {
+            background: var(--primary);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: bold;
+            animation: pulse 2s infinite;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.7rem 1.5rem;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex: 1;
+            justify-content: center;
+        }
+        
+        button:hover {
+            background: var(--secondary);
+            transform: scale(1.05);
+        }
+        
+        button:active {
+            transform: scale(0.95);
+        }
+        
+        .counter {
+            font-size: 2rem;
+            font-weight: bold;
+            text-align: center;
+            margin: 1rem 0;
+            color: var(--success);
+            transition: var(--transition);
+        }
+        
+        .counter.changed {
+            animation: pop 0.5s ease;
+        }
+        
+        .comparison {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            margin-top: 2rem;
+            animation: slideUp 1s ease;
+        }
+        
+        .comparison h2 {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: var(--success);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        th, td {
+            padding: 1rem;
+            text-align: right;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        th {
+            background: rgba(67, 97, 238, 0.3);
+            font-weight: bold;
+        }
+        
+        tr:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .highlight {
+            color: var(--success);
+            font-weight: bold;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            animation: fadeIn 1.5s ease;
+        }
+        
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideUp {
+            from { 
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to { 
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        @keyframes pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+        
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>مفاهیم Props و State در React.js</h1>
+            <p class="subtitle">آشنایی با دو مفهوم اساسی در ری‌اکت و تفاوت‌های آن‌ها با مثال‌های تعاملی و انیمیشن</p>
+        </header>
+        
+        <div class="content">
+            <div class="card">
+                <h2><i>📤</i> Props (ویژگی‌ها)</h2>
+                <div class="definition">
+                    <p>Props داده‌هایی هستند که از یک کامپوننت والد به کامپوننت فرزند منتقل می‌شوند. این داده‌ها فقط-خواندنی (Read-only) هستند و کامپوننت فرزند نمی‌تواند آن‌ها را تغییر دهد.</p>
+                </div>
+                
+                <div class="characteristics">
+                    <h3>ویژگی‌های Props:</h3>
+                    <ul>
+                        <li><i>➡️</i> از والد به فرزند منتقل می‌شوند (یک‌طرفه)</li>
+                        <li><i>🔒</i> فقط-خواندنی هستند (Immutable)</li>
+                        <li><i>🎯</i> برای پیکربندی کامپوننت استفاده می‌شوند</li>
+                        <li><i>🔗</i> امکان ارتباط بین کامپوننت‌ها را فراهم می‌کنند</li>
+                    </ul>
+                </div>
+                
+                <div class="demo-container">
+                    <div class="demo-title">شبیه‌سازی جریان Props</div>
+                    
+                    <div class="component parent animated">
+                        <div class="component-title"><i>🏠</i> کامپوننت والد</div>
+                        <p>نام کاربر: <span class="highlight" id="parent-name">رضا</span></p>
+                        <p>سن کاربر: <span class="highlight" id="parent-age">25</span></p>
+                        
+                        <div class="controls">
+                            <button onclick="changeName()">
+                                <i>✏️</i> تغییر نام
+                            </button>
+                            <button onclick="changeAge()">
+                                <i>🔢</i> تغییر سن
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="props-flow">
+                        <div class="arrow">⬇️</div>
+                    </div>
+                    
+                    <div class="component child">
+                        <div class="component-title"><i>👶</i> کامپوننت فرزند</div>
+                        <p>دریافت شده از والد:</p>
+                        <p>نام: <span class="highlight" id="child-name">رضا</span></p>
+                        <p>سن: <span class="highlight" id="child-age">25</span></p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2><i>📝</i> State (حالت)</h2>
+                <div class="definition">
+                    <p>State داده‌هایی هستند که داخل یک کامپوننت مدیریت می‌شوند و می‌توانند در طول زمان تغییر کنند. وقتی state تغییر می‌کند، کامپوننت دوباره رندر می‌شود.</p>
+                </div>
+                
+                <div class="characteristics">
+                    <h3>ویژگی‌های State:</h3>
+                    <ul>
+                        <li><i>🔄</i> قابل تغییر هستند (Mutable)</li>
+                        <li><i>🏠</i> محلی به کامپوننت هستند</li>
+                        <li><i>⚡</i> تغییر state باعث رندر مجدد می‌شود</li>
+                        <li><i>💾</i> وضعیت پویای کامپوننت را مدیریت می‌کنند</li>
+                    </ul>
+                </div>
+                
+                <div class="demo-container">
+                    <div class="demo-title">شبیه‌سازی مدیریت State</div>
+                    
+                    <div class="component">
+                        <div class="component-title"><i>🧮</i> کامپوننت شمارنده</div>
+                        <div class="counter" id="counter">0</div>
+                        
+                        <div class="controls">
+                            <button onclick="decrement()">
+                                <i>➖</i> کاهش
+                            </button>
+                            <button onclick="reset()">
+                                <i>🔄</i> بازنشانی
+                            </button>
+                            <button onclick="increment()">
+                                <i>➕</i> افزایش
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="data-flow">
+                        <div class="data-item">State فعلی: <span id="current-state">0</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="comparison">
+            <h2>مقایسه Props و State</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>مشخصه</th>
+                        <th>Props</th>
+                        <th>State</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>قابلیت تغییر</td>
+                        <td>فقط-خواندنی</td>
+                        <td>قابل تغییر</td>
+                    </tr>
+                    <tr>
+                        <td>منبع داده</td>
+                        <td>کامپوننت والد</td>
+                        <td>کامپوننت خودی</td>
+                    </tr>
+                    <tr>
+                        <td>تأثیر روی رندر</td>
+                        <td>تغییر در والد باعث رندر مجدد فرزند می‌شود</td>
+                        <td>تغییر state باعث رندر مجدد کامپوننت می‌شود</td>
+                    </tr>
+                    <tr>
+                        <td>اشتراک‌گذاری</td>
+                        <td>می‌توان بین چند کامپوننت استفاده کرد</td>
+                        <td>محلی است و نمی‌توان مستقیماً به کامپوننت دیگر فرستاد</td>
+                    </tr>
+                    <tr>
+                        <td>مقداردهی اولیه</td>
+                        <td>توسط والد</td>
+                        <td>در constructor یا با useState</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <footer>
+            <p>ساخته شده با ❤️ برای آموزش مفاهیم React.js</p>
+        </footer>
+    </div>
+
+    <script>
+        // شبیه‌سازی Props
+        let userName = "رضا";
+        let userAge = 25;
+        
+        function changeName() {
+            const names = ["رضا", "سارا", "علی", "نازنین", "محمد"];
+            userName = names[Math.floor(Math.random() * names.length)];
+            updatePropsDisplay();
+            animateComponent(document.querySelector('.parent'));
+        }
+        
+        function changeAge() {
+            userAge = Math.floor(Math.random() * 50) + 18;
+            updatePropsDisplay();
+            animateComponent(document.querySelector('.parent'));
+        }
+        
+        function updatePropsDisplay() {
+            document.getElementById('parent-name').textContent = userName;
+            document.getElementById('parent-age').textContent = userAge;
+            document.getElementById('child-name').textContent = userName;
+            document.getElementById('child-age').textContent = userAge;
+        }
+        
+        // شبیه‌سازی State
+        let count = 0;
+        
+        function increment() {
+            count++;
+            updateStateDisplay();
+            animateCounter();
+        }
+        
+        function decrement() {
+            count--;
+            updateStateDisplay();
+            animateCounter();
+        }
+        
+        function reset() {
+            count = 0;
+            updateStateDisplay();
+            animateCounter();
+        }
+        
+        function updateStateDisplay() {
+            document.getElementById('counter').textContent = count;
+            document.getElementById('current-state').textContent = count;
+        }
+        
+        // توابع انیمیشن
+        function animateComponent(component) {
+            component.classList.add('animated');
+            setTimeout(() => {
+                component.classList.remove('animated');
+            }, 1500);
+        }
+        
+        function animateCounter() {
+            const counter = document.getElementById('counter');
+            counter.classList.add('changed');
+            setTimeout(() => {
+                counter.classList.remove('changed');
+            }, 500);
+        }
+        
+        // انیمیشن اولیه برای کامپوننت‌ها
+        document.addEventListener('DOMContentLoaded', function() {
+            const cards = document.querySelectorAll('.card');
+            cards.forEach((card, index) => {
+                card.style.animationDelay = `${index * 0.2}s`;
+            });
+            
+            const components = document.querySelectorAll('.component');
+            components.forEach((component, index) => {
+                setTimeout(() => {
+                    animateComponent(component);
+                }, 1000 + (index * 300));
+            });
+        });
+    </script>
+</body>
+</html>

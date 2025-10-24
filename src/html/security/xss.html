@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XSS Attack Simulation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            color: #e94560;
+            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            color: #8fe3cf;
+        }
+        
+        .simulation-area {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .panel {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .panel h2 {
+            color: #e94560;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .user-input {
+            display: flex;
+            margin-bottom: 15px;
+        }
+        
+        .user-input input {
+            flex: 1;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px 0 0 5px;
+            background: rgba(255, 255, 255, 0.9);
+            font-size: 1rem;
+        }
+        
+        .user-input button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 0 5px 5px 0;
+            background: #e94560;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+        
+        .user-input button:hover {
+            background: #c2334d;
+        }
+        
+        .message-log {
+            height: 200px;
+            overflow-y: auto;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+        
+        .message {
+            margin-bottom: 10px;
+            padding: 8px;
+            border-radius: 5px;
+        }
+        
+        .user-message {
+            background: rgba(0, 123, 255, 0.2);
+            border-left: 3px solid #007bff;
+        }
+        
+        .system-message {
+            background: rgba(40, 167, 69, 0.2);
+            border-left: 3px solid #28a745;
+        }
+        
+        .malicious-message {
+            background: rgba(220, 53, 69, 0.2);
+            border-left: 3px solid #dc3545;
+        }
+        
+        .attack-info {
+            background: rgba(255, 193, 7, 0.2);
+            border-left: 3px solid #ffc107;
+        }
+        
+        .code-display {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            overflow-x: auto;
+            margin-bottom: 15px;
+            border: 1px solid #444;
+        }
+        
+        .code-keyword {
+            color: #569cd6;
+        }
+        
+        .code-string {
+            color: #ce9178;
+        }
+        
+        .code-comment {
+            color: #6a9955;
+        }
+        
+        .steps {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .step {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #0f3460;
+            transition: all 0.3s;
+        }
+        
+        .step.active {
+            background: rgba(143, 227, 207, 0.1);
+            border-left-color: #8fe3cf;
+            transform: translateX(5px);
+        }
+        
+        .step-number {
+            display: inline-block;
+            background: #0f3460;
+            color: white;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 25px;
+            margin-right: 10px;
+            font-weight: bold;
+        }
+        
+        .step.active .step-number {
+            background: #8fe3cf;
+            color: #16213e;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .control-btn {
+            padding: 10px 25px;
+            border: none;
+            border-radius: 5px;
+            background: #0f3460;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        
+        .control-btn:hover {
+            background: #1a508b;
+            transform: translateY(-2px);
+        }
+        
+        .control-btn.reset {
+            background: #e94560;
+        }
+        
+        .control-btn.reset:hover {
+            background: #c2334d;
+        }
+        
+        .warning {
+            color: #e94560;
+            font-weight: bold;
+            text-align: center;
+            margin-top: 20px;
+            padding: 10px;
+            background: rgba(233, 69, 96, 0.1);
+            border-radius: 5px;
+            border: 1px solid rgba(233, 69, 96, 0.3);
+        }
+
+        .attack-payloads {
+            margin-top: 20px;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .payload-item {
+            padding: 8px;
+            margin: 5px 0;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .payload-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        @media (max-width: 768px) {
+            .simulation-area {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>XSS Attack Simulation</h1>
+            <p class="subtitle">Interactive demonstration of a Cross-Site Scripting attack</p>
+        </header>
+        
+        <div class="simulation-area">
+            <div class="panel">
+                <h2>Vulnerable Website</h2>
+                <div class="user-input">
+                    <input type="text" id="userInput" placeholder="Enter your comment...">
+                    <button id="submitBtn">Submit</button>
+                </div>
+                <div class="message-log" id="messageLog">
+                    <div class="message system-message">
+                        Welcome to our comment section! Please be respectful in your comments.
+                    </div>
+                    <div class="message user-message">
+                        Hello, this is a normal comment.
+                    </div>
+                </div>
+                <div class="code-display">
+                    <span class="code-keyword">function</span> displayComment(comment) {<br>
+                    &nbsp;&nbsp;<span class="code-keyword">let</span> commentDiv = document.createElement(<span class="code-string">'div'</span>);<br>
+                    &nbsp;&nbsp;commentDiv.innerHTML = comment; <span class="code-comment">// VULNERABLE CODE: Directly inserting user input</span><br>
+                    &nbsp;&nbsp;document.getElementById(<span class="code-string">'messageLog'</span>).appendChild(commentDiv);<br>
+                    }
+                </div>
+                
+                <div class="attack-payloads">
+                    <h3>Try these XSS payloads:</h3>
+                    <div class="payload-item" data-payload="<script>alert('XSS Attack!')</script>">
+                        &lt;script&gt;alert('XSS Attack!')&lt;/script&gt;
+                    </div>
+                    <div class="payload-item" data-payload="<img src='x' onerror='alert(\"XSS via onerror\")'>">
+                        &lt;img src='x' onerror='alert("XSS via onerror")'&gt;
+                    </div>
+                    <div class="payload-item" data-payload="<div onmouseover='alert(\"XSS via onmouseover\")'>Hover over me</div>">
+                        &lt;div onmouseover='alert("XSS via onmouseover")'&gt;Hover over me&lt;/div&gt;
+                    </div>
+                </div>
+            </div>
+            
+            <div class="panel">
+                <h2>Attack Process</h2>
+                <div class="steps">
+                    <div class="step active" id="step1">
+                        <span class="step-number">1</span>
+                        Attacker identifies a vulnerable input field
+                    </div>
+                    <div class="step" id="step2">
+                        <span class="step-number">2</span>
+                        Malicious script is crafted and injected
+                    </div>
+                    <div class="step" id="step3">
+                        <span class="step-number">3</span>
+                        Unsuspecting user visits the vulnerable page
+                    </div>
+                    <div class="step" id="step4">
+                        <span class="step-number">4</span>
+                        Malicious script executes in user's browser
+                    </div>
+                    <div class="step" id="step5">
+                        <span class="step-number">5</span>
+                        Attacker gains unauthorized access to user data
+                    </div>
+                </div>
+                
+                <div class="message-log" id="attackLog">
+                    <div class="message attack-info">
+                        XSS Attack Simulation Ready. Try entering a malicious payload.
+                    </div>
+                </div>
+                
+                <div class="controls">
+                    <button class="control-btn" id="prevBtn">Previous Step</button>
+                    <button class="control-btn" id="nextBtn">Next Step</button>
+                    <button class="control-btn reset" id="resetBtn">Reset</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="warning">
+            ⚠️ This is a simulation for educational purposes only. Do not use these techniques maliciously.
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const userInput = document.getElementById('userInput');
+            const submitBtn = document.getElementById('submitBtn');
+            const messageLog = document.getElementById('messageLog');
+            const attackLog = document.getElementById('attackLog');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const resetBtn = document.getElementById('resetBtn');
+            const steps = document.querySelectorAll('.step');
+            const payloadItems = document.querySelectorAll('.payload-item');
+            
+            let currentStep = 0;
+            
+            // Initialize steps
+            updateSteps();
+            
+            // Submit button event
+            submitBtn.addEventListener('click', function() {
+                processInput();
+            });
+            
+            // Allow pressing Enter to submit
+            userInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    processInput();
+                }
+            });
+            
+            // Payload items click event
+            payloadItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    userInput.value = this.getAttribute('data-payload');
+                });
+            });
+            
+            // Step navigation
+            prevBtn.addEventListener('click', function() {
+                if (currentStep > 0) {
+                    currentStep--;
+                    updateSteps();
+                }
+            });
+            
+            nextBtn.addEventListener('click', function() {
+                if (currentStep < steps.length - 1) {
+                    currentStep++;
+                    updateSteps();
+                }
+            });
+            
+            resetBtn.addEventListener('click', function() {
+                currentStep = 0;
+                updateSteps();
+                
+                // Clear attack log except the first message
+                while (attackLog.children.length > 1) {
+                    attackLog.removeChild(attackLog.lastChild);
+                }
+                
+                // Clear message log except the first two messages
+                while (messageLog.children.length > 2) {
+                    messageLog.removeChild(messageLog.lastChild);
+                }
+                
+                // Add reset message
+                const resetMessage = document.createElement('div');
+                resetMessage.className = 'message system-message';
+                resetMessage.textContent = 'Simulation has been reset.';
+                attackLog.appendChild(resetMessage);
+                attackLog.scrollTop = attackLog.scrollHeight;
+            });
+            
+            function processInput() {
+                const comment = userInput.value.trim();
+                if (comment) {
+                    // Vulnerable code - directly inserting user input
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = 'message user-message';
+                    
+                    // This is the vulnerable part - innerHTML without sanitization
+                    messageDiv.innerHTML = comment;
+                    
+                    messageLog.appendChild(messageDiv);
+                    
+                    // Scroll to bottom
+                    messageLog.scrollTop = messageLog.scrollHeight;
+                    
+                    // Check if the input contains script tags (simulating XSS)
+                    if (isMalicious(comment)) {
+                        // Add to attack log
+                        const attackMessage = document.createElement('div');
+                        attackMessage.className = 'message malicious-message';
+                        attackMessage.textContent = `XSS DETECTED: Malicious script executed!`;
+                        attackLog.appendChild(attackMessage);
+                        
+                        // Simulate attack consequences
+                        setTimeout(() => {
+                            const stolenData = document.createElement('div');
+                            stolenData.className = 'message malicious-message';
+                            stolenData.textContent = `[ATTACKER] Cookies stolen: simulated_cookie_data`;
+                            attackLog.appendChild(stolenData);
+                            
+                            const redirect = document.createElement('div');
+                            redirect.className = 'message malicious-message';
+                            redirect.textContent = `[ATTACKER] Redirecting to malicious site...`;
+                            attackLog.appendChild(redirect);
+                            
+                            attackLog.scrollTop = attackLog.scrollHeight;
+                        }, 1000);
+                        
+                        // Advance to step 4
+                        if (currentStep < 4) {
+                            currentStep = 4;
+                            updateSteps();
+                        }
+                    } else {
+                        // Normal comment
+                        const normalMessage = document.createElement('div');
+                        normalMessage.className = 'message system-message';
+                        normalMessage.textContent = `Normal comment processed successfully.`;
+                        attackLog.appendChild(normalMessage);
+                        attackLog.scrollTop = attackLog.scrollHeight;
+                    }
+                    
+                    // Clear input
+                    userInput.value = '';
+                }
+            }
+            
+            function isMalicious(input) {
+                const maliciousPatterns = [
+                    /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
+                    /javascript:/gi,
+                    /onerror\s*=/gi,
+                    /onload\s*=/gi,
+                    /onmouseover\s*=/gi,
+                    /onclick\s*=/gi
+                ];
+                
+                return maliciousPatterns.some(pattern => pattern.test(input));
+            }
+            
+            function updateSteps() {
+                steps.forEach((step, index) => {
+                    if (index === currentStep) {
+                        step.classList.add('active');
+                    } else {
+                        step.classList.remove('active');
+                    }
+                });
+                
+                // Update buttons
+                prevBtn.disabled = currentStep === 0;
+                nextBtn.disabled = currentStep === steps.length - 1;
+                
+                // Update attack log based on current step
+                if (currentStep === 1) {
+                    addAttackLog("Attacker identifies the comment field as vulnerable to XSS");
+                } else if (currentStep === 2) {
+                    addAttackLog("Crafting malicious payload: <script>alert('XSS')</script>");
+                } else if (currentStep === 3) {
+                    addAttackLog("Unsuspecting user visits the vulnerable page");
+                } else if (currentStep === 4) {
+                    addAttackLog("Malicious script executes in the user's browser");
+                } else if (currentStep === 5) {
+                    addAttackLog("Attacker gains unauthorized access to user data");
+                }
+            }
+            
+            function addAttackLog(message) {
+                // Check if message already exists
+                const existingMessages = Array.from(attackLog.children);
+                const messageExists = existingMessages.some(child => 
+                    child.textContent.includes(message)
+                );
+                
+                if (!messageExists) {
+                    const logEntry = document.createElement('div');
+                    logEntry.className = 'message attack-info';
+                    logEntry.textContent = message;
+                    attackLog.appendChild(logEntry);
+                    attackLog.scrollTop = attackLog.scrollHeight;
+                }
+            }
+        });
+    </script>
+</body>
+</html>

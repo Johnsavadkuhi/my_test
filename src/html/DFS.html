@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DFS Algorithm Visualization with Pause/Resume</title>
+    <title>Interactive DFS Algorithm Visualization</title>
     <style>
         :root {
             --primary: #6c5ce7;
@@ -17,6 +17,7 @@
             --background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
             --code-bg: #1e1e3f;
             --code-highlight: rgba(253, 121, 168, 0.2);
+            --path-color: #74b9ff;
         }
         
         * {
@@ -35,7 +36,7 @@
         }
         
         .container {
-            max-width: 1400px;
+            max-width: 1600px;
             margin: 0 auto;
         }
         
@@ -215,6 +216,10 @@
             background: var(--primary);
         }
         
+        .node.path {
+            background: var(--path-color);
+        }
+        
         .edge {
             position: absolute;
             height: 3px;
@@ -226,6 +231,11 @@
         
         .edge.visited {
             background: var(--success);
+            height: 4px;
+        }
+        
+        .edge.path {
+            background: var(--path-color);
             height: 4px;
         }
         
@@ -259,6 +269,7 @@
             background: var(--warning);
             font-weight: bold;
             color: var(--dark);
+            transition: all 0.3s ease;
         }
         
         .stack-item.current {
@@ -313,6 +324,7 @@
             transition: all 0.3s ease;
             margin-bottom: 2px;
             min-height: 24px;
+            white-space: pre;
         }
         
         .code-line.active {
@@ -385,6 +397,10 @@
             background: var(--warning);
         }
         
+        .legend-path {
+            background: var(--path-color);
+        }
+        
         .info-panel {
             margin-top: 20px;
             padding: 15px;
@@ -434,6 +450,101 @@
             animation: none;
         }
         
+        .step-explanation {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            min-height: 80px;
+        }
+        
+        .step-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--secondary);
+        }
+        
+        .step-content {
+            line-height: 1.6;
+        }
+        
+        .traversal-path {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+        }
+        
+        .path-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--secondary);
+        }
+        
+        .path-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .path-item {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--path-color);
+            font-weight: bold;
+            color: white;
+        }
+        
+        .path-arrow {
+            color: var(--secondary);
+            font-weight: bold;
+        }
+        
+        .algorithm-stats {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--accent);
+        }
+        
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--secondary);
+        }
+        
+        .node-info {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+        }
+        
+        .node-info-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--secondary);
+        }
+        
+        .node-info-content {
+            line-height: 1.6;
+        }
+        
         @keyframes pulse {
             0% {
                 box-shadow: 0 0 0 0 rgba(253, 121, 168, 0.7);
@@ -444,6 +555,22 @@
             100% {
                 box-shadow: 0 0 0 0 rgba(253, 121, 168, 0);
             }
+        }
+        
+        @keyframes highlight {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.2);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+        
+        .highlight {
+            animation: highlight 0.5s ease;
         }
         
         @media (max-width: 768px) {
@@ -465,12 +592,30 @@
 <body>
     <div class="container">
         <header>
-            <h1>DFS Algorithm Visualization with Pause/Resume</h1>
-            <p class="subtitle">Visual simulation of DFS algorithm with step-by-step control</p>
+            <h1>Interactive DFS Algorithm Visualization</h1>
+            <p class="subtitle">Step-by-step execution with enhanced visualizations and explanations</p>
         </header>
         
         <div class="content">
             <div class="panel controls">
+                  <div class="traversal-path">
+                    <div class="path-title">Traversal Path:</div>
+                    <div class="path-items" id="path-items"></div>
+                </div>
+                   <div class="algorithm-stats">
+                    <div class="stat-item">
+                        <div class="stat-value" id="nodes-visited">0</div>
+                        <div class="stat-label">Visited</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="steps-count">0</div>
+                        <div class="stat-label">Steps</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="stack-size">0</div>
+                        <div class="stat-label">Stack Size</div>
+                    </div>
+                </div>
                 <div class="control-group">
                     <label for="tree-type">Tree Type:</label>
                     <select id="tree-type">
@@ -532,9 +677,39 @@
                     <span id="status-text">Ready</span>
                 </div>
                 
+                <!-- <div class="algorithm-stats">
+                    <div class="stat-item">
+                        <div class="stat-value" id="nodes-visited">0</div>
+                        <div class="stat-label">Visited</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="steps-count">0</div>
+                        <div class="stat-label">Steps</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="stack-size">0</div>
+                        <div class="stat-label">Stack Size</div>
+                    </div>
+                </div> -->
+                
                 <div class="stack-display">
                     <div class="stack-title">DFS Stack:</div>
                     <div class="stack-items" id="stack-items"></div>
+                </div>
+                
+                <!-- <div class="traversal-path">
+                    <div class="path-title">Traversal Path:</div>
+                    <div class="path-items" id="path-items"></div>
+                </div> -->
+                
+                <div class="step-explanation">
+                    <div class="step-title">Current Step:</div>
+                    <div class="step-content" id="step-content">Click "Start DFS" to begin visualization</div>
+                </div>
+                
+                <div class="node-info">
+                    <div class="node-info-title">Node Information:</div>
+                    <div class="node-info-content" id="node-info">Hover over a node to see details</div>
                 </div>
                 
                 <div class="info-panel">
@@ -546,14 +721,19 @@
             </div>
             
             <div class="panel visualization">
-                <div class="tree-container" id="tree-container"></div>
+                <div class="tree-container" id="tree-container">
+                    
+                </div>
+
+                
             </div>
             
+            
             <div class="panel code-panel">
-                <div class="code-title">DFS JavaScript Code</div>
+                <div class="code-title">DFS Algorithm Code</div>
                 <div class="code-container-wrapper">
                     <div class="code-container" id="code-container">
-                        <!-- Code will be inserted by JavaScript -->
+                        <!-- Real DFS algorithm code will be displayed here -->
                     </div>
                 </div>
             </div>
@@ -576,6 +756,10 @@
                 <div class="legend-color legend-queued"></div>
                 <span>Stacked Node</span>
             </div>
+            <div class="legend-item">
+                <div class="legend-color legend-path"></div>
+                <span>Traversal Path</span>
+            </div>
         </div>
     </div>
 
@@ -593,11 +777,17 @@
         const stepBtn = document.getElementById('step-btn');
         const resetBtn = document.getElementById('reset');
         const stackItems = document.getElementById('stack-items');
+        const pathItems = document.getElementById('path-items');
         const treeTypeSelect = document.getElementById('tree-type');
         const dfsTypeSelect = document.getElementById('dfs-type');
         const codeContainer = document.getElementById('code-container');
         const statusIndicator = document.getElementById('status-indicator');
         const statusText = document.getElementById('status-text');
+        const stepContent = document.getElementById('step-content');
+        const nodeInfo = document.getElementById('node-info');
+        const nodesVisited = document.getElementById('nodes-visited');
+        const stepsCount = document.getElementById('steps-count');
+        const stackSize = document.getElementById('stack-size');
         
         let tree = [];
         let edges = [];
@@ -609,77 +799,114 @@
         let currentNodeIndex = 0;
         let currentStep = 0;
         let resumeResolve = null;
+        let executionState = null;
+        let visitedCount = 0;
+        let traversalPath = [];
         
-        // DFS algorithm code for display
+        // Real DFS algorithm code for display
         const dfsCode = {
             preorder: [
-                { line: 1, code: "<span class='code-keyword'>function</span> <span class='code-function'>dfsPreorder</span>(root) {", state: "initial" },
-                { line: 2, code: "  <span class='code-keyword'>const</span> <span class='code-variable'>stack</span> = [root];", state: "initial" },
-                { line: 3, code: "  ", state: "initial" },
-                { line: 4, code: "  <span class='code-keyword'>while</span> (stack.length > <span class='code-number'>0</span>) {", state: "loop-start" },
-                { line: 5, code: "    <span class='code-keyword'>const</span> <span class='code-variable'>currentNode</span> = stack.pop();", state: "get-current" },
-                { line: 6, code: "    highlightCurrentNode(currentNode);", state: "highlight-current" },
+                { line: 1, code: "function dfsPreorder(root) {", state: "initial" },
+                { line: 2, code: "  const stack = [root];", state: "initial" },
+                { line: 3, code: "  const visited = new Set();", state: "initial" },
+                { line: 4, code: "  ", state: "initial" },
+                { line: 5, code: "  while (stack.length > 0) {", state: "loop-start" },
+                { line: 6, code: "    const node = stack.pop();", state: "get-current" },
                 { line: 7, code: "    ", state: "initial" },
-                { line: 8, code: "    <span class='code-comment'>// Process current node after delay</span>", state: "initial" },
-                { line: 9, code: "    <span class='code-keyword'>await</span> <span class='code-function'>delay</span>(animationSpeed);", state: "delay" },
-                { line: 10, code: "    ", state: "initial" },
-                { line: 11, code: "    markNodeVisited(currentNode);", state: "mark-visited" },
-                { line: 12, code: "    ", state: "initial" },
-                { line: 13, code: "    <span class='code-comment'>// Add children to stack in reverse order</span>", state: "initial" },
-                { line: 14, code: "    <span class='code-keyword'>for</span> (<span class='code-keyword'>let</span> <span class='code-variable'>i</span> = currentNode.children.length - <span class='code-number'>1</span>; i >= <span class='code-number'>0</span>; i--) {", state: "children-loop" },
-                { line: 15, code: "      <span class='code-keyword'>const</span> <span class='code-variable'>childIndex</span> = currentNode.children[i];", state: "get-child" },
-                { line: 16, code: "      <span class='code-keyword'>const</span> <span class='code-variable'>childNode</span> = tree[childIndex];", state: "get-child" },
-                { line: 17, code: "      ", state: "initial" },
-                { line: 18, code: "      <span class='code-keyword'>if</span> (!childNode.visited) {", state: "check-visited" },
-                { line: 19, code: "        childNode.visited = <span class='code-keyword'>true</span>;", state: "mark-child-visited" },
-                { line: 20, code: "        stack.push(childIndex);", state: "add-to-stack" },
-                { line: 21, code: "        highlightStackedNode(childNode);", state: "highlight-stacked" },
-                { line: 22, code: "      }", state: "initial" },
-                { line: 23, code: "    }", state: "initial" },
-                { line: 24, code: "    ", state: "initial" },
-                { line: 25, code: "    updateStackDisplay(stack);", state: "update-stack" },
-                { line: 26, code: "  }", state: "loop-end" },
-                { line: 27, code: "}", state: "function-end" }
-            ],
-            inorder: [
-                { line: 1, code: "<span class='code-keyword'>function</span> <span class='code-function'>dfsInorder</span>(node) {", state: "initial" },
-                { line: 2, code: "  <span class='code-keyword'>if</span> (node === <span class='code-keyword'>null</span>) <span class='code-keyword'>return</span>;", state: "base-case" },
-                { line: 3, code: "  ", state: "initial" },
-                { line: 4, code: "  <span class='code-comment'>// Traverse left subtree first</span>", state: "initial" },
-                { line: 5, code: "  <span class='code-keyword'>if</span> (node.children[<span class='code-number'>0</span>] !== <span class='code-keyword'>undefined</span>) {", state: "check-left" },
-                { line: 6, code: "    <span class='code-keyword'>const</span> <span class='code-variable'>leftChild</span> = tree[node.children[<span class='code-number'>0</span>]];", state: "get-left" },
-                { line: 7, code: "    <span class='code-keyword'>await</span> <span class='code-function'>dfsInorder</span>(leftChild);", state: "recurse-left" },
-                { line: 8, code: "  }", state: "initial" },
-                { line: 9, code: "  ", state: "initial" },
-                { line: 10, code: "  highlightCurrentNode(node);", state: "highlight-current" },
-                { line: 11, code: "  <span class='code-keyword'>await</span> <span class='code-function'>delay</span>(animationSpeed);", state: "delay" },
-                { line: 12, code: "  markNodeVisited(node);", state: "mark-visited" },
-                { line: 13, code: "  ", state: "initial" },
-                { line: 14, code: "  <span class='code-comment'>// Traverse right subtree</span>", state: "initial" },
-                { line: 15, code: "  <span class='code-keyword'>if</span> (node.children[<span class='code-number'>1</span>] !== <span class='code-keyword'>undefined</span>) {", state: "check-right" },
-                { line: 16, code: "    <span class='code-keyword'>const</span> <span class='code-variable'>rightChild</span> = tree[node.children[<span class='code-number'>1</span>]];", state: "get-right" },
-                { line: 17, code: "    <span class='code-keyword'>await</span> <span class='code-function'>dfsInorder</span>(rightChild);", state: "recurse-right" },
-                { line: 18, code: "  }", state: "initial" },
+                { line: 8, code: "    if (!visited.has(node)) {", state: "check-visited" },
+                { line: 9, code: "      visited.add(node);", state: "mark-visited" },
+                { line: 10, code: "      processNode(node);", state: "process-node" },
+                { line: 11, code: "      ", state: "initial" },
+                { line: 12, code: "      // Add children in reverse order", state: "initial" },
+                { line: 13, code: "      for (let i = node.children.length - 1; i >= 0; i--) {", state: "children-loop" },
+                { line: 14, code: "        const child = node.children[i];", state: "get-child" },
+                { line: 15, code: "        stack.push(child);", state: "add-to-stack" },
+                { line: 16, code: "      }", state: "initial" },
+                { line: 17, code: "    }", state: "initial" },
+                { line: 18, code: "  }", state: "loop-end" },
                 { line: 19, code: "}", state: "function-end" }
             ],
-            postorder: [
-                { line: 1, code: "<span class='code-keyword'>function</span> <span class='code-function'>dfsPostorder</span>(node) {", state: "initial" },
-                { line: 2, code: "  <span class='code-keyword'>if</span> (node === <span class='code-keyword'>null</span>) <span class='code-keyword'>return</span>;", state: "base-case" },
+            inorder: [
+                { line: 1, code: "function dfsInorder(node, visited) {", state: "initial" },
+                { line: 2, code: "  if (node === null) return;", state: "base-case" },
                 { line: 3, code: "  ", state: "initial" },
-                { line: 4, code: "  <span class='code-comment'>// Traverse all children first</span>", state: "initial" },
-                { line: 5, code: "  <span class='code-keyword'>for</span> (<span class='code-keyword'>const</span> <span class='code-variable'>childIndex</span> <span class='code-keyword'>of</span> node.children) {", state: "children-loop" },
-                { line: 6, code: "    <span class='code-keyword'>const</span> <span class='code-variable'>childNode</span> = tree[childIndex];", state: "get-child" },
-                { line: 7, code: "    <span class='code-keyword'>await</span> <span class='code-function'>dfsPostorder</span>(childNode);", state: "recurse-child" },
-                { line: 8, code: "  }", state: "initial" },
-                { line: 9, code: "  ", state: "initial" },
-                { line: 10, code: "  highlightCurrentNode(node);", state: "highlight-current" },
-                { line: 11, code: "  <span class='code-keyword'>await</span> <span class='code-function'>delay</span>(animationSpeed);", state: "delay" },
-                { line: 12, code: "  markNodeVisited(node);", state: "mark-visited" },
-                { line: 13, code: "}", state: "function-end" }
+                { line: 4, code: "  // Traverse left subtree first", state: "initial" },
+                { line: 5, code: "  if (node.children[0]) {", state: "check-left" },
+                { line: 6, code: "    dfsInorder(node.children[0], visited);", state: "recurse-left" },
+                { line: 7, code: "  }", state: "initial" },
+                { line: 8, code: "  ", state: "initial" },
+                { line: 9, code: "  // Process current node", state: "initial" },
+                { line: 10, code: "  visited.add(node);", state: "mark-visited" },
+                { line: 11, code: "  processNode(node);", state: "process-node" },
+                { line: 12, code: "  ", state: "initial" },
+                { line: 13, code: "  // Traverse right subtree", state: "initial" },
+                { line: 14, code: "  if (node.children[1]) {", state: "check-right" },
+                { line: 15, code: "    dfsInorder(node.children[1], visited);", state: "recurse-right" },
+                { line: 16, code: "  }", state: "initial" },
+                { line: 17, code: "}", state: "function-end" }
+            ],
+            postorder: [
+                { line: 1, code: "function dfsPostorder(node, visited) {", state: "initial" },
+                { line: 2, code: "  if (node === null) return;", state: "base-case" },
+                { line: 3, code: "  ", state: "initial" },
+                { line: 4, code: "  // Traverse all children first", state: "initial" },
+                { line: 5, code: "  for (const child of node.children) {", state: "children-loop" },
+                { line: 6, code: "    dfsPostorder(child, visited);", state: "recurse-child" },
+                { line: 7, code: "  }", state: "initial" },
+                { line: 8, code: "  ", state: "initial" },
+                { line: 9, code: "  // Process current node", state: "initial" },
+                { line: 10, code: "  visited.add(node);", state: "mark-visited" },
+                { line: 11, code: "  processNode(node);", state: "process-node" },
+                { line: 12, code: "}", state: "function-end" }
             ]
         };
         
-        // Initialize code display
+        // Step explanations for different DFS types
+        const stepExplanations = {
+            preorder: {
+                1: "Starting DFS Preorder traversal. The function is called with the root node.",
+                2: "Initializing the stack with the root node. The stack will keep track of nodes to visit.",
+                3: "Creating a Set to track visited nodes and avoid cycles.",
+                5: "Beginning the main DFS loop. We continue as long as there are nodes in the stack.",
+                6: "Popping the top node from the stack. This becomes our current node to process.",
+                8: "Checking if we've already visited this node to avoid processing it multiple times.",
+                9: "Marking the current node as visited.",
+                10: "Processing the current node (in this visualization, we highlight it).",
+                12: "Preparing to add children to the stack in reverse order.",
+                13: "Iterating through all children of the current node.",
+                14: "Getting the next child node.",
+                15: "Pushing the child node onto the stack for future processing.",
+                18: "End of the main DFS loop. If stack is not empty, we continue.",
+                19: "DFS Preorder traversal is complete."
+            },
+            inorder: {
+                1: "Starting DFS Inorder traversal (recursive implementation).",
+                2: "Base case: if node is null, we return (stop recursion).",
+                4: "For Inorder traversal, we first traverse the left subtree.",
+                5: "Checking if the current node has a left child.",
+                6: "Recursively calling DFS on the left child.",
+                9: "After traversing left subtree, we process the current node.",
+                10: "Marking the current node as visited.",
+                11: "Processing the current node.",
+                13: "Now we traverse the right subtree.",
+                14: "Checking if the current node has a right child.",
+                15: "Recursively calling DFS on the right child.",
+                17: "DFS Inorder traversal for this subtree is complete."
+            },
+            postorder: {
+                1: "Starting DFS Postorder traversal (recursive implementation).",
+                2: "Base case: if node is null, we return (stop recursion).",
+                4: "For Postorder traversal, we first traverse all children.",
+                5: "Iterating through all children of the current node.",
+                6: "Recursively calling DFS on each child.",
+                9: "After traversing all children, we process the current node.",
+                10: "Marking the current node as visited.",
+                11: "Processing the current node.",
+                12: "DFS Postorder traversal for this subtree is complete."
+            }
+        };
+        
+        // Display algorithm code
         function initializeCodeDisplay() {
             codeContainer.innerHTML = '';
             const dfsType = dfsTypeSelect.value;
@@ -689,48 +916,132 @@
                 const codeLine = document.createElement('div');
                 codeLine.className = 'code-line';
                 codeLine.id = `code-line-${item.line}`;
-                codeLine.innerHTML = item.code;
+                codeLine.innerHTML = formatCode(item.code);
                 codeContainer.appendChild(codeLine);
             });
         }
         
-        // Update status display
+        // Format code for beautiful display
+        function formatCode(code) {
+            return code
+                .replace(/function/g, '<span class="code-keyword">function</span>')
+                .replace(/const/g, '<span class="code-keyword">const</span>')
+                .replace(/let/g, '<span class="code-keyword">let</span>')
+                .replace(/var/g, '<span class="code-keyword">var</span>')
+                .replace(/if/g, '<span class="code-keyword">if</span>')
+                .replace(/else/g, '<span class="code-keyword">else</span>')
+                .replace(/for/g, '<span class="code-keyword">for</span>')
+                .replace(/while/g, '<span class="code-keyword">while</span>')
+                .replace(/return/g, '<span class="code-keyword">return</span>')
+                .replace(/new/g, '<span class="code-keyword">new</span>')
+                .replace(/dfsPreorder|dfsInorder|dfsPostorder/g, '<span class="code-function">$&</span>')
+                .replace(/stack|node|visited|child|children/g, '<span class="code-variable">$&</span>')
+                .replace(/\/\/.*$/g, '<span class="code-comment">$&</span>')
+                .replace(/\b\d+\b/g, '<span class="code-number">$&</span>');
+        }
+        
+        // Update status
         function updateStatus(status, text) {
             statusIndicator.className = `status-indicator ${status}`;
             statusText.textContent = text;
         }
         
+        // Update step explanation
+        function updateStepExplanation(lineNumber) {
+            const dfsType = dfsTypeSelect.value;
+            const explanation = stepExplanations[dfsType][lineNumber];
+            if (explanation) {
+                stepContent.textContent = explanation;
+            }
+        }
+        
+        // Update algorithm statistics
+        function updateStats() {
+            nodesVisited.textContent = visitedCount;
+            stepsCount.textContent = currentStep;
+            stackSize.textContent = dfsStack.length;
+        }
+        
+        // Update traversal path display
+        function updateTraversalPath(nodeIndex) {
+            if (nodeIndex !== undefined && nodeIndex !== null) {
+                traversalPath.push(nodeIndex);
+                
+                pathItems.innerHTML = '';
+                traversalPath.forEach((nodeIdx, index) => {
+                    const pathItem = document.createElement('div');
+                    pathItem.className = 'path-item';
+                    pathItem.textContent = tree[nodeIdx].value;
+                    pathItems.appendChild(pathItem);
+                    
+                    // Add arrow between nodes (except for the last one)
+                    if (index < traversalPath.length - 1) {
+                        const arrow = document.createElement('div');
+                        arrow.className = 'path-arrow';
+                        arrow.textContent = '→';
+                        pathItems.appendChild(arrow);
+                    }
+                });
+                
+                // Highlight the path in the visualization
+                highlightTraversalPath();
+            }
+        }
+        
+        // Highlight the traversal path in the visualization
+        function highlightTraversalPath() {
+            // Reset all nodes and edges to default state
+            tree.forEach((node, index) => {
+                const nodeElement = document.getElementById(`node-${index}`);
+                if (node.visited && !traversalPath.includes(index)) {
+                    nodeElement.className = 'node visited';
+                } else if (traversalPath.includes(index)) {
+                    nodeElement.className = 'node path';
+                }
+            });
+            
+            edges.forEach(edge => {
+                const edgeElement = document.querySelector(`.edge[data-from="${edge.from}"][data-to="${edge.to}"]`);
+                if (edgeElement) {
+                    if (traversalPath.includes(edge.from) && traversalPath.includes(edge.to) && 
+                        Math.abs(traversalPath.indexOf(edge.from) - traversalPath.indexOf(edge.to)) === 1) {
+                        edgeElement.className = 'edge path';
+                    } else if (tree[edge.from].visited && tree[edge.to].visited) {
+                        edgeElement.className = 'edge visited';
+                    } else {
+                        edgeElement.className = 'edge';
+                    }
+                }
+            });
+        }
+        
         // Highlight current code line
         function highlightCodeLine(lineNumber) {
-            // Remove active class from all lines
             document.querySelectorAll('.code-line').forEach(line => {
                 line.classList.remove('active');
             });
             
-            // Add active class to current line
             if (lineNumber >= 0) {
                 const currentLine = document.getElementById(`code-line-${lineNumber}`);
                 if (currentLine) {
                     currentLine.classList.add('active');
                     
-                    // Scroll the code container to show the active line
                     const codeContainer = document.getElementById('code-container');
                     const lineTop = currentLine.offsetTop;
                     const containerHeight = codeContainer.clientHeight;
                     const lineHeight = currentLine.clientHeight;
                     
-                    // Calculate the scroll position to center the active line
                     const scrollTo = lineTop - (containerHeight / 2) + (lineHeight / 2);
                     
-                    // Smooth scroll within the code container only
                     codeContainer.scrollTo({
                         top: scrollTo,
                         behavior: 'smooth'
                     });
                 }
+                
+                // Update step explanation
+                updateStepExplanation(lineNumber);
             }
-            
-            currentCodeLine = lineNumber;
         }
         
         // Update node count display
@@ -757,7 +1068,7 @@
             initializeCodeDisplay();
         });
         
-        // Wait for resume or step
+        // Wait for resume or next step
         async function waitForResume() {
             if (!isPaused) return;
             
@@ -766,16 +1077,20 @@
             });
         }
         
-        // Generate random tree
+        // Generate tree
         function generateTree() {
             if (isAnimating && !isPaused) return;
             
             treeContainer.innerHTML = '';
             stackItems.innerHTML = '';
+            pathItems.innerHTML = '';
             tree = [];
             edges = [];
             dfsStack = [];
             currentStep = 0;
+            executionState = null;
+            visitedCount = 0;
+            traversalPath = [];
             
             const nodeCount = parseInt(nodeCountSlider.value);
             const treeType = treeTypeSelect.value;
@@ -806,6 +1121,9 @@
             // Reset code highlighting
             highlightCodeLine(-1);
             updateStatus('idle', 'Ready');
+            stepContent.textContent = 'Click "Start DFS" to begin visualization';
+            nodeInfo.textContent = 'Hover over a node to see details';
+            updateStats();
             
             // Enable/disable buttons
             startDfsBtn.disabled = false;
@@ -954,6 +1272,8 @@
                 
                 const edgeElement = document.createElement('div');
                 edgeElement.className = 'edge';
+                edgeElement.setAttribute('data-from', edge.from);
+                edgeElement.setAttribute('data-to', edge.to);
                 edgeElement.style.width = `${Math.sqrt(
                     Math.pow(toNode.x - fromNode.x, 2) + 
                     Math.pow(toNode.y - fromNode.y, 2)
@@ -976,6 +1296,24 @@
                 nodeElement.textContent = node.value;
                 nodeElement.style.left = `${node.x - 25}px`;
                 nodeElement.style.top = `${node.y - 25}px`;
+                
+                // Add hover effect to show node information
+                nodeElement.addEventListener('mouseenter', () => {
+                    const childrenList = node.children.map(idx => tree[idx].value).join(', ');
+                    nodeInfo.textContent = `Node ${node.value}: ${node.children.length} children (${childrenList || 'none'})`;
+                });
+                
+                nodeElement.addEventListener('mouseleave', () => {
+                    if (isAnimating) {
+                        const currentNode = tree[currentNodeIndex];
+                        if (currentNode) {
+                            const childrenList = currentNode.children.map(idx => tree[idx].value).join(', ');
+                            nodeInfo.textContent = `Current: ${currentNode.value}, Children: ${childrenList || 'none'}`;
+                        }
+                    } else {
+                        nodeInfo.textContent = 'Hover over a node to see details';
+                    }
+                });
                 
                 treeContainer.appendChild(nodeElement);
             });
@@ -1001,10 +1339,14 @@
                     nodeElement.className = 'node default';
                 });
                 
-                // Reset stack display
+                // Reset displays
                 stackItems.innerHTML = '';
+                pathItems.innerHTML = '';
+                traversalPath = [];
+                visitedCount = 0;
                 
                 updateStatus('running', 'DFS Running');
+                updateStats();
                 
                 // Initialize code highlighting
                 initializeCodeDisplay();
@@ -1028,6 +1370,7 @@
             resumeBtn.disabled = true;
             stepBtn.disabled = true;
             updateStatus('idle', 'DFS Complete');
+            stepContent.textContent = 'DFS traversal completed!';
         }
         
         // Preorder DFS implementation
@@ -1037,129 +1380,128 @@
             await waitForResume();
             
             // Initialize stack with root
-            dfsStack = [0];
-            tree[0].visited = true;
+            const stack = [0];
+            const visited = new Set();
             
             highlightCodeLine(2);
             await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
             await waitForResume();
             
-            highlightCodeLine(4);
+            highlightCodeLine(3);
+            await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+            await waitForResume();
+            
+            highlightCodeLine(5);
             await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
             await waitForResume();
             
             // Main DFS loop
-            while (dfsStack.length > 0) {
+            while (stack.length > 0) {
                 if (isPaused) {
                     updateStatus('paused', 'DFS Paused');
                     await waitForResume();
                     updateStatus('running', 'DFS Running');
                 }
                 
-                highlightCodeLine(5);
-                await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
-                await waitForResume();
-                
-                // Get current node from stack
-                currentNodeIndex = dfsStack.pop();
-                const currentNode = tree[currentNodeIndex];
-                
-                // Highlight current node
-                const currentNodeElement = document.getElementById(`node-${currentNode.id}`);
-                currentNodeElement.className = 'node current';
-                
                 highlightCodeLine(6);
                 await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
                 await waitForResume();
                 
-                highlightCodeLine(9);
-                // Delay for animation
-                await new Promise(resolve => setTimeout(resolve, animationSpeed));
-                await waitForResume();
+                // Get current node from stack
+                const nodeIndex = stack.pop();
+                const node = tree[nodeIndex];
+                currentNodeIndex = nodeIndex;
                 
-                // Mark node as visited
-                currentNodeElement.className = 'node visited';
+                // Update node info
+                const childrenList = node.children.map(idx => tree[idx].value).join(', ');
+                nodeInfo.textContent = `Current: ${node.value}, Children: ${childrenList || 'none'}`;
                 
-                highlightCodeLine(11);
+                highlightCodeLine(8);
                 await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
                 await waitForResume();
                 
-                highlightCodeLine(13);
-                await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
-                await waitForResume();
-                
-                highlightCodeLine(14);
-                await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
-                await waitForResume();
-                
-                // Add children to stack in reverse order (for preorder)
-                for (let i = currentNode.children.length - 1; i >= 0; i--) {
-                    highlightCodeLine(15);
+                if (!visited.has(nodeIndex)) {
+                    highlightCodeLine(9);
                     await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
                     await waitForResume();
                     
-                    const childIndex = currentNode.children[i];
+                    visited.add(nodeIndex);
+                    node.visited = true;
+                    visitedCount++;
+                    
+                    // Highlight visited node
+                    const nodeElement = document.getElementById(`node-${nodeIndex}`);
+                    nodeElement.className = 'node visited';
+                    
+                    highlightCodeLine(10);
+                    await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+                    await waitForResume();
+                    
+                    // Process node (highlight as current node)
+                    nodeElement.className = 'node current';
+                    await new Promise(resolve => setTimeout(resolve, animationSpeed));
+                    await waitForResume();
+                    nodeElement.className = 'node visited';
+                    
+                    // Add to traversal path
+                    updateTraversalPath(nodeIndex);
+                    
+                    highlightCodeLine(12);
+                    await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+                    await waitForResume();
+                    
+                    highlightCodeLine(13);
+                    await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+                    await waitForResume();
+                    
+                    // Add children to stack in reverse order
+                    for (let i = node.children.length - 1; i >= 0; i--) {
+                        highlightCodeLine(14);
+                        await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+                        await waitForResume();
+                        
+                        const childIndex = node.children[i];
+                        
+                        highlightCodeLine(15);
+                        await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+                        await waitForResume();
+                        
+                        stack.push(childIndex);
+                        
+                        // Highlight nodes added to stack
+                        const childNodeElement = document.getElementById(`node-${childIndex}`);
+                        childNodeElement.className = 'node queued';
+                        
+                        highlightCodeLine(13);
+                        await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+                        await waitForResume();
+                    }
                     
                     highlightCodeLine(16);
                     await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
                     await waitForResume();
-                    
-                    const childNode = tree[childIndex];
-                    
-                    highlightCodeLine(18);
-                    await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
-                    await waitForResume();
-                    
-                    if (!childNode.visited) {
-                        highlightCodeLine(19);
-                        await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
-                        await waitForResume();
-                        
-                        childNode.visited = true;
-                        
-                        highlightCodeLine(20);
-                        await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
-                        await waitForResume();
-                        
-                        dfsStack.push(childIndex);
-                        
-                        highlightCodeLine(21);
-                        await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
-                        await waitForResume();
-                        
-                        // Highlight stacked nodes
-                        const childNodeElement = document.getElementById(`node-${childIndex}`);
-                        childNodeElement.className = 'node queued';
-                    }
-                    
-                    highlightCodeLine(14);
-                    await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
-                    await waitForResume();
                 }
                 
-                highlightCodeLine(23);
+                highlightCodeLine(17);
                 await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
                 await waitForResume();
                 
                 // Update stack display
-                updateStackDisplay(dfsStack);
+                updateStackDisplay(stack);
+                updateStats();
                 
-                highlightCodeLine(25);
-                await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
-                await waitForResume();
-                
-                highlightCodeLine(4);
+                highlightCodeLine(5);
                 await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
                 await waitForResume();
                 
                 currentStep++;
             }
             
-            highlightCodeLine(26);
+            highlightCodeLine(18);
             await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
             await waitForResume();
             
-            highlightCodeLine(27);
+            highlightCodeLine(19);
         }
         
         // Inorder DFS implementation (for binary trees)
@@ -1168,12 +1510,13 @@
             await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
             await waitForResume();
             
-            await inorderTraversal(tree[0]);
+            const visited = new Set();
+            await inorderTraversal(0, visited);
             
-            highlightCodeLine(19);
+            highlightCodeLine(17);
         }
         
-        async function inorderTraversal(node) {
+        async function inorderTraversal(nodeIndex, visited) {
             if (isPaused) {
                 updateStatus('paused', 'DFS Paused');
                 await waitForResume();
@@ -1184,7 +1527,14 @@
             await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
             await waitForResume();
             
-            if (!node) return;
+            if (nodeIndex === null || nodeIndex === undefined) return;
+            
+            const node = tree[nodeIndex];
+            currentNodeIndex = nodeIndex;
+            
+            // Update node info
+            const childrenList = node.children.map(idx => tree[idx].value).join(', ');
+            nodeInfo.textContent = `Current: ${node.value}, Children: ${childrenList || 'none'}`;
             
             highlightCodeLine(4);
             await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
@@ -1200,62 +1550,66 @@
                 await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
                 await waitForResume();
                 
-                const leftChild = tree[node.children[0]];
-                
-                highlightCodeLine(7);
-                await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
-                await waitForResume();
-                
-                await inorderTraversal(leftChild);
+                await inorderTraversal(node.children[0], visited);
             }
             
             // Process current node
+            highlightCodeLine(9);
+            await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+            await waitForResume();
+            
             highlightCodeLine(10);
             await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
             await waitForResume();
             
-            // Highlight current node
-            const currentNodeElement = document.getElementById(`node-${node.id}`);
-            currentNodeElement.className = 'node current';
+            visited.add(nodeIndex);
+            node.visited = true;
+            visitedCount++;
+            
+            // Highlight visited node
+            const nodeElement = document.getElementById(`node-${nodeIndex}`);
+            nodeElement.className = 'node visited';
             
             highlightCodeLine(11);
-            // Delay for animation
-            await new Promise(resolve => setTimeout(resolve, animationSpeed));
+            await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
             await waitForResume();
             
-            // Mark node as visited
-            currentNodeElement.className = 'node visited';
+            // Process node (highlight as current node)
+            nodeElement.className = 'node current';
+            await new Promise(resolve => setTimeout(resolve, animationSpeed));
+            await waitForResume();
+            nodeElement.className = 'node visited';
+            
+            // Add to traversal path
+            updateTraversalPath(nodeIndex);
+            updateStats();
             
             highlightCodeLine(12);
             await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
             await waitForResume();
             
-            highlightCodeLine(14);
+            highlightCodeLine(13);
             await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
             await waitForResume();
             
             // Traverse right subtree
             if (node.children[1] !== undefined) {
+                highlightCodeLine(14);
+                await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+                await waitForResume();
+                
                 highlightCodeLine(15);
                 await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
                 await waitForResume();
                 
-                highlightCodeLine(16);
-                await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
-                await waitForResume();
-                
-                const rightChild = tree[node.children[1]];
-                
-                highlightCodeLine(17);
-                await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
-                await waitForResume();
-                
-                await inorderTraversal(rightChild);
+                await inorderTraversal(node.children[1], visited);
             }
             
-            highlightCodeLine(18);
+            highlightCodeLine(16);
             await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
             await waitForResume();
+            
+            currentStep++;
         }
         
         // Postorder DFS implementation
@@ -1264,12 +1618,13 @@
             await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
             await waitForResume();
             
-            await postorderTraversal(tree[0]);
+            const visited = new Set();
+            await postorderTraversal(0, visited);
             
-            highlightCodeLine(13);
+            highlightCodeLine(12);
         }
         
-        async function postorderTraversal(node) {
+        async function postorderTraversal(nodeIndex, visited) {
             if (isPaused) {
                 updateStatus('paused', 'DFS Paused');
                 await waitForResume();
@@ -1280,7 +1635,14 @@
             await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
             await waitForResume();
             
-            if (!node) return;
+            if (nodeIndex === null || nodeIndex === undefined) return;
+            
+            const node = tree[nodeIndex];
+            currentNodeIndex = nodeIndex;
+            
+            // Update node info
+            const childrenList = node.children.map(idx => tree[idx].value).join(', ');
+            nodeInfo.textContent = `Current: ${node.value}, Children: ${childrenList || 'none'}`;
             
             highlightCodeLine(4);
             await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
@@ -1296,43 +1658,49 @@
                 await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
                 await waitForResume();
                 
-                const childNode = tree[childIndex];
-                
-                highlightCodeLine(7);
-                await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
-                await waitForResume();
-                
-                await postorderTraversal(childNode);
+                await postorderTraversal(childIndex, visited);
                 
                 highlightCodeLine(5);
                 await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
                 await waitForResume();
             }
             
-            highlightCodeLine(8);
+            highlightCodeLine(7);
             await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
             await waitForResume();
             
             // Process current node
+            highlightCodeLine(9);
+            await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+            await waitForResume();
+            
             highlightCodeLine(10);
             await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
             await waitForResume();
             
-            // Highlight current node
-            const currentNodeElement = document.getElementById(`node-${node.id}`);
-            currentNodeElement.className = 'node current';
+            visited.add(nodeIndex);
+            node.visited = true;
+            visitedCount++;
+            
+            // Highlight visited node
+            const nodeElement = document.getElementById(`node-${nodeIndex}`);
+            nodeElement.className = 'node visited';
             
             highlightCodeLine(11);
-            // Delay for animation
-            await new Promise(resolve => setTimeout(resolve, animationSpeed));
-            await waitForResume();
-            
-            // Mark node as visited
-            currentNodeElement.className = 'node visited';
-            
-            highlightCodeLine(12);
             await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
             await waitForResume();
+            
+            // Process node (highlight as current node)
+            nodeElement.className = 'node current';
+            await new Promise(resolve => setTimeout(resolve, animationSpeed));
+            await waitForResume();
+            nodeElement.className = 'node visited';
+            
+            // Add to traversal path
+            updateTraversalPath(nodeIndex);
+            updateStats();
+            
+            currentStep++;
         }
         
         // Pause DFS execution
@@ -1368,6 +1736,7 @@
         // Update stack display
         function updateStackDisplay(stack) {
             stackItems.innerHTML = '';
+            dfsStack = [...stack];
             
             // Display stack from top to bottom (reverse order)
             for (let i = stack.length - 1; i >= 0; i--) {
@@ -1384,6 +1753,9 @@
             isPaused = false;
             currentStep = 0;
             dfsStack = [];
+            executionState = null;
+            visitedCount = 0;
+            traversalPath = [];
             
             tree.forEach(node => {
                 node.visited = false;
@@ -1394,12 +1766,16 @@
             });
             
             stackItems.innerHTML = '';
+            pathItems.innerHTML = '';
             startDfsBtn.disabled = false;
             pauseBtn.disabled = true;
             resumeBtn.disabled = true;
             stepBtn.disabled = true;
             highlightCodeLine(-1);
             updateStatus('idle', 'Ready');
+            stepContent.textContent = 'Click "Start DFS" to begin visualization';
+            nodeInfo.textContent = 'Hover over a node to see details';
+            updateStats();
             
             if (resumeResolve) {
                 resumeResolve();
