@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CSRF Attack Demonstration</title>
+    <title>CSRF Attack Demo</title>
     <style>
         * {
             margin: 0;
@@ -30,8 +30,8 @@
             margin-bottom: 20px;
             padding: 20px;
             background: rgba(255, 255, 255, 0.95);
-            border-radius: 15px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
         }
         
         h1 {
@@ -55,7 +55,7 @@
         .auto-play-btn {
             display: inline-block;
             padding: 12px 30px;
-            background: linear-gradient(to right, #4CAF50, #45a049);
+            background: linear-gradient(to right, #1a2a6c, #b21f1f);
             color: white;
             border: none;
             border-radius: 30px;
@@ -63,12 +63,12 @@
             cursor: pointer;
             transition: all 0.3s;
             font-weight: 600;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
         }
         
         .auto-play-btn:hover {
             transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.25);
         }
         
         .animation-area {
@@ -80,8 +80,8 @@
         
         .browser-window {
             background: white;
-            border-radius: 10px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
             overflow: hidden;
             position: relative;
             height: 450px;
@@ -101,8 +101,8 @@
         }
         
         .browser-button {
-            width: 10px;
-            height: 10px;
+            width: 12px;
+            height: 12px;
             border-radius: 50%;
         }
         
@@ -115,8 +115,8 @@
             margin: 0 10px;
             background: white;
             padding: 6px 12px;
-            border-radius: 15px;
-            font-size: 0.85rem;
+            border-radius: 12px;
+            font-size: 0.9rem;
             color: #555;
             text-align: center;
             overflow: hidden;
@@ -126,19 +126,19 @@
         
         .browser-content {
             padding: 15px;
-            height: calc(100% - 45px);
+            height: calc(100% - 42px);
             overflow-y: auto;
             position: relative;
         }
         
         .bank-app {
             background-color: #f0f9ff;
-            border-top: 5px solid #1e88e5;
+            border-top: 4px solid #1e88e5;
         }
         
         .malicious-site {
             background-color: #fff5f5;
-            border-top: 5px solid #e53935;
+            border-top: 4px solid #e53935;
         }
         
         .server-console {
@@ -147,40 +147,40 @@
             color: #00ff00;
             font-family: 'Courier New', monospace;
             padding: 15px;
-            border-radius: 10px;
+            border-radius: 8px;
             height: 180px;
             overflow-y: auto;
             margin-top: 10px;
         }
         
         .console-line {
-            margin-bottom: 4px;
-            font-size: 0.85rem;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
         }
         
         .user-info {
             background: #e3f2fd;
             padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 12px;
-            border-left: 4px solid #1e88e5;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            border-left: 3px solid #1e88e5;
             font-size: 0.9rem;
         }
         
         .transaction {
             background: white;
             padding: 12px;
-            border-radius: 8px;
+            border-radius: 6px;
             margin-bottom: 10px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            border-left: 4px solid #1e88e5;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border-left: 3px solid #1e88e5;
             font-size: 0.85rem;
         }
         
         .transaction-header {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 6px;
+            margin-bottom: 5px;
         }
         
         .amount {
@@ -201,7 +201,7 @@
         
         label {
             display: block;
-            margin-bottom: 4px;
+            margin-bottom: 5px;
             font-weight: 600;
             font-size: 0.9rem;
         }
@@ -210,7 +210,7 @@
             width: 100%;
             padding: 8px;
             border: 1px solid #ddd;
-            border-radius: 5px;
+            border-radius: 4px;
             font-size: 0.9rem;
         }
         
@@ -242,7 +242,7 @@
             background: linear-gradient(to right, #1a2a6c, #b21f1f);
             color: white;
             border: none;
-            border-radius: 30px;
+            border-radius: 25px;
             font-size: 0.9rem;
             cursor: pointer;
             transition: all 0.3s;
@@ -250,7 +250,7 @@
         }
         
         .control-btn:hover {
-            transform: translateY(-3px);
+            transform: translateY(-2px);
         }
         
         .control-btn:disabled {
@@ -262,15 +262,15 @@
         .hidden-form {
             background: #ffebee;
             padding: 12px;
-            border-radius: 8px;
-            margin-top: 12px;
+            border-radius: 6px;
+            margin-top: 15px;
             border: 2px dashed #e53935;
             font-size: 0.85rem;
         }
         
         .status-message {
             padding: 8px;
-            border-radius: 5px;
+            border-radius: 4px;
             margin-top: 8px;
             text-align: center;
             font-weight: 600;
@@ -304,9 +304,9 @@
         .data-packet {
             position: absolute;
             background: white;
-            padding: 8px;
-            border-radius: 8px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            padding: 10px;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
             z-index: 100;
             border: 2px solid #1e88e5;
             max-width: 280px;
@@ -315,7 +315,7 @@
         
         .packet-header {
             font-weight: bold;
-            margin-bottom: 4px;
+            margin-bottom: 5px;
             color: #1a2a6c;
             font-size: 0.9rem;
         }
@@ -329,8 +329,8 @@
             position: absolute;
             background: #8d6e63;
             color: white;
-            padding: 4px 8px;
-            border-radius: 15px;
+            padding: 5px 10px;
+            border-radius: 12px;
             font-size: 0.75rem;
             font-weight: bold;
             z-index: 10;
@@ -339,13 +339,13 @@
         .step-indicator {
             text-align: center;
             margin: 15px 0;
-            font-size: 1.2rem;
+            font-size: 1.3rem;
             font-weight: 600;
             color: white;
             text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
             background: rgba(0, 0, 0, 0.3);
             padding: 12px;
-            border-radius: 10px;
+            border-radius: 8px;
         }
         
         .visual-flow {
@@ -360,17 +360,31 @@
         .flow-item {
             background: white;
             padding: 12px;
-            border-radius: 10px;
+            border-radius: 8px;
             text-align: center;
             font-weight: 600;
-            width: 130px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            width: 140px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
             font-size: 0.9rem;
+            z-index: 2;
         }
         
         .flow-arrow {
-            font-size: 1.5rem;
-            color: white;
+            position: relative;
+            width: 50px;
+            height: 50px;
+            z-index: 1;
+        }
+        
+        .flow-arrow svg {
+            width: 100%;
+            height: 100%;
+            fill: white;
+            filter: drop-shadow(1px 1px 2px rgba(0,0,0,0.3));
+        }
+        
+        .flow-arrow.request {
+            transform: scaleX(-1);
         }
         
         .highlight {
@@ -385,18 +399,18 @@
         
         .attack-flow {
             position: absolute;
-            height: 3px;
+            height: 2px;
             background: #e53935;
-            z-index: 5;
+            z-index: 1;
         }
         
         .explanation-panel {
             grid-column: 1 / -1;
             background: rgba(255, 255, 255, 0.95);
-            border-radius: 10px;
+            border-radius: 8px;
             padding: 15px;
             margin-top: 10px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
         
         .explanation-title {
@@ -411,44 +425,84 @@
             line-height: 1.5;
         }
         
-        .arrow-container {
-            position: relative;
-            width: 100%;
-            height: 100px;
-            margin: 20px 0;
-        }
-        
-        .arrow {
+        .character {
             position: absolute;
-            width: 0;
-            height: 0;
-            border-style: solid;
-        }
-        
-        .arrow-label {
-            position: absolute;
-            font-size: 0.8rem;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             font-weight: bold;
             color: white;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
-            background: rgba(0,0,0,0.5);
-            padding: 3px 8px;
-            border-radius: 10px;
+            z-index: 5;
         }
         
-        .request-arrow {
-            border-width: 10px 0 10px 20px;
-            border-color: transparent transparent transparent #4CAF50;
+        .user-character {
+            background: #4caf50;
+            top: 10px;
+            left: 10px;
         }
         
-        .response-arrow {
-            border-width: 10px 20px 10px 0;
-            border-color: transparent #2196F3 transparent transparent;
+        .hacker-character {
+            background: #e53935;
+            top: 10px;
+            right: 10px;
         }
         
-        .malicious-arrow {
-            border-width: 10px 0 10px 20px;
-            border-color: transparent transparent transparent #e53935;
+        .bank-character {
+            background: #1e88e5;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        
+        .character-label {
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.7rem;
+            white-space: nowrap;
+            color: white;
+            text-shadow: 1px 1px 1px rgba(0,0,0,0.5);
+        }
+        
+        .character-container {
+            position: relative;
+            height: 60px;
+            margin-bottom: 10px;
+        }
+        
+        .emoji {
+            font-size: 1.5rem;
+        }
+        
+        .step-visual {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 10px 0;
+        }
+        
+        .step-visual-item {
+            margin: 0 15px;
+            text-align: center;
+        }
+        
+        .step-visual-icon {
+            font-size: 2rem;
+            margin-bottom: 5px;
+        }
+        
+        .step-visual-text {
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .step-visual-arrow {
+            font-size: 1.5rem;
+            color: white;
         }
         
         @media (max-width: 768px) {
@@ -468,42 +522,68 @@
             }
             
             .flow-item {
-                width: 100px;
+                width: 120px;
                 font-size: 0.8rem;
-                padding: 8px;
+                padding: 10px;
             }
             
             .flow-arrow {
-                display: none;
+                transform: rotate(90deg);
+                width: 35px;
+                height: 35px;
+            }
+            
+            .flow-arrow.request {
+                transform: rotate(90deg) scaleX(-1);
             }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1>CSRF Attack Demonstration</h1>
-            <p class="subtitle">A visual explanation of Cross-Site Request Forgery attacks and how to prevent them</p>
-        </header>
+      
+        
+        <div class="character-container">
+            <div class="character user-character">
+                <div class="emoji">👤</div>
+                <div class="character-label">You</div>
+            </div>
+            <div class="character bank-character">
+                <div class="emoji">🏦</div>
+                <div class="character-label">Bank</div>
+            </div>
+            <div class="character hacker-character">
+                <div class="emoji">👨‍💻</div>
+                <div class="character-label">Hacker</div>
+            </div>
+        </div>
         
         <div class="top-controls">
             <button id="autoBtn" class="auto-play-btn">Auto Play All Steps</button>
         </div>
         
-        <div class="step-indicator" id="stepIndicator">Step 1: User logs into the bank website</div>
+        <div class="step-indicator" id="stepIndicator">Step 1: You log into your bank account</div>
         
-        <div class="visual-flow">
-            <div class="flow-item" id="flowUser">User</div>
-            <div class="flow-arrow">→</div>
-            <div class="flow-item" id="flowBank">Bank Website</div>
-            <div class="flow-arrow">→</div>
-            <div class="flow-item" id="flowHacker">Hacker's Site</div>
-            <div class="flow-arrow">→</div>
-            <div class="flow-item" id="flowAttack">CSRF Attack</div>
-        </div>
-        
-        <div class="arrow-container" id="arrowContainer">
-            <!-- Arrows will be dynamically added here -->
+        <div class="step-visual" id="stepVisual">
+            <div class="step-visual-item">
+                <div class="step-visual-icon">🔐</div>
+                <div class="step-visual-text">Login</div>
+            </div>
+            <div class="step-visual-arrow">→</div>
+            <div class="step-visual-item">
+                <div class="step-visual-icon">🌐</div>
+                <div class="step-visual-text">Browse</div>
+            </div>
+            <div class="step-visual-arrow">→</div>
+            <div class="step-visual-item">
+                <div class="step-visual-icon">🎣</div>
+                <div class="step-visual-text">Trap</div>
+            </div>
+            <div class="step-visual-arrow">→</div>
+            <div class="step-visual-item">
+                <div class="step-visual-icon">💰</div>
+                <div class="step-visual-text">Theft</div>
+            </div>
         </div>
         
         <div class="animation-area">
@@ -520,7 +600,7 @@
                     <h3>Secure Bank - Transfer Money</h3>
                     
                     <div class="user-info" id="userInfo">
-                        <strong>User Status:</strong> Not logged in
+                        <strong>Your Status:</strong> Not logged in
                     </div>
                     
                     <form id="loginForm">
@@ -589,17 +669,17 @@
                     <div class="browser-url">https://free-movie-download.com</div>
                 </div>
                 <div class="browser-content">
-                    <h3>Free Movie Downloads!</h3>
+                    <h3>🎬 Free Movie Downloads!</h3>
                     <p>Click the button below to download the latest movies for FREE!</p>
                     
-                    <button id="movieButton">Download Free Movies Now!</button>
+                    <button id="movieButton">🎁 Download Free Movies Now!</button>
                     
                     <div id="movieMessage" class="status-message info" style="display: none;">
                         Preparing your download...
                     </div>
                     
                     <div class="hidden-form">
-                        <h4>Hidden CSRF Form (Invisible to User)</h4>
+                        <h4>⚠️ Hidden CSRF Form (Invisible to You)</h4>
                         <div class="packet-content">
                             &lt;form id="hiddenCsrfForm" action="https://secure-bank.com/transfer" method="POST"&gt;<br>
                             &nbsp;&nbsp;&lt;input type="hidden" name="recipient" value="HACKER-12345"&gt;<br>
@@ -609,7 +689,7 @@
                         </div>
                     </div>
                     
-                    <div id="csrfStatus" class="status-message" style="display: none; margin-top: 12px;"></div>
+                    <div id="csrfStatus" class="status-message" style="display: none; margin-top: 10px;"></div>
                 </div>
             </div>
             
@@ -621,7 +701,7 @@
             <div class="explanation-panel" id="explanationPanel">
                 <div class="explanation-title">What is CSRF?</div>
                 <div class="explanation-content" id="explanationContent">
-                    Cross-Site Request Forgery (CSRF) is an attack that tricks a user into performing actions they didn't intend to perform on a web application where they're authenticated.
+                    Cross-Site Request Forgery (CSRF) is an attack that tricks you into performing actions you didn't intend to perform on a website where you're logged in.
                 </div>
             </div>
         </div>
@@ -652,12 +732,11 @@
             const stepIndicator = document.getElementById('stepIndicator');
             const transactionNew = document.getElementById('transactionNew');
             const explanationContent = document.getElementById('explanationContent');
-            const arrowContainer = document.getElementById('arrowContainer');
+            const stepVisual = document.getElementById('stepVisual');
             
-            const flowUser = document.getElementById('flowUser');
-            const flowBank = document.getElementById('flowBank');
-            const flowHacker = document.getElementById('flowHacker');
-            const flowAttack = document.getElementById('flowAttack');
+            const userCharacter = document.querySelector('.user-character');
+            const bankCharacter = document.querySelector('.bank-character');
+            const hackerCharacter = document.querySelector('.hacker-character');
             
             let currentStep = 0;
             const totalSteps = 8;
@@ -708,7 +787,7 @@
                 loginStatus.className = 'status-message';
                 transferStatus.textContent = '';
                 transferStatus.className = 'status-message';
-                userInfo.innerHTML = '<strong>User Status:</strong> Not logged in';
+                userInfo.innerHTML = '<strong>Your Status:</strong> Not logged in';
                 userInfo.style.background = '#e3f2fd';
                 userInfo.style.borderLeftColor = '#1e88e5';
                 transferSection.style.display = 'none';
@@ -716,48 +795,64 @@
                 csrfStatus.style.display = 'none';
                 transactionNew.style.display = 'none';
                 
+                // Reset characters
+                [userCharacter, bankCharacter, hackerCharacter].forEach(el => {
+                    el.style.transform = '';
+                    el.style.boxShadow = '';
+                });
+                
                 // Reset server console
                 serverConsole.innerHTML = `
                     <div class="console-line">Bank Server Console - Ready</div>
                     <div class="console-line">> Waiting for connections...</div>
                 `;
                 
-                // Reset flow indicators
-                [flowUser, flowBank, flowHacker, flowAttack].forEach(el => {
-                    el.classList.remove('highlight');
-                });
+                stepIndicator.textContent = 'Step 1: You log into your bank account';
+                explanationContent.textContent = 'Cross-Site Request Forgery (CSRF) is an attack that tricks you into performing actions you didn\'t intend to perform on a website where you\'re logged in.';
                 
-                stepIndicator.textContent = 'Step 1: User logs into the bank website';
-                explanationContent.textContent = 'Cross-Site Request Forgery (CSRF) is an attack that tricks a user into performing actions they didn\'t intend to perform on a web application where they\'re authenticated.';
+                // Reset step visual
+                const stepItems = stepVisual.querySelectorAll('.step-visual-item');
+                stepItems.forEach(item => {
+                    item.style.opacity = '0.5';
+                });
                 
                 currentStep = 0;
                 sessionCookie = null;
                 
-                // Remove any data packets, cookies, or arrows
-                document.querySelectorAll('.data-packet, .session-cookie, .attack-flow, .arrow, .arrow-label').forEach(el => {
+                // Remove any data packets or cookies
+                document.querySelectorAll('.data-packet, .session-cookie, .attack-flow').forEach(el => {
                     el.remove();
                 });
             }
             
             function runStep(step) {
                 // Remove any existing visual elements
-                document.querySelectorAll('.data-packet, .session-cookie, .attack-flow, .arrow, .arrow-label').forEach(el => {
+                document.querySelectorAll('.data-packet, .session-cookie, .attack-flow').forEach(el => {
                     el.remove();
                 });
                 
-                // Reset highlights
-                [flowUser, flowBank, flowHacker, flowAttack].forEach(el => {
-                    el.classList.remove('highlight');
+                // Reset characters
+                [userCharacter, bankCharacter, hackerCharacter].forEach(el => {
+                    el.style.boxShadow = '';
+                });
+                
+                // Update step visual
+                const stepItems = stepVisual.querySelectorAll('.step-visual-item');
+                stepItems.forEach((item, index) => {
+                    if (index < step) {
+                        item.style.opacity = '1';
+                        item.style.transform = 'scale(1.1)';
+                    } else {
+                        item.style.opacity = '0.5';
+                        item.style.transform = 'scale(1)';
+                    }
                 });
                 
                 switch(step) {
                     case 1:
-                        stepIndicator.textContent = 'Step 1: User logs into the bank website';
-                        explanationContent.textContent = 'The user logs into their bank account. The bank server creates a session and sends a session cookie to the browser. This cookie will be automatically included in all subsequent requests to the bank.';
-                        flowUser.classList.add('highlight');
-                        
-                        // Create login request arrow
-                        createArrow('user', 'bank', 'Login Request', 'request');
+                        stepIndicator.textContent = 'Step 1: You log into your bank account';
+                        explanationContent.textContent = 'You log into your bank account. The bank gives your browser a special key (session cookie) that proves who you are. This key is automatically sent with every request to the bank.';
+                        userCharacter.style.boxShadow = '0 0 15px 5px rgba(76, 175, 80, 0.7)';
                         
                         // Simulate login
                         setTimeout(() => {
@@ -765,17 +860,14 @@
                             loginStatus.className = 'status-message info';
                             
                             setTimeout(() => {
-                                loginStatus.textContent = 'Login successful! Session created.';
+                                loginStatus.textContent = '✅ Login successful! Session created.';
                                 loginStatus.className = 'status-message success';
-                                userInfo.innerHTML = '<strong>User Status:</strong> Logged in as john_doe';
+                                userInfo.innerHTML = '<strong>Your Status:</strong> Logged in as john_doe';
                                 transferSection.style.display = 'block';
                                 
                                 // Create session cookie
                                 sessionCookie = 'session_id=abc123xyz; user=john_doe';
                                 createSessionCookie();
-                                
-                                // Create login response arrow
-                                createArrow('bank', 'user', 'Session Cookie', 'response');
                                 
                                 // Log to server console
                                 addConsoleMessage('> User john_doe logged in successfully');
@@ -785,31 +877,22 @@
                         break;
                         
                     case 2:
-                        stepIndicator.textContent = 'Step 2: User visits malicious website';
-                        explanationContent.textContent = 'While still logged into the bank, the user visits a malicious website. This could happen through a phishing email, malicious ad, or by simply browsing to an untrusted site.';
-                        flowHacker.classList.add('highlight');
-                        
-                        // Create navigation arrow
-                        createArrow('user', 'hacker', 'Visit Malicious Site', 'request');
+                        stepIndicator.textContent = 'Step 2: You visit a malicious website';
+                        explanationContent.textContent = 'While still logged into the bank, you visit a malicious website. This could be through a phishing email, a malicious ad, or by clicking a link.';
+                        userCharacter.style.boxShadow = '0 0 15px 5px rgba(76, 175, 80, 0.7)';
+                        hackerCharacter.style.boxShadow = '0 0 15px 5px rgba(229, 57, 53, 0.7)';
                         
                         // Show user browsing to malicious site
                         addConsoleMessage('> User navigated to free-movie-download.com');
                         
-                        // Show browser sending cookie to malicious site (but it can't access it directly)
-                        createDataPacket(
-                            'Browser sends session cookie with request',
-                            'Cookie: session_id=abc123xyz',
-                            flowBank,
-                            flowHacker
-                        );
+                        // Visual animation of user moving to hacker's site
+                        animateCharacter(userCharacter, hackerCharacter);
                         break;
                         
                     case 3:
-                        stepIndicator.textContent = 'Step 3: Malicious site loads hidden CSRF form';
-                        explanationContent.textContent = 'The malicious website contains a hidden form that targets the bank\'s transfer endpoint. This form is invisible to the user but will be submitted automatically by JavaScript.';
-                        
-                        // Create malicious content arrow
-                        createArrow('hacker', 'user', 'Malicious Content', 'malicious');
+                        stepIndicator.textContent = 'Step 3: Malicious site loads hidden form';
+                        explanationContent.textContent = 'The malicious website contains a hidden form that targets the bank\'s transfer page. This form is invisible to you but will be submitted automatically by JavaScript.';
+                        hackerCharacter.style.boxShadow = '0 0 15px 5px rgba(229, 57, 53, 0.7)';
                         
                         // Show the hidden form being loaded
                         movieMessage.textContent = 'Loading content...';
@@ -817,7 +900,7 @@
                         movieMessage.className = 'status-message info';
                         
                         setTimeout(() => {
-                            csrfStatus.textContent = 'Hidden CSRF form loaded in background';
+                            csrfStatus.textContent = '⚠️ Hidden CSRF form loaded in background';
                             csrfStatus.className = 'status-message warning';
                             csrfStatus.style.display = 'block';
                             
@@ -827,22 +910,19 @@
                         
                     case 4:
                         stepIndicator.textContent = 'Step 4: Malicious site auto-submits the form';
-                        explanationContent.textContent = 'The malicious JavaScript automatically submits the hidden form. The browser includes the user\'s session cookie with this request, making it appear legitimate to the bank server.';
-                        flowAttack.classList.add('highlight');
-                        
-                        // Create CSRF attack arrow
-                        createArrow('user', 'bank', 'CSRF Attack', 'malicious');
+                        explanationContent.textContent = 'The malicious JavaScript automatically submits the hidden form. Your browser includes your session key with this request, making it look like you intentionally sent it.';
+                        hackerCharacter.style.boxShadow = '0 0 15px 5px rgba(229, 57, 53, 0.7)';
                         
                         // Show the form being submitted
-                        csrfStatus.textContent = 'Auto-submitting hidden form to bank...';
+                        csrfStatus.textContent = '🚨 Auto-submitting hidden form to bank...';
                         csrfStatus.className = 'status-message error';
                         
                         // Create visual of form data being sent
                         createDataPacket(
                             'CSRF Attack Request',
                             'POST /transfer HTTP/1.1\nHost: secure-bank.com\nCookie: session_id=abc123xyz\n\nrecipient=HACKER-12345&amount=1000',
-                            flowHacker,
-                            flowBank,
+                            hackerCharacter,
+                            bankCharacter,
                             true
                         );
                         
@@ -852,7 +932,8 @@
                         
                     case 5:
                         stepIndicator.textContent = 'Step 5: Bank processes the forged request';
-                        explanationContent.textContent = 'The bank server validates the session cookie and processes the transfer request. Since the request came with a valid session, the bank assumes it was intentionally sent by the authenticated user.';
+                        explanationContent.textContent = 'The bank checks your session key and processes the transfer request. Since the request came with a valid key, the bank thinks you intentionally sent it.';
+                        bankCharacter.style.boxShadow = '0 0 15px 5px rgba(30, 136, 229, 0.7)';
                         
                         // Show bank processing the request
                         addConsoleMessage('> Processing transfer: $1000 to HACKER-12345');
@@ -862,7 +943,7 @@
                             addConsoleMessage('> Balance sufficient, processing transfer...');
                             
                             setTimeout(() => {
-                                addConsoleMessage('> Transfer completed successfully');
+                                addConsoleMessage('> ✅ Transfer completed successfully');
                                 
                                 // Update UI to show the unauthorized transaction
                                 const now = new Date();
@@ -870,7 +951,7 @@
                                 document.getElementById('transactionStatus').textContent = 'Completed';
                                 transactionNew.style.display = 'block';
                                 
-                                transferStatus.textContent = 'New transaction: $1000 transferred to HACKER-12345';
+                                transferStatus.textContent = '🚨 New transaction: $1000 transferred to HACKER-12345';
                                 transferStatus.className = 'status-message error';
                             }, 1500);
                         }, 1500);
@@ -878,30 +959,30 @@
                         
                     case 6:
                         stepIndicator.textContent = 'Step 6: Money transferred to hacker\'s account';
-                        explanationContent.textContent = 'The bank completes the transfer, moving funds from the user\'s account to the attacker\'s account. The user may not notice this unauthorized transaction until they check their account statement.';
-                        
-                        // Create transfer confirmation arrow
-                        createArrow('bank', 'hacker', 'Transfer Confirmation', 'response');
+                        explanationContent.textContent = 'The bank completes the transfer, moving money from your account to the hacker\'s account. You might not notice this until you check your account statement.';
+                        bankCharacter.style.boxShadow = '0 0 15px 5px rgba(30, 136, 229, 0.7)';
+                        hackerCharacter.style.boxShadow = '0 0 15px 5px rgba(229, 57, 53, 0.7)';
                         
                         // Show successful transfer
                         addConsoleMessage('> Funds transferred: $1000 sent to account HACKER-12345');
                         
                         // Visual confirmation of attack success
                         createDataPacket(
-                            'Transfer Confirmation',
+                            '💰 Transfer Confirmation',
                             'Transaction ID: TXN789123\nAmount: $1000.00\nFrom: john_doe\nTo: HACKER-12345\nStatus: COMPLETED',
-                            flowBank,
-                            flowHacker,
+                            bankCharacter,
+                            hackerCharacter,
                             true
                         );
                         break;
                         
                     case 7:
-                        stepIndicator.textContent = 'Step 7: User notices unauthorized transaction';
-                        explanationContent.textContent = 'The user eventually discovers the unauthorized transaction. At this point, the damage is already done, and the user must contact the bank to report the fraud and attempt to recover the funds.';
+                        stepIndicator.textContent = 'Step 7: You notice unauthorized transaction';
+                        explanationContent.textContent = 'You eventually discover the unauthorized transaction. At this point, the damage is already done, and you must contact the bank to report the fraud.';
+                        userCharacter.style.boxShadow = '0 0 15px 5px rgba(76, 175, 80, 0.7)';
                         
                         // Show user discovering the fraud
-                        userInfo.innerHTML = '<strong>User Status:</strong> ❌ Unauthorized transaction detected!';
+                        userInfo.innerHTML = '<strong>Your Status:</strong> ❌ Unauthorized transaction detected!';
                         userInfo.style.background = '#ffebee';
                         userInfo.style.borderLeftColor = '#e53935';
                         
@@ -920,10 +1001,38 @@
                         addConsoleMessage('> 3. Require re-authentication for sensitive actions');
                         addConsoleMessage('> 4. Use custom request headers for API calls');
                         
-                        csrfStatus.textContent = 'CSRF attacks can be prevented with proper security measures!';
+                        csrfStatus.textContent = '✅ CSRF attacks can be prevented with proper security measures!';
                         csrfStatus.className = 'status-message success';
                         break;
                 }
+            }
+            
+            function animateCharacter(fromElement, toElement) {
+                const fromRect = fromElement.getBoundingClientRect();
+                const toRect = toElement.getBoundingClientRect();
+                
+                // Create a temporary character for animation
+                const tempChar = document.createElement('div');
+                tempChar.className = 'character user-character';
+                tempChar.innerHTML = '<div class="emoji">👤</div>';
+                tempChar.style.position = 'fixed';
+                tempChar.style.left = `${fromRect.left}px`;
+                tempChar.style.top = `${fromRect.top}px`;
+                tempChar.style.zIndex = '100';
+                
+                document.body.appendChild(tempChar);
+                
+                // Animate the character moving
+                setTimeout(() => {
+                    tempChar.style.transition = 'all 1.5s ease-in-out';
+                    tempChar.style.left = `${toRect.left}px`;
+                    tempChar.style.top = `${toRect.top}px`;
+                    
+                    // Remove after animation
+                    setTimeout(() => {
+                        tempChar.remove();
+                    }, 1500);
+                }, 500);
             }
             
             function createSessionCookie() {
@@ -952,7 +1061,6 @@
                 // Position the packet
                 const fromRect = fromElement.getBoundingClientRect();
                 const toRect = toElement.getBoundingClientRect();
-                const containerRect = document.querySelector('.visual-flow').getBoundingClientRect();
                 
                 packet.style.left = `${fromRect.left + fromRect.width/2 - 140}px`;
                 packet.style.top = `${fromRect.top + fromRect.height/2 - 40}px`;
@@ -991,81 +1099,8 @@
                     attackFlow.style.transform = `rotate(${angle}deg)`;
                     attackFlow.style.transformOrigin = '0 0';
                     
-                    document.querySelector('.visual-flow').appendChild(attackFlow);
+                    document.querySelector('.character-container').appendChild(attackFlow);
                 }
-            }
-            
-            function createArrow(from, to, label, type) {
-                const arrow = document.createElement('div');
-                const arrowLabel = document.createElement('div');
-                
-                arrow.className = 'arrow';
-                arrowLabel.className = 'arrow-label';
-                arrowLabel.textContent = label;
-                
-                // Set arrow type
-                if (type === 'request') {
-                    arrow.classList.add('request-arrow');
-                } else if (type === 'response') {
-                    arrow.classList.add('response-arrow');
-                } else if (type === 'malicious') {
-                    arrow.classList.add('malicious-arrow');
-                }
-                
-                // Calculate positions based on from and to
-                let fromX, fromY, toX, toY;
-                const containerRect = arrowContainer.getBoundingClientRect();
-                
-                switch(from) {
-                    case 'user':
-                        fromX = 50;
-                        fromY = 50;
-                        break;
-                    case 'bank':
-                        fromX = containerRect.width / 2;
-                        fromY = 50;
-                        break;
-                    case 'hacker':
-                        fromX = containerRect.width - 50;
-                        fromY = 50;
-                        break;
-                }
-                
-                switch(to) {
-                    case 'user':
-                        toX = 50;
-                        toY = 50;
-                        break;
-                    case 'bank':
-                        toX = containerRect.width / 2;
-                        toY = 50;
-                        break;
-                    case 'hacker':
-                        toX = containerRect.width - 50;
-                        toY = 50;
-                        break;
-                }
-                
-                // Position the arrow
-                arrow.style.left = `${fromX}px`;
-                arrow.style.top = `${fromY}px`;
-                
-                // Position the label
-                arrowLabel.style.left = `${(fromX + toX) / 2 - arrowLabel.offsetWidth / 2}px`;
-                arrowLabel.style.top = `${fromY - 25}px`;
-                
-                // Calculate rotation for the arrow
-                const angle = Math.atan2(toY - fromY, toX - fromX) * 180 / Math.PI;
-                arrow.style.transform = `rotate(${angle}deg)`;
-                
-                arrowContainer.appendChild(arrow);
-                arrowContainer.appendChild(arrowLabel);
-                
-                // Remove after some time
-                setTimeout(() => {
-                    arrow.remove();
-                    arrowLabel.remove();
-                }, 3500);
             }
             
             function addConsoleMessage(message) {
