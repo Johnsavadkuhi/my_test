@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced HTTP Security Status Codes Animation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --success: #4CAF50;
+            --redirect: #FF9800;
+            --client-error: #F44336;
+            --server-error: #9C27B0;
+            --security: #2196F3;
+            --dark-blue: #1a237e;
+            --dark-red: #b71c1c;
+            --dark-orange: #e65100;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--dark-blue), var(--dark-red), var(--dark-orange));
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            width: 100%;
+        }
+
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            background: linear-gradient(to right, #4FC3F7, #E1F5FE);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            font-size: 1.3rem;
+            max-width: 900px;
+            margin: 0 auto 20px;
+            line-height: 1.6;
+            opacity: 0.9;
+        }
+
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 30px;
+            max-width: 1400px;
+            width: 100%;
+        }
+
+        .animation-area {
+            flex: 1;
+            min-width: 350px;
+            max-width: 700px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 600px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .controls {
+            flex: 0 0 350px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .status-display {
+            width: 100%;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .status-code {
+            font-size: 7rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.5);
+            transition: all 0.5s ease;
+        }
+
+        .status-message {
+            font-size: 2rem;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .status-description {
+            font-size: 1.2rem;
+            line-height: 1.6;
+            max-width: 600px;
+            margin: 0 auto;
+            opacity: 0.9;
+        }
+
+        .animation-scene {
+            width: 100%;
+            height: 350px;
+            position: relative;
+            margin: 20px 0;
+            border-radius: 15px;
+            overflow: hidden;
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .client, .server {
+            position: absolute;
+            width: 90px;
+            height: 90px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 15px;
+            font-weight: bold;
+            font-size: 1rem;
+            text-align: center;
+            transition: all 0.5s ease;
+            z-index: 10;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .client {
+            background: var(--success);
+            left: 50px;
+            top: 130px;
+            box-shadow: 0 0 20px var(--success);
+        }
+
+        .server {
+            background: var(--security);
+            right: 50px;
+            top: 130px;
+            box-shadow: 0 0 20px var(--security);
+        }
+
+        .request, .response {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: bold;
+            opacity: 0;
+            transition: all 0.5s ease;
+            z-index: 5;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+        }
+
+        .request {
+            background: var(--redirect);
+            box-shadow: 0 0 15px var(--redirect);
+        }
+
+        .response {
+            background: var(--security);
+            box-shadow: 0 0 15px var(--security);
+        }
+
+        .path {
+            position: absolute;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.2);
+            top: 165px;
+            left: 140px;
+            right: 140px;
+            border-radius: 3px;
+            z-index: 1;
+        }
+
+        .firewall, .database, .hacker {
+            position: absolute;
+            width: 70px;
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 0.8rem;
+            text-align: center;
+            transition: all 0.5s ease;
+            opacity: 0;
+            z-index: 8;
+        }
+
+        .firewall {
+            background: #FF5722;
+            left: 180px;
+            top: 140px;
+            box-shadow: 0 0 15px #FF5722;
+        }
+
+        .database {
+            background: #673AB7;
+            right: 180px;
+            top: 140px;
+            box-shadow: 0 0 15px #673AB7;
+        }
+
+        .hacker {
+            background: #F44336;
+            left: 50px;
+            top: 50px;
+            box-shadow: 0 0 15px #F44336;
+            transform: scale(0);
+        }
+
+        .control-group {
+            margin-bottom: 25px;
+        }
+
+        h3 {
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+            text-align: center;
+            color: #E1F5FE;
+        }
+
+        .status-buttons {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            background: rgba(255, 255, 255, 0.15);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            padding: 14px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        button:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        button.active {
+            background: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+            transform: scale(1.05);
+        }
+
+        .info-box {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            padding: 18px;
+            margin-top: 20px;
+            border-left: 4px solid var(--security);
+        }
+
+        .info-box h4 {
+            margin-bottom: 12px;
+            font-size: 1.3rem;
+            color: #4FC3F7;
+        }
+
+        .info-box p {
+            line-height: 1.6;
+            font-size: 1rem;
+        }
+
+        .explanation {
+            margin-top: 30px;
+            font-size: 1.1rem;
+            line-height: 1.7;
+            text-align: center;
+            max-width: 1000px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        footer {
+            margin-top: 40px;
+            text-align: center;
+            font-size: 1rem;
+            opacity: 0.8;
+            padding: 20px;
+            width: 100%;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .security-features {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 20px;
+            justify-content: center;
+        }
+
+        .security-badge {
+            background: rgba(33, 150, 243, 0.2);
+            border-radius: 10px;
+            padding: 10px 15px;
+            font-size: 0.9rem;
+            border: 1px solid rgba(33, 150, 243, 0.5);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .controls {
+                width: 100%;
+            }
+            
+            h1 {
+                font-size: 2.5rem;
+            }
+            
+            .status-code {
+                font-size: 5rem;
+            }
+            
+            .animation-scene {
+                height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Advanced HTTP Security Status Codes</h1>
+        <p class="subtitle">Explore HTTP status codes with a focus on web security. Understand how servers respond to different requests and protect against threats.</p>
+    </header>
+
+    <div class="container">
+        <div class="animation-area">
+            <div class="status-display">
+                <div class="status-code">200</div>
+                <div class="status-message">OK</div>
+                <div class="status-description">The request was successful and the server returned the requested resource.</div>
+            </div>
+            
+            <div class="animation-scene">
+                <div class="path"></div>
+                <div class="client">CLIENT</div>
+                <div class="server">SERVER</div>
+                <div class="firewall">FIREWALL</div>
+                <div class="database">DATABASE</div>
+                <div class="hacker">HACKER</div>
+                <div class="request">REQUEST</div>
+                <div class="response">RESPONSE</div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <div class="control-group">
+                <h3>Common Status Codes</h3>
+                <div class="status-buttons">
+                    <button data-code="200" class="active">200 OK</button>
+                    <button data-code="201">201 Created</button>
+                    <button data-code="301">301 Moved</button>
+                    <button data-code="304">304 Not Modified</button>
+                    <button data-code="400">400 Bad Request</button>
+                    <button data-code="401">401 Unauthorized</button>
+                    <button data-code="403">403 Forbidden</button>
+                    <button data-code="404">404 Not Found</button>
+                    <button data-code="429">429 Too Many Requests</button>
+                    <button data-code="500">500 Server Error</button>
+                    <button data-code="502">502 Bad Gateway</button>
+                    <button data-code="503">503 Unavailable</button>
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <h3>Security Focused Codes</h3>
+                <div class="status-buttons">
+                    <button data-code="401">401 Unauthorized</button>
+                    <button data-code="403">403 Forbidden</button>
+                    <button data-code="429">429 Too Many Requests</button>
+                    <button data-code="451">451 Unavailable</button>
+                </div>
+            </div>
+            
+            <div class="info-box">
+                <h4>HTTP Security Explained</h4>
+                <p>HTTP status codes help communicate the result of a request between client and server. Security-focused codes like 401, 403, and 429 protect against unauthorized access, brute force attacks, and other web threats.</p>
+                
+                <div class="security-features">
+                    <div class="security-badge">Authentication</div>
+                    <div class="security-badge">Authorization</div>
+                    <div class="security-badge">Rate Limiting</div>
+                    <div class="security-badge">Firewall Protection</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="explanation">
+        <p>This advanced animation demonstrates HTTP communication with security elements. Watch how requests travel through firewalls, how servers interact with databases, and how security measures protect against threats. Different status codes represent various security scenarios - from successful authentication to blocked attacks.</p>
+    </div>
+    
+    <footer>
+        <p>Advanced HTTP Security Status Codes Animation | Educational Tool for Understanding Web Security</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const statusCodeEl = document.querySelector('.status-code');
+            const statusMessageEl = document.querySelector('.status-message');
+            const statusDescriptionEl = document.querySelector('.status-description');
+            const clientEl = document.querySelector('.client');
+            const serverEl = document.querySelector('.server');
+            const requestEl = document.querySelector('.request');
+            const responseEl = document.querySelector('.response');
+            const firewallEl = document.querySelector('.firewall');
+            const databaseEl = document.querySelector('.database');
+            const hackerEl = document.querySelector('.hacker');
+            const buttons = document.querySelectorAll('button');
+            
+            // HTTP status code data with security focus
+            const statusCodes = {
+                200: {
+                    message: "OK",
+                    description: "The request was successful and the server returned the requested resource.",
+                    category: "2xx",
+                    color: "#4CAF50"
+                },
+                201: {
+                    message: "Created",
+                    description: "The request was successful and a new resource was created as a result.",
+                    category: "2xx",
+                    color: "#4CAF50"
+                },
+                301: {
+                    message: "Moved Permanently",
+                    description: "The requested resource has been permanently moved to a new URL.",
+                    category: "3xx",
+                    color: "#FF9800"
+                },
+                304: {
+                    message: "Not Modified",
+                    description: "The resource has not been modified since the last request.",
+                    category: "3xx",
+                    color: "#FF9800"
+                },
+                400: {
+                    message: "Bad Request",
+                    description: "The server cannot process the request due to a client error.",
+                    category: "4xx",
+                    color: "#F44336"
+                },
+                401: {
+                    message: "Unauthorized",
+                    description: "Authentication is required and has failed or not been provided.",
+                    category: "4xx",
+                    color: "#F44336"
+                },
+                403: {
+                    message: "Forbidden",
+                    description: "The client does not have permission to access the requested resource.",
+                    category: "4xx",
+                    color: "#F44336"
+                },
+                404: {
+                    message: "Not Found",
+                    description: "The server cannot find the requested resource.",
+                    category: "4xx",
+                    color: "#F44336"
+                },
+                429: {
+                    message: "Too Many Requests",
+                    description: "The user has sent too many requests in a given amount of time.",
+                    category: "4xx",
+                    color: "#F44336"
+                },
+                451: {
+                    message: "Unavailable For Legal Reasons",
+                    description: "The resource is unavailable due to legal reasons.",
+                    category: "4xx",
+                    color: "#F44336"
+                },
+                500: {
+                    message: "Internal Server Error",
+                    description: "The server encountered an unexpected condition.",
+                    category: "5xx",
+                    color: "#9C27B0"
+                },
+                502: {
+                    message: "Bad Gateway",
+                    description: "The server received an invalid response from an upstream server.",
+                    category: "5xx",
+                    color: "#9C27B0"
+                },
+                503: {
+                    message: "Service Unavailable",
+                    description: "The server is temporarily unable to handle the request.",
+                    category: "5xx",
+                    color: "#9C27B0"
+                }
+            };
+            
+            // Reset animation elements
+            function resetAnimation() {
+                requestEl.style.opacity = "0";
+                requestEl.style.left = "140px";
+                responseEl.style.opacity = "0";
+                responseEl.style.right = "140px";
+                clientEl.style.background = "#4CAF50";
+                serverEl.style.background = "#2196F3";
+                firewallEl.style.opacity = "0";
+                databaseEl.style.opacity = "0";
+                hackerEl.style.opacity = "0";
+                hackerEl.style.transform = "scale(0)";
+                serverEl.textContent = "SERVER";
+                clientEl.textContent = "CLIENT";
+            }
+            
+            // Animation function
+            function animateStatus(code) {
+                resetAnimation();
+                
+                // Update status display
+                statusCodeEl.textContent = code;
+                statusMessageEl.textContent = statusCodes[code].message;
+                statusDescriptionEl.textContent = statusCodes[code].description;
+                statusCodeEl.style.color = statusCodes[code].color;
+                
+                // Show firewall and database
+                setTimeout(() => {
+                    firewallEl.style.opacity = "1";
+                    databaseEl.style.opacity = "1";
+                }, 300);
+                
+                // Set request animation
+                setTimeout(() => {
+                    requestEl.textContent = "REQUEST";
+                    requestEl.style.opacity = "1";
+                    requestEl.style.left = "140px";
+                    
+                    // Animate request moving to server through firewall
+                    setTimeout(() => {
+                        requestEl.style.left = "180px";
+                        
+                        setTimeout(() => {
+                            requestEl.style.left = "calc(100% - 190px)";
+                            
+                            // Process request based on status code
+                            setTimeout(() => {
+                                requestEl.style.opacity = "0";
+                                
+                                // Different animations based on status code
+                                switch(code) {
+                                    case 200: // OK
+                                        serverEl.style.background = statusCodes[code].color;
+                                        databaseEl.style.background = "#4CAF50";
+                                        setTimeout(() => {
+                                            databaseEl.style.background = "#673AB7";
+                                            responseEl.textContent = "RESPONSE";
+                                            responseEl.style.opacity = "1";
+                                            responseEl.style.right = "calc(100% - 190px)";
+                                            
+                                            setTimeout(() => {
+                                                responseEl.style.right = "180px";
+                                                
+                                                setTimeout(() => {
+                                                    responseEl.style.right = "140px";
+                                                    clientEl.style.background = statusCodes[code].color;
+                                                }, 500);
+                                            }, 500);
+                                        }, 1000);
+                                        break;
+                                        
+                                    case 201: // Created
+                                        serverEl.style.background = statusCodes[code].color;
+                                        serverEl.textContent = "CREATING";
+                                        databaseEl.style.background = "#4CAF50";
+                                        setTimeout(() => {
+                                            databaseEl.style.background = "#673AB7";
+                                            serverEl.textContent = "SERVER";
+                                            responseEl.textContent = "CREATED";
+                                            responseEl.style.opacity = "1";
+                                            responseEl.style.right = "calc(100% - 190px)";
+                                            
+                                            setTimeout(() => {
+                                                responseEl.style.right = "140px";
+                                                clientEl.style.background = statusCodes[code].color;
+                                            }, 500);
+                                        }, 1500);
+                                        break;
+                                        
+                                    case 301: // Moved
+                                        serverEl.style.background = statusCodes[code].color;
+                                        serverEl.textContent = "REDIRECTING";
+                                        setTimeout(() => {
+                                            serverEl.textContent = "SERVER";
+                                            responseEl.textContent = "NEW LOCATION";
+                                            responseEl.style.opacity = "1";
+                                            responseEl.style.right = "calc(100% - 190px)";
+                                            
+                                            setTimeout(() => {
+                                                responseEl.style.right = "140px";
+                                                clientEl.style.background = statusCodes[code].color;
+                                            }, 500);
+                                        }, 1000);
+                                        break;
+                                        
+                                    case 304: // Not Modified
+                                        serverEl.style.background = statusCodes[code].color;
+                                        serverEl.textContent = "CHECKING CACHE";
+                                        setTimeout(() => {
+                                            serverEl.textContent = "SERVER";
+                                            responseEl.textContent = "NOT MODIFIED";
+                                            responseEl.style.opacity = "1";
+                                            responseEl.style.right = "calc(100% - 190px)";
+                                            
+                                            setTimeout(() => {
+                                                responseEl.style.right = "140px";
+                                                clientEl.style.background = statusCodes[code].color;
+                                            }, 500);
+                                        }, 1000);
+                                        break;
+                                        
+                                    case 400: // Bad Request
+                                        serverEl.style.background = statusCodes[code].color;
+                                        serverEl.textContent = "INVALID REQUEST";
+                                        setTimeout(() => {
+                                            serverEl.textContent = "SERVER";
+                                            responseEl.textContent = "BAD REQUEST";
+                                            responseEl.style.opacity = "1";
+                                            responseEl.style.right = "calc(100% - 190px)";
+                                            
+                                            setTimeout(() => {
+                                                responseEl.style.right = "140px";
+                                                clientEl.style.background = statusCodes[code].color;
+                                            }, 500);
+                                        }, 1000);
+                                        break;
+                                        
+                                    case 401: // Unauthorized
+                                        serverEl.style.background = statusCodes[code].color;
+                                        serverEl.textContent = "AUTH REQUIRED";
+                                        setTimeout(() => {
+                                            serverEl.textContent = "SERVER";
+                                            responseEl.textContent = "UNAUTHORIZED";
+                                            responseEl.style.opacity = "1";
+                                            responseEl.style.right = "calc(100% - 190px)";
+                                            
+                                            setTimeout(() => {
+                                                responseEl.style.right = "140px";
+                                                clientEl.style.background = statusCodes[code].color;
+                                            }, 500);
+                                        }, 1000);
+                                        break;
+                                        
+                                    case 403: // Forbidden
+                                        serverEl.style.background = statusCodes[code].color;
+                                        serverEl.textContent = "ACCESS DENIED";
+                                        setTimeout(() => {
+                                            serverEl.textContent = "SERVER";
+                                            responseEl.textContent = "FORBIDDEN";
+                                            responseEl.style.opacity = "1";
+                                            responseEl.style.right = "calc(100% - 190px)";
+                                            
+                                            setTimeout(() => {
+                                                responseEl.style.right = "140px";
+                                                clientEl.style.background = statusCodes[code].color;
+                                            }, 500);
+                                        }, 1000);
+                                        break;
+                                        
+                                    case 404: // Not Found
+                                        serverEl.style.background = statusCodes[code].color;
+                                        serverEl.textContent = "SEARCHING...";
+                                        databaseEl.style.background = "#F44336";
+                                        setTimeout(() => {
+                                            databaseEl.style.background = "#673AB7";
+                                            serverEl.textContent = "SERVER";
+                                            responseEl.textContent = "NOT FOUND";
+                                            responseEl.style.opacity = "1";
+                                            responseEl.style.right = "calc(100% - 190px)";
+                                            
+                                            setTimeout(() => {
+                                                responseEl.style.right = "140px";
+                                                clientEl.style.background = statusCodes[code].color;
+                                            }, 500);
+                                        }, 1000);
+                                        break;
+                                        
+                                    case 429: // Too Many Requests
+                                        // Show hacker attempting multiple requests
+                                        hackerEl.style.opacity = "1";
+                                        hackerEl.style.transform = "scale(1)";
+                                        
+                                        setTimeout(() => {
+                                            // Show multiple requests from hacker
+                                            for (let i = 0; i < 3; i++) {
+                                                setTimeout(() => {
+                                                    const tempRequest = document.createElement('div');
+                                                    tempRequest.className = 'request';
+                                                    tempRequest.style.background = '#F44336';
+                                                    tempRequest.style.left = '50px';
+                                                    tempRequest.style.top = '50px';
+                                                    tempRequest.style.opacity = '1';
+                                                    tempRequest.textContent = 'ATTACK';
+                                                    document.querySelector('.animation-scene').appendChild(tempRequest);
+                                                    
+                                                    setTimeout(() => {
+                                                        tempRequest.style.left = '180px';
+                                                        
+                                                        setTimeout(() => {
+                                                            tempRequest.style.opacity = '0';
+                                                            setTimeout(() => {
+                                                                document.querySelector('.animation-scene').removeChild(tempRequest);
+                                                            }, 500);
+                                                        }, 500);
+                                                    }, 100);
+                                                }, i * 300);
+                                            }
+                                            
+                                            // Server response
+                                            setTimeout(() => {
+                                                serverEl.style.background = statusCodes[code].color;
+                                                serverEl.textContent = "RATE LIMIT";
+                                                firewallEl.style.background = "#F44336";
+                                                
+                                                setTimeout(() => {
+                                                    serverEl.textContent = "SERVER";
+                                                    firewallEl.style.background = "#FF5722";
+                                                    responseEl.textContent = "TOO MANY REQUESTS";
+                                                    responseEl.style.opacity = "1";
+                                                    responseEl.style.right = "calc(100% - 190px)";
+                                                    
+                                                    setTimeout(() => {
+                                                        responseEl.style.right = "140px";
+                                                        clientEl.style.background = statusCodes[code].color;
+                                                    }, 500);
+                                                }, 1000);
+                                            }, 1200);
+                                        }, 500);
+                                        break;
+                                        
+                                    case 451: // Unavailable For Legal Reasons
+                                        serverEl.style.background = statusCodes[code].color;
+                                        serverEl.textContent = "LEGAL BLOCK";
+                                        setTimeout(() => {
+                                            serverEl.textContent = "SERVER";
+                                            responseEl.textContent = "UNAVAILABLE LEGALLY";
+                                            responseEl.style.opacity = "1";
+                                            responseEl.style.right = "calc(100% - 190px)";
+                                            
+                                            setTimeout(() => {
+                                                responseEl.style.right = "140px";
+                                                clientEl.style.background = statusCodes[code].color;
+                                            }, 500);
+                                        }, 1000);
+                                        break;
+                                        
+                                    case 500: // Internal Server Error
+                                        serverEl.style.background = statusCodes[code].color;
+                                        serverEl.textContent = "ERROR";
+                                        databaseEl.style.background = "#F44336";
+                                        setTimeout(() => {
+                                            databaseEl.style.background = "#673AB7";
+                                            serverEl.textContent = "SERVER";
+                                            responseEl.textContent = "SERVER ERROR";
+                                            responseEl.style.opacity = "1";
+                                            responseEl.style.right = "calc(100% - 190px)";
+                                            
+                                            setTimeout(() => {
+                                                responseEl.style.right = "140px";
+                                                clientEl.style.background = statusCodes[code].color;
+                                            }, 500);
+                                        }, 1000);
+                                        break;
+                                        
+                                    case 502: // Bad Gateway
+                                        serverEl.style.background = statusCodes[code].color;
+                                        serverEl.textContent = "GATEWAY ERROR";
+                                        setTimeout(() => {
+                                            serverEl.textContent = "SERVER";
+                                            responseEl.textContent = "BAD GATEWAY";
+                                            responseEl.style.opacity = "1";
+                                            responseEl.style.right = "calc(100% - 190px)";
+                                            
+                                            setTimeout(() => {
+                                                responseEl.style.right = "140px";
+                                                clientEl.style.background = statusCodes[code].color;
+                                            }, 500);
+                                        }, 1000);
+                                        break;
+                                        
+                                    case 503: // Service Unavailable
+                                        serverEl.style.background = statusCodes[code].color;
+                                        serverEl.textContent = "OVERLOADED";
+                                        setTimeout(() => {
+                                            serverEl.textContent = "SERVER";
+                                            responseEl.textContent = "SERVICE UNAVAILABLE";
+                                            responseEl.style.opacity = "1";
+                                            responseEl.style.right = "calc(100% - 190px)";
+                                            
+                                            setTimeout(() => {
+                                                responseEl.style.right = "140px";
+                                                clientEl.style.background = statusCodes[code].color;
+                                            }, 500);
+                                        }, 1000);
+                                        break;
+                                }
+                            }, 500);
+                        }, 500);
+                    }, 500);
+                }, 500);
+            }
+            
+            // Set up button event listeners
+            buttons.forEach(button => {
+                button.addEventListener('click', function() {
+                    // Remove active class from all buttons
+                    buttons.forEach(btn => btn.classList.remove('active'));
+                    
+                    // Add active class to clicked button
+                    this.classList.add('active');
+                    
+                    // Get code from data attribute
+                    const code = this.getAttribute('data-code');
+                    
+                    if (code) {
+                        animateStatus(parseInt(code));
+                    }
+                });
+            });
+            
+            // Initialize with 200 status
+            animateStatus(200);
+        });
+    </script>
+</body>
+</html>
