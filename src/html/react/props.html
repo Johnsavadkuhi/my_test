@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>React State, Props & Virtual DOM</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .animation-area {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .component {
+            flex: 1;
+            min-width: 300px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .component h2 {
+            text-align: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .state-container, .props-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .state-item, .prop-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+        }
+        
+        .state-value, .prop-value {
+            font-weight: bold;
+            color: #4cd964;
+        }
+        
+        .dom-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .dom-representation {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+        }
+        
+        .dom-box {
+            width: 45%;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .dom-box h3 {
+            margin-bottom: 10px;
+        }
+        
+        .dom-tree {
+            min-height: 150px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            padding: 10px;
+            font-family: monospace;
+            text-align: left;
+        }
+        
+        .diff-highlight {
+            background-color: rgba(255, 204, 0, 0.3);
+            transition: background-color 0.5s;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            background: #4cd964;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        button:hover {
+            background: #3cb054;
+            transform: translateY(-2px);
+        }
+        
+        .flow-arrow {
+            font-size: 2rem;
+            text-align: center;
+            margin: 10px 0;
+        }
+        
+        .explanation {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        
+        .explanation h2 {
+            margin-bottom: 15px;
+        }
+        
+        .explanation p {
+            margin-bottom: 10px;
+            line-height: 1.6;
+        }
+        
+        .highlight {
+            color: #4cd964;
+            font-weight: bold;
+        }
+        
+        @media (max-width: 768px) {
+            .animation-area {
+                flex-direction: column;
+            }
+            
+            .dom-representation {
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            .dom-box {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>React State, Props & Virtual DOM</h1>
+            <p class="subtitle">Visualizing how React manages component data and updates</p>
+        </header>
+        
+        <div class="animation-area">
+            <div class="component">
+                <h2>Component State</h2>
+                <div class="state-container">
+                    <div class="state-item">
+                        <span>Counter:</span>
+                        <span class="state-value" id="counter-state">0</span>
+                    </div>
+                    <div class="state-item">
+                        <span>Theme:</span>
+                        <span class="state-value" id="theme-state">Light</span>
+                    </div>
+                    <div class="state-item">
+                        <span>User:</span>
+                        <span class="state-value" id="user-state">John Doe</span>
+                    </div>
+                </div>
+                
+                <div class="flow-arrow">↓</div>
+                
+                <h2>Component Props</h2>
+                <div class="props-container">
+                    <div class="prop-item">
+                        <span>Title:</span>
+                        <span class="prop-value" id="title-prop">Welcome</span>
+                    </div>
+                    <div class="prop-item">
+                        <span>Count:</span>
+                        <span class="prop-value" id="count-prop">0</span>
+                    </div>
+                    <div class="prop-item">
+                        <span>User:</span>
+                        <span class="prop-value" id="user-prop">John Doe</span>
+                    </div>
+                </div>
+                
+                <div class="controls">
+                    <button id="increment-btn">Increment Counter</button>
+                    <button id="toggle-theme">Toggle Theme</button>
+                    <button id="change-user">Change User</button>
+                </div>
+            </div>
+            
+            <div class="component">
+                <h2>Virtual DOM vs Real DOM</h2>
+                <div class="dom-container">
+                    <div class="dom-representation">
+                        <div class="dom-box">
+                            <h3>Virtual DOM</h3>
+                            <div class="dom-tree" id="virtual-dom">
+                                &lt;App&gt;<br>
+                                &nbsp;&nbsp;&lt;Header title="Welcome" /&gt;<br>
+                                &nbsp;&nbsp;&lt;Counter count=0 /&gt;<br>
+                                &nbsp;&nbsp;&lt;UserProfile name="John Doe" /&gt;<br>
+                                &lt;/App&gt;
+                            </div>
+                        </div>
+                        
+                        <div class="dom-box">
+                            <h3>Real DOM</h3>
+                            <div class="dom-tree" id="real-dom">
+                                &lt;div id="root"&gt;<br>
+                                &nbsp;&nbsp;&lt;h1&gt;Welcome&lt;/h1&gt;<br>
+                                &nbsp;&nbsp;&lt;div&gt;Count: 0&lt;/div&gt;<br>
+                                &nbsp;&nbsp;&lt;div&gt;User: John Doe&lt;/div&gt;<br>
+                                &lt;/div&gt;
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="controls">
+                        <button id="update-dom">Update DOM</button>
+                        <button id="reset-all">Reset All</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="explanation">
+            <h2>How It Works</h2>
+            <p><span class="highlight">State:</span> Internal data managed by a component. When state changes, the component re-renders.</p>
+            <p><span class="highlight">Props:</span> Data passed from a parent component to a child component. Props are immutable.</p>
+            <p><span class="highlight">Virtual DOM:</span> A lightweight copy of the real DOM. React uses it to determine the most efficient way to update the real DOM.</p>
+            <p>When state changes, React creates a new Virtual DOM, compares it with the previous one (diffing), and updates only the changed parts in the real DOM.</p>
+        </div>
+    </div>
+
+    <script>
+        // State data
+        let state = {
+            counter: 0,
+            theme: 'Light',
+            user: 'John Doe'
+        };
+        
+        // DOM elements
+        const counterStateEl = document.getElementById('counter-state');
+        const themeStateEl = document.getElementById('theme-state');
+        const userStateEl = document.getElementById('user-state');
+        
+        const titlePropEl = document.getElementById('title-prop');
+        const countPropEl = document.getElementById('count-prop');
+        const userPropEl = document.getElementById('user-prop');
+        
+        const virtualDomEl = document.getElementById('virtual-dom');
+        const realDomEl = document.getElementById('real-dom');
+        
+        // Buttons
+        const incrementBtn = document.getElementById('increment-btn');
+        const toggleThemeBtn = document.getElementById('toggle-theme');
+        const changeUserBtn = document.getElementById('change-user');
+        const updateDomBtn = document.getElementById('update-dom');
+        const resetBtn = document.getElementById('reset-all');
+        
+        // Update the UI based on current state
+        function updateUI() {
+            // Update state display
+            counterStateEl.textContent = state.counter;
+            themeStateEl.textContent = state.theme;
+            userStateEl.textContent = state.user;
+            
+            // Update props display
+            countPropEl.textContent = state.counter;
+            userPropEl.textContent = state.user;
+            
+            // Update Virtual DOM display
+            updateVirtualDOM();
+        }
+        
+        // Update Virtual DOM representation
+        function updateVirtualDOM() {
+            virtualDomEl.innerHTML = `
+                &lt;App&gt;<br>
+                &nbsp;&nbsp;&lt;Header title="Welcome" /&gt;<br>
+                &nbsp;&nbsp;&lt;Counter count=${state.counter} /&gt;<br>
+                &nbsp;&nbsp;&lt;UserProfile name="${state.user}" theme="${state.theme}" /&gt;<br>
+                &lt;/App&gt;
+            `;
+        }
+        
+        // Update Real DOM representation with animation
+        function updateRealDOM() {
+            // Highlight the changes
+            realDomEl.classList.add('diff-highlight');
+            
+            // Update the content
+            realDomEl.innerHTML = `
+                &lt;div id="root"&gt;<br>
+                &nbsp;&nbsp;&lt;h1&gt;Welcome&lt;/h1&gt;<br>
+                &nbsp;&nbsp;&lt;div&gt;Count: ${state.counter}&lt;/div&gt;<br>
+                &nbsp;&nbsp;&lt;div&gt;User: ${state.user}&lt;/div&gt;<br>
+                &nbsp;&nbsp;&lt;div&gt;Theme: ${state.theme}&lt;/div&gt;<br>
+                &lt;/div&gt;
+            `;
+            
+            // Remove highlight after animation
+            setTimeout(() => {
+                realDomEl.classList.remove('diff-highlight');
+            }, 1000);
+        }
+        
+        // Event listeners
+        incrementBtn.addEventListener('click', () => {
+            state.counter++;
+            updateUI();
+        });
+        
+        toggleThemeBtn.addEventListener('click', () => {
+            state.theme = state.theme === 'Light' ? 'Dark' : 'Light';
+            updateUI();
+        });
+        
+        changeUserBtn.addEventListener('click', () => {
+            const users = ['John Doe', 'Jane Smith', 'Bob Johnson', 'Alice Williams'];
+            const randomUser = users[Math.floor(Math.random() * users.length)];
+            state.user = randomUser;
+            updateUI();
+        });
+        
+        updateDomBtn.addEventListener('click', () => {
+            updateRealDOM();
+        });
+        
+        resetBtn.addEventListener('click', () => {
+            state = {
+                counter: 0,
+                theme: 'Light',
+                user: 'John Doe'
+            };
+            updateUI();
+            updateRealDOM();
+        });
+        
+        // Initialize the UI
+        updateUI();
+        updateRealDOM();
+    </script>
+</body>
+</html>
