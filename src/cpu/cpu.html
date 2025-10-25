@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Function Execution Simulation in Memory & CPU</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --accent: #e74c3c;
+            --memory: #9b59b6;
+            --cpu: #f39c12;
+            --success: #2ecc71;
+            --stack: #e67e22;
+            --light: #ecf0f1;
+            --dark: #34495e;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, var(--primary), var(--dark));
+            color: var(--light);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, var(--secondary), var(--success));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.8;
+        }
+        
+        .control-panel {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            margin-bottom: 30px;
+        }
+        
+        .speed-control {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .speed-control label {
+            font-weight: bold;
+            color: var(--cpu);
+        }
+        
+        .speed-control input {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            background: var(--secondary);
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex: 1;
+            min-width: 120px;
+        }
+        
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .btn-run {
+            background: var(--success);
+        }
+        
+        .btn-step {
+            background: var(--cpu);
+        }
+        
+        .btn-reset {
+            background: var(--accent);
+        }
+        
+        .simulation-area {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        @media (max-width: 1100px) {
+            .simulation-area {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .memory-section, .cpu-section {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .section-title {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .memory-section .section-title {
+            color: var(--memory);
+        }
+        
+        .cpu-section .section-title {
+            color: var(--cpu);
+        }
+        
+        .memory-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .memory-cell {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 15px 10px;
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            min-height: 120px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        
+        .memory-cell.active {
+            box-shadow: 0 0 15px var(--secondary);
+            transform: scale(1.05);
+        }
+        
+        .memory-cell.stack-frame {
+            border: 2px solid var(--stack);
+        }
+        
+        .memory-address {
+            font-size: 0.8rem;
+            opacity: 0.7;
+            margin-bottom: 5px;
+        }
+        
+        .variable-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .variable-value {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--success);
+        }
+        
+        .variable-type {
+            font-size: 0.8rem;
+            opacity: 0.7;
+            margin-top: 5px;
+        }
+        
+        .stack-section {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .stack-title {
+            color: var(--stack);
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .stack-pointer {
+            font-size: 0.9rem;
+            text-align: center;
+            margin-top: 10px;
+            color: var(--stack);
+        }
+        
+        .cpu-registers {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .register {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            transition: all 0.3s ease;
+            min-height: 100px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .register.active {
+            box-shadow: 0 0 15px var(--cpu);
+            transform: scale(1.05);
+        }
+        
+        .register-name {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: var(--cpu);
+        }
+        
+        .register-value {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+        
+        .data-path {
+            position: absolute;
+            height: 4px;
+            background: var(--secondary);
+            z-index: 1;
+            transition: all 0.5s ease;
+        }
+        
+        .code-editor {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            font-family: 'Courier New', monospace;
+            line-height: 1.5;
+            min-height: 200px;
+            overflow: auto;
+        }
+        
+        .code-line {
+            margin-bottom: 5px;
+            padding: 5px;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+            white-space: pre;
+        }
+        
+        .code-line.active {
+            background: rgba(52, 152, 219, 0.3);
+            box-shadow: 0 0 10px rgba(52, 152, 219, 0.5);
+        }
+        
+        .code-line.function {
+            color: var(--stack);
+        }
+        
+        .explanation {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            margin-top: 40px;
+        }
+        
+        .explanation h2 {
+            margin-bottom: 15px;
+            color: var(--secondary);
+        }
+        
+        .explanation p {
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+        
+        .pulse {
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 0.7; }
+            50% { opacity: 1; }
+            100% { opacity: 0.7; }
+        }
+        
+        .data-flow {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--success);
+            z-index: 10;
+            box-shadow: 0 0 10px var(--success);
+            display: none;
+        }
+        
+        .highlight {
+            animation: highlight 1s ease;
+        }
+        
+        @keyframes highlight {
+            0% { background-color: rgba(46, 204, 113, 0.3); }
+            100% { background-color: transparent; }
+        }
+        
+        .binary-representation {
+            font-size: 0.7rem;
+            margin-top: 5px;
+            opacity: 0.7;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .call-stack {
+            margin-top: 20px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            min-height: 100px;
+        }
+        
+        .stack-frame {
+            padding: 8px;
+            margin-bottom: 5px;
+            background: rgba(230, 126, 34, 0.2);
+            border-radius: 4px;
+            border-left: 3px solid var(--stack);
+        }
+        
+        .stack-frame.active {
+            background: rgba(230, 126, 34, 0.4);
+            box-shadow: 0 0 8px rgba(230, 126, 34, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Function Execution Simulation in Memory & CPU</h1>
+            <p class="subtitle">A Revolutionary Animation Showing How Functions Work at the Hardware Level</p>
+        </header>
+        
+        <div class="control-panel">
+            <div class="speed-control">
+                <label for="speedControl">Animation Speed:</label>
+                <input type="range" id="speedControl" min="1" max="10" value="5">
+                <span id="speedValue">Normal</span>
+            </div>
+            
+            <div class="buttons">
+                <button class="btn-run" id="btnRun">Run Program</button>
+                <button class="btn-step" id="btnStep">Step Forward</button>
+                <button class="btn-reset" id="btnReset">Reset</button>
+            </div>
+        </div>
+        
+        <div class="simulation-area">
+            <div class="memory-section">
+                <h2 class="section-title">
+                    <span>Memory (RAM) & Stack</span>
+                </h2>
+                <div class="memory-grid" id="memoryGrid">
+                    <!-- Memory cells will be generated by JavaScript -->
+                </div>
+                
+                <div class="stack-section">
+                    <h3 class="stack-title">Call Stack</h3>
+                    <div class="call-stack" id="callStack">
+                        <!-- Stack frames will be generated by JavaScript -->
+                    </div>
+                    <div class="stack-pointer" id="stackPointer">Stack Pointer: 0x0000</div>
+                </div>
+            </div>
+            
+            <div class="cpu-section">
+                <h2 class="section-title">
+                    <span>Central Processing Unit (CPU)</span>
+                </h2>
+                <div class="cpu-registers">
+                    <div class="register" id="registerA">
+                        <div class="register-name">Register A</div>
+                        <div class="register-value">-</div>
+                    </div>
+                    <div class="register" id="registerB">
+                        <div class="register-name">Register B</div>
+                        <div class="register-value">-</div>
+                    </div>
+                    <div class="register" id="registerC">
+                        <div class="register-name">Register C</div>
+                        <div class="register-value">-</div>
+                    </div>
+                    <div class="register" id="registerIP">
+                        <div class="register-name">Instruction Pointer</div>
+                        <div class="register-value">0x0000</div>
+                    </div>
+                    <div class="register" id="registerSP">
+                        <div class="register-name">Stack Pointer</div>
+                        <div class="register-value">0x0000</div>
+                    </div>
+                    <div class="register" id="registerBP">
+                        <div class="register-name">Base Pointer</div>
+                        <div class="register-value">0x0000</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="code-editor" id="codeEditor">
+            <div class="code-line">int main() {</div>
+            <div class="code-line">    int x = 5;</div>
+            <div class="code-line">    int y = 10;</div>
+            <div class="code-line">    int result = add(x, y);</div>
+            <div class="code-line">    return 0;</div>
+            <div class="code-line">}</div>
+            <div class="code-line function"></div>
+            <div class="code-line function">int add(int a, int b) {</div>
+            <div class="code-line function">    int sum = a + b;</div>
+            <div class="code-line function">    return sum;</div>
+            <div class="code-line function">}</div>
+        </div>
+        
+        <div class="explanation">
+            <h2>How Function Execution Works in Memory and CPU</h2>
+            <p>This simulation demonstrates how function calls are handled in memory and processed by the CPU:</p>
+            <ul>
+                <li><strong>Memory (RAM)</strong> stores variables at specific addresses. Each variable has a name, value, type, and memory address.</li>
+                <li><strong>Call Stack</strong> is a special region of memory that stores information about active function calls.</li>
+                <li><strong>CPU Registers</strong> are small, fast storage locations inside the processor used to perform operations.</li>
+                <li>When a function is called, a new <strong>stack frame</strong> is created containing parameters, local variables, and return address.</li>
+                <li>The <strong>Instruction Pointer</strong> keeps track of which line of code is being executed.</li>
+                <li>The <strong>Stack Pointer</strong> points to the top of the stack, and the <strong>Base Pointer</strong> points to the base of the current stack frame.</li>
+            </ul>
+            <p>Watch as the animation shows function calls, parameter passing, and stack frame management during program execution!</p>
+        </div>
+    </div>
+
+    <script>
+        // Memory simulation
+        const memory = [
+            { address: '0x1000', name: 'x', value: 5, type: 'int', binary: '00000101', isGlobal: true },
+            { address: '0x1004', name: 'y', value: 10, type: 'int', binary: '00001010', isGlobal: true },
+            { address: '0x1008', name: 'result', value: 0, type: 'int', binary: '00000000', isGlobal: true },
+            { address: '0x2000', name: 'a', value: 0, type: 'int', binary: '00000000', isStack: true },
+            { address: '0x2004', name: 'b', value: 0, type: 'int', binary: '00000000', isStack: true },
+            { address: '0x2008', name: 'sum', value: 0, type: 'int', binary: '00000000', isStack: true },
+            { address: '0x200C', name: 'ret_addr', value: 0, type: 'address', binary: '00000000', isStack: true }
+        ];
+        
+        // CPU registers
+        const registers = {
+            A: { value: null, element: document.getElementById('registerA') },
+            B: { value: null, element: document.getElementById('registerB') },
+            C: { value: null, element: document.getElementById('registerC') },
+            IP: { value: '0x0000', element: document.getElementById('registerIP') },
+            SP: { value: '0x2000', element: document.getElementById('registerSP') },
+            BP: { value: '0x2000', element: document.getElementById('registerBP') }
+        };
+        
+        // Program code
+        const program = [
+            { line: 0, code: 'int main() {', action: 'function_start', function: 'main' },
+            { line: 1, code: '    int x = 5;', action: 'declare', variable: 'x', value: 5 },
+            { line: 2, code: '    int y = 10;', action: 'declare', variable: 'y', value: 10 },
+            { line: 3, code: '    int result = add(x, y);', action: 'function_call', function: 'add', args: ['x', 'y'], returnVar: 'result' },
+            { line: 4, code: '    return 0;', action: 'return', value: 0 },
+            { line: 5, code: '}', action: 'function_end', function: 'main' },
+            { line: 7, code: 'int add(int a, int b) {', action: 'function_start', function: 'add' },
+            { line: 8, code: '    int sum = a + b;', action: 'operation', operation: 'add', args: ['a', 'b'], result: 'sum' },
+            { line: 9, code: '    return sum;', action: 'return', value: 'sum' },
+            { line: 10, code: '}', action: 'function_end', function: 'add' }
+        ];
+        
+        let currentStep = 0;
+        let isRunning = false;
+        let callStack = [];
+        let currentFunction = 'main';
+        let animationSpeed = 5; // Default speed (1-10 scale)
+        
+        // Initialize memory grid
+        const memoryGrid = document.getElementById('memoryGrid');
+        const callStackElement = document.getElementById('callStack');
+        const stackPointerElement = document.getElementById('stackPointer');
+        const speedControl = document.getElementById('speedControl');
+        const speedValue = document.getElementById('speedValue');
+        
+        // Update speed display
+        function updateSpeedDisplay() {
+            const speeds = ['Very Slow', 'Slow', 'Moderate', 'Normal', 'Fast', 'Very Fast'];
+            const index = Math.min(Math.floor((animationSpeed - 1) / 1.5), 5);
+            speedValue.textContent = speeds[index];
+        }
+        
+        // Get animation duration based on speed
+        function getAnimationDuration() {
+            // Inverse relationship: higher speed = shorter duration
+            return 1200 - (animationSpeed * 100);
+        }
+        
+        // Speed control event listener
+        speedControl.addEventListener('input', function() {
+            animationSpeed = parseInt(this.value);
+            updateSpeedDisplay();
+        });
+        
+        // Initialize speed display
+        updateSpeedDisplay();
+        
+        function initializeMemoryGrid() {
+            memoryGrid.innerHTML = '';
+            memory.forEach(cell => {
+                if (!cell.isStack) {
+                    const memoryCell = document.createElement('div');
+                    memoryCell.className = 'memory-cell';
+                    memoryCell.id = `cell-${cell.address}`;
+                    memoryCell.innerHTML = `
+                        <div class="memory-address">${cell.address}</div>
+                        <div class="variable-name">${cell.name}</div>
+                        <div class="variable-value">${cell.value}</div>
+                        <div class="variable-type">${cell.type}</div>
+                        <div class="binary-representation">${cell.binary}</div>
+                    `;
+                    memoryGrid.appendChild(memoryCell);
+                }
+            });
+            
+            // Add stack section header
+            const stackHeader = document.createElement('div');
+            stackHeader.className = 'memory-cell stack-frame';
+            stackHeader.innerHTML = `
+                <div class="memory-address">Stack Frame</div>
+                <div class="variable-name">Function Variables</div>
+                <div class="variable-value">-</div>
+                <div class="variable-type">-</div>
+            `;
+            memoryGrid.appendChild(stackHeader);
+            
+            // Add stack variables
+            memory.forEach(cell => {
+                if (cell.isStack) {
+                    const memoryCell = document.createElement('div');
+                    memoryCell.className = 'memory-cell stack-frame';
+                    memoryCell.id = `cell-${cell.address}`;
+                    memoryCell.innerHTML = `
+                        <div class="memory-address">${cell.address}</div>
+                        <div class="variable-name">${cell.name}</div>
+                        <div class="variable-value">${cell.value}</div>
+                        <div class="variable-type">${cell.type}</div>
+                        <div class="binary-representation">${cell.binary}</div>
+                    `;
+                    memoryGrid.appendChild(memoryCell);
+                }
+            });
+        }
+        
+        function updateCallStack() {
+            callStackElement.innerHTML = '';
+            
+            if (callStack.length === 0) {
+                callStackElement.innerHTML = '<div class="stack-frame">Stack is empty</div>';
+                return;
+            }
+            
+            // Display stack frames (from top to bottom)
+            for (let i = callStack.length - 1; i >= 0; i--) {
+                const frame = callStack[i];
+                const frameElement = document.createElement('div');
+                frameElement.className = 'stack-frame';
+                if (i === callStack.length - 1) {
+                    frameElement.classList.add('active');
+                }
+                frameElement.innerHTML = `
+                    <strong>${frame.function}</strong> (IP: ${frame.returnIP})
+                `;
+                callStackElement.appendChild(frameElement);
+            }
+            
+            stackPointerElement.textContent = `Stack Pointer: ${registers.SP.value}`;
+        }
+        
+        // Initialize code editor highlighting
+        const codeLines = document.querySelectorAll('.code-line');
+        
+        // Update register display
+        function updateRegisters() {
+            for (const reg in registers) {
+                const valueElement = registers[reg].element.querySelector('.register-value');
+                valueElement.textContent = registers[reg].value !== null ? registers[reg].value : '-';
+            }
+        }
+        
+        // Highlight active code line
+        function highlightCodeLine(lineNumber) {
+            codeLines.forEach((line, index) => {
+                if (index === lineNumber) {
+                    line.classList.add('active');
+                } else {
+                    line.classList.remove('active');
+                }
+            });
+        }
+        
+        // Create data flow animation
+        function createDataFlow(fromElement, toElement, color = '#2ecc71') {
+            const fromRect = fromElement.getBoundingClientRect();
+            const toRect = toElement.getBoundingClientRect();
+            
+            const dataFlow = document.createElement('div');
+            dataFlow.className = 'data-flow';
+            dataFlow.style.backgroundColor = color;
+            dataFlow.style.left = `${fromRect.left + fromRect.width/2 - 10}px`;
+            dataFlow.style.top = `${fromRect.top + fromRect.height/2 - 10}px`;
+            document.body.appendChild(dataFlow);
+            
+            // Animate the data flow
+            const startX = fromRect.left + fromRect.width/2;
+            const startY = fromRect.top + fromRect.height/2;
+            const endX = toRect.left + toRect.width/2;
+            const endY = toRect.top + toRect.height/2;
+            
+            dataFlow.style.display = 'block';
+            
+            // Animate using requestAnimationFrame
+            let startTime = null;
+            const duration = getAnimationDuration(); // ms
+            
+            function animate(time) {
+                if (!startTime) startTime = time;
+                const progress = (time - startTime) / duration;
+                
+                if (progress < 1) {
+                    const currentX = startX + (endX - startX) * progress;
+                    const currentY = startY + (endY - startY) * progress;
+                    
+                    dataFlow.style.left = `${currentX - 10}px`;
+                    dataFlow.style.top = `${currentY - 10}px`;
+                    
+                    requestAnimationFrame(animate);
+                } else {
+                    document.body.removeChild(dataFlow);
+                    toElement.classList.add('highlight');
+                    setTimeout(() => {
+                        toElement.classList.remove('highlight');
+                    }, getAnimationDuration());
+                }
+            }
+            
+            requestAnimationFrame(animate);
+        }
+        
+        // Execute a program step
+        function executeStep() {
+            if (currentStep >= program.length) {
+                isRunning = false;
+                return;
+            }
+            
+            const step = program[currentStep];
+            highlightCodeLine(step.line);
+            
+            // Update instruction pointer
+            registers.IP.value = `0x${(0x1000 + currentStep * 4).toString(16).toUpperCase()}`;
+            updateRegisters();
+            
+            switch(step.action) {
+                case 'function_start':
+                    if (step.function !== 'main') {
+                        // For function calls, create a new stack frame
+                        callStack.push({
+                            function: step.function,
+                            returnIP: registers.IP.value,
+                            basePointer: registers.BP.value
+                        });
+                        
+                        // Update base pointer to current stack pointer
+                        registers.BP.value = registers.SP.value;
+                        updateRegisters();
+                        
+                        updateCallStack();
+                    }
+                    break;
+                    
+                case 'declare':
+                    // For declaration, just highlight the variable in memory
+                    const varName = step.variable;
+                    const memoryCell = memory.find(cell => cell.name === varName);
+                    if (memoryCell) {
+                        const cellElement = document.getElementById(`cell-${memoryCell.address}`);
+                        cellElement.classList.add('active');
+                        setTimeout(() => {
+                            cellElement.classList.remove('active');
+                        }, getAnimationDuration());
+                    }
+                    break;
+                    
+                case 'function_call':
+                    // Simulate function call - push parameters to stack
+                    const arg1 = memory.find(cell => cell.name === step.args[0]);
+                    const arg2 = memory.find(cell => cell.name === step.args[1]);
+                    
+                    if (arg1 && arg2) {
+                        // Store return address
+                        const retAddrCell = memory.find(cell => cell.name === 'ret_addr');
+                        retAddrCell.value = registers.IP.value;
+                        document.getElementById(`cell-${retAddrCell.address}`).querySelector('.variable-value').textContent = retAddrCell.value;
+                        
+                        // Push first argument to stack
+                        const aCell = memory.find(cell => cell.name === 'a');
+                        aCell.value = arg1.value;
+                        document.getElementById(`cell-${aCell.address}`).querySelector('.variable-value').textContent = aCell.value;
+                        createDataFlow(
+                            document.getElementById(`cell-${arg1.address}`),
+                            document.getElementById(`cell-${aCell.address}`),
+                            '#3498db'
+                        );
+                        
+                        // Push second argument to stack after delay
+                        setTimeout(() => {
+                            const bCell = memory.find(cell => cell.name === 'b');
+                            bCell.value = arg2.value;
+                            document.getElementById(`cell-${bCell.address}`).querySelector('.variable-value').textContent = bCell.value;
+                            createDataFlow(
+                                document.getElementById(`cell-${arg2.address}`),
+                                document.getElementById(`cell-${bCell.address}`),
+                                '#3498db'
+                            );
+                            
+                            // Update stack pointer
+                            setTimeout(() => {
+                                registers.SP.value = '0x200C';
+                                updateRegisters();
+                                updateCallStack();
+                            }, getAnimationDuration());
+                        }, getAnimationDuration());
+                    }
+                    break;
+                    
+                case 'operation':
+                    // Simulate operation inside function
+                    if (step.operation === 'add') {
+                        const aCell = memory.find(cell => cell.name === 'a');
+                        const bCell = memory.find(cell => cell.name === 'b');
+                        const sumCell = memory.find(cell => cell.name === 'sum');
+                        
+                        if (aCell && bCell && sumCell) {
+                            // Load a into register A
+                            registers.A.value = aCell.value;
+                            updateRegisters();
+                            createDataFlow(
+                                document.getElementById(`cell-${aCell.address}`),
+                                registers.A.element,
+                                '#3498db'
+                            );
+                            
+                            // Load b into register B after a short delay
+                            setTimeout(() => {
+                                registers.B.value = bCell.value;
+                                updateRegisters();
+                                createDataFlow(
+                                    document.getElementById(`cell-${bCell.address}`),
+                                    registers.B.element,
+                                    '#3498db'
+                                );
+                                
+                                // Perform addition after another delay
+                                setTimeout(() => {
+                                    registers.C.value = registers.A.value + registers.B.value;
+                                    updateRegisters();
+                                    
+                                    // Store result in sum variable
+                                    setTimeout(() => {
+                                        sumCell.value = registers.C.value;
+                                        const sumCellElement = document.getElementById(`cell-${sumCell.address}`);
+                                        sumCellElement.querySelector('.variable-value').textContent = sumCell.value;
+                                        
+                                        createDataFlow(
+                                            registers.C.element,
+                                            sumCellElement,
+                                            '#2ecc71'
+                                        );
+                                        
+                                        // Clear registers after storing
+                                        setTimeout(() => {
+                                            registers.A.value = null;
+                                            registers.B.value = null;
+                                            registers.C.value = null;
+                                            updateRegisters();
+                                        }, getAnimationDuration());
+                                    }, getAnimationDuration());
+                                }, getAnimationDuration());
+                            }, getAnimationDuration());
+                        }
+                    }
+                    break;
+                    
+                case 'return':
+                    // Simulate return from function
+                    if (step.function === 'add') {
+                        const sumCell = memory.find(cell => cell.name === 'sum');
+                        const resultCell = memory.find(cell => cell.name === 'result');
+                        
+                        if (sumCell && resultCell) {
+                            // Copy return value to result
+                            resultCell.value = sumCell.value;
+                            document.getElementById(`cell-${resultCell.address}`).querySelector('.variable-value').textContent = resultCell.value;
+                            createDataFlow(
+                                document.getElementById(`cell-${sumCell.address}`),
+                                document.getElementById(`cell-${resultCell.address}`),
+                                '#e74c3c'
+                            );
+                            
+                            // Pop stack frame
+                            setTimeout(() => {
+                                callStack.pop();
+                                registers.SP.value = '0x2000';
+                                registers.BP.value = '0x2000';
+                                updateRegisters();
+                                updateCallStack();
+                                
+                                // Clear stack variables
+                                const stackVars = memory.filter(cell => cell.isStack);
+                                stackVars.forEach(cell => {
+                                    cell.value = 0;
+                                    const cellElement = document.getElementById(`cell-${cell.address}`);
+                                    if (cellElement) {
+                                        cellElement.querySelector('.variable-value').textContent = cell.value;
+                                    }
+                                });
+                            }, getAnimationDuration());
+                        }
+                    }
+                    break;
+                    
+                case 'function_end':
+                    // For function end, just update the call stack
+                    if (step.function !== 'main') {
+                        callStack.pop();
+                        updateCallStack();
+                    }
+                    break;
+            }
+            
+            currentStep++;
+        }
+        
+        // Run the entire program
+        function runProgram() {
+            if (isRunning) return;
+            
+            isRunning = true;
+            const runStep = () => {
+                if (currentStep < program.length && isRunning) {
+                    executeStep();
+                    setTimeout(runStep, getAnimationDuration() * 6); // Wait for animations to complete
+                } else {
+                    isRunning = false;
+                }
+            };
+            
+            runStep();
+        }
+        
+        // Reset the simulation
+        function resetSimulation() {
+            currentStep = 0;
+            isRunning = false;
+            callStack = [];
+            currentFunction = 'main';
+            
+            // Reset memory
+            memory[0].value = 5;
+            memory[1].value = 10;
+            memory[2].value = 0;
+            memory[3].value = 0;
+            memory[4].value = 0;
+            memory[5].value = 0;
+            memory[6].value = 0;
+            
+            // Reset registers
+            for (const reg in registers) {
+                if (reg !== 'IP' && reg !== 'SP' && reg !== 'BP') {
+                    registers[reg].value = null;
+                } else if (reg === 'IP') {
+                    registers[reg].value = '0x0000';
+                } else if (reg === 'SP') {
+                    registers[reg].value = '0x2000';
+                } else if (reg === 'BP') {
+                    registers[reg].value = '0x2000';
+                }
+            }
+            
+            // Update displays
+            initializeMemoryGrid();
+            updateRegisters();
+            updateCallStack();
+            highlightCodeLine(-1);
+        }
+        
+        // Event listeners
+        document.getElementById('btnRun').addEventListener('click', runProgram);
+        document.getElementById('btnStep').addEventListener('click', () => {
+            if (!isRunning) {
+                executeStep();
+            }
+        });
+        document.getElementById('btnReset').addEventListener('click', resetSimulation);
+        
+        // Initialize the simulation
+        initializeMemoryGrid();
+        updateRegisters();
+        updateCallStack();
+    </script>
+</body>
+</html>
