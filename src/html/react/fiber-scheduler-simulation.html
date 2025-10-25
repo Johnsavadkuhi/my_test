@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>React Fiber Lifecycle Visualizer (Deluxe)</title>
+<style>
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background: #f6f8fa;
+  color: #24292e;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+}
+h1 {
+  color: #0969da;
+  margin-bottom: 15px;
+}
+.container {
+  display: flex;
+  gap: 60px;
+  margin-top: 30px;
+  position: relative;
+}
+.tree, .scheduler {
+  background: #ffffff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px #0002;
+  width: 280px;
+  position: relative;
+  z-index: 2;
+}
+.tree h2, .scheduler h2 {
+  text-align: center;
+  color: #0969da;
+  margin-bottom: 10px;
+}
+.fiber {
+  background: #58a6ff;
+  padding: 10px 14px;
+  border-radius: 10px;
+  margin: 10px auto;
+  text-align: center;
+  transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+  cursor: default;
+  position: relative;
+}
+.fiber:hover {
+  transform: scale(1.05);
+}
+.fiber.active { background: #3fb950; }
+.fiber.changed { background: #f39c12; }
+.details {
+  display: none;
+  position: absolute;
+  top: 110%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #fff;
+  color: #333;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 8px;
+  font-size: 12px;
+  box-shadow: 0 2px 10px #0002;
+  white-space: nowrap;
+  z-index: 10;
+}
+.fiber:hover .details { display: block; }
+.priority { font-size: 12px; color: #555; }
+.link {
+  position: absolute;
+  height: 2px;
+  background: #2da44e;
+  transition: all 1s;
+  z-index: 1;
+}
+.alt-link {
+  position: absolute;
+  height: 1.5px;
+  background: #1f6feb;
+  border-top: 1.5px dotted #1f6feb;
+  z-index: 0;
+}
+#controls {
+  margin-top: 20px;
+  display: flex;
+  gap: 10px;
+}
+input {
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  width: 180px;
+}
+button {
+  background-color: #2da44e;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 16px;
+  cursor: pointer;
+  font-size: 15px;
+}
+button:hover { background-color: #22863a; }
+#output {
+  margin-top: 20px;
+  font-size: 18px;
+  color: #0969da;
+}
+#log {
+  margin-top: 30px;
+  background: #fff;
+  padding: 15px;
+  border-radius: 8px;
+  width: 780px;
+  height: 180px;
+  overflow-y: auto;
+  font-size: 13px;
+  box-shadow: inset 0 0 10px #0001;
+  border: 1px solid #ddd;
+}
+.scheduler-controls {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.phase-indicator {
+  position: fixed;
+  top: 15px;
+  right: 15px;
+  background: #0969da;
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: 20px;
+  font-weight: bold;
+  opacity: 0;
+  transition: all 0.6s ease;
+  pointer-events: none;
+}
+.phase-indicator.show { opacity: 1; transform: translateY(0); }
+.timebar {
+  margin-top: 15px;
+  height: 10px;
+  width: 300px;
+  border-radius: 10px;
+  background: #e1e4e8;
+  overflow: hidden;
+  position: relative;
+}
+.timebar-fill {
+  position: absolute;
+  height: 100%;
+  width: 0%;
+  background: #2da44e;
+  transition: width 0.16s linear;
+}
+</style>
+</head>
+<body>
+<h1>React Fiber Lifecycle Visualizer (Deluxe)</h1>
+
+<div id="controls">
+  <input type="text" id="inputText" placeholder="Type something..." />
+  <button id="updateBtn">Commit Update</button>
+</div>
+
+<div id="output">Text: (waiting...)</div>
+<div class="timebar"><div class="timebar-fill" id="timebarFill"></div></div>
+
+<div class="container" id="container">
+  <div class="tree" id="currentTree">
+    <h2>Current Fiber Tree</h2>
+    <div class="fiber" id="curr-app">FiberRoot (App)
+      <div class="details">type: App<br>props: {}<br>state: {}<br>alternate: work-app</div>
+    </div>
+    <div class="fiber" id="curr-input">Fiber: Input
+      <div class="details">type: input<br>props: {value: ""}<br>state: {}<br>alternate: work-input</div>
+    </div>
+    <div class="fiber" id="curr-button">Fiber: Button
+      <div class="details">type: button<br>props: {onClick: fn}<br>state: {}<br>alternate: work-button</div>
+    </div>
+    <div class="fiber" id="curr-text">Fiber: Text
+      <div class="details">type: span<br>props: {children: "(waiting...)"}<br>state: {}<br>alternate: work-text</div>
+    </div>
+  </div>
+
+  <div class="tree" id="workTree">
+    <h2>Work-In-Progress Tree</h2>
+    <div class="fiber" id="work-app">FiberRoot (App)
+      <div class="details">type: App<br>props: {}<br>state: {}<br>alternate: curr-app</div>
+    </div>
+    <div class="fiber" id="work-input">Fiber: Input
+      <div class="details">type: input<br>props: {value: ""}<br>state: {}<br>alternate: curr-input</div>
+    </div>
+    <div class="fiber" id="work-button">Fiber: Button
+      <div class="details">type: button<br>props: {onClick: fn}<br>state: {}<br>alternate: curr-button</div>
+    </div>
+    <div class="fiber" id="work-text">Fiber: Text
+      <div class="details">type: span<br>props: {children: "(waiting...)"}<br>state: {}<br>alternate: curr-text</div>
+    </div>
+  </div>
+
+  <div class="scheduler" id="scheduler">
+    <h2>Scheduler Queue</h2>
+    <div class="scheduler-controls">
+      <button id="pauseBtn">⏸ Pause</button>
+      <button id="resumeBtn">▶ Resume</button>
+    </div>
+    <div class="fiber" draggable="true" id="task-high">Task: Input Change <div class="priority">Priority: High</div></div>
+    <div class="fiber" draggable="true" id="task-normal">Task: Button Update <div class="priority">Priority: Normal</div></div>
+    <div class="fiber" draggable="true" id="task-low">Task: Background Render <div class="priority">Priority: Low</div></div>
+  </div>
+</div>
+
+<div id="log"></div>
+<div class="phase-indicator" id="phaseIndicator"></div>
+
+<script>
+const logBox = document.getElementById("log");
+const inputEl = document.getElementById("inputText");
+const outputEl = document.getElementById("output");
+const container = document.getElementById("container");
+const scheduler = document.getElementById("scheduler");
+const timebar = document.getElementById("timebarFill");
+const phaseIndicator = document.getElementById("phaseIndicator");
+let paused = false;
+
+function log(msg) {
+  const t = new Date().toLocaleTimeString();
+  logBox.innerHTML += `<div>[${t}] ${msg}</div>`;
+  logBox.scrollTop = logBox.scrollHeight;
+}
+function showPhase(phase, color) {
+  phaseIndicator.textContent = phase;
+  phaseIndicator.style.background = color;
+  phaseIndicator.classList.add("show");
+  setTimeout(() => phaseIndicator.classList.remove("show"), 2000);
+}
+function clearStates() {
+  document.querySelectorAll(".fiber").forEach(f => f.classList.remove("active","changed"));
+  document.querySelectorAll(".link, .alt-link").forEach(l => l.remove());
+}
+function connectLine(id1, id2, color="#2da44e", dotted=false) {
+  const f1 = document.getElementById(id1);
+  const f2 = document.getElementById(id2);
+  const rect1 = f1.getBoundingClientRect();
+  const rect2 = f2.getBoundingClientRect();
+  const line = document.createElement("div");
+  line.className = dotted ? "alt-link" : "link";
+  line.style.background = color;
+  const containerRect = container.getBoundingClientRect();
+  const x1 = rect1.right - containerRect.left;
+  const y1 = rect1.top + rect1.height/2 - containerRect.top;
+  const x2 = rect2.left - containerRect.left;
+  const y2 = rect2.top + rect2.height/2 - containerRect.top;
+  const len = Math.sqrt((x2-x1)**2+(y2-y1)**2);
+  const angle = Math.atan2(y2-y1,x2-x1)*(180/Math.PI);
+  line.style.width = len+"px";
+  line.style.transformOrigin="0 0";
+  line.style.transform=`translate(${x1}px,${y1}px) rotate(${angle}deg)`;
+  container.appendChild(line);
+}
+function animateTimebar() {
+  timebar.style.width="0%";
+  let w=0;
+  const frame=()=>{if(paused)return;w+=6;if(w<=100){timebar.style.width=w+"%";requestAnimationFrame(frame);}else{timebar.style.width="0%";}};
+  requestAnimationFrame(frame);
+}
+function renderPhase(value) {
+  showPhase("Render Phase", "#0969da");
+  log("🧩 Render phase started...");
+  const ids=["work-app","work-input","work-button","work-text"];
+  let i=0;
+  const step=()=>{
+    if(paused)return setTimeout(step,400);
+    if(i>=ids.length){log("✅ Render complete → Scheduler phase.");simulateScheduler(value);return;}
+    clearStates();animateTimebar();
+    const el=document.getElementById(ids[i]);
+    el.classList.add("active");
+    log(`Rendering Fiber: ${el.textContent}`);
+    i++;setTimeout(step,900);
+  };step();
+}
+function simulateScheduler(value){
+  showPhase("Scheduler Phase","#6f42c1");
+  log("🕒 Scheduler started (drag tasks to reprioritize)...");
+  const tasks=()=>Array.from(scheduler.querySelectorAll(".fiber[draggable]"));
+  let i=0;
+  const next=()=>{
+    if(paused)return setTimeout(next,500);
+    if(i>=tasks().length){log("✅ Scheduler done → Commit phase.");setTimeout(()=>showConnections(value),800);return;}
+    clearStates();animateTimebar();
+    const t=tasks()[i];t.classList.add("active");
+    log(`Running ${t.textContent.trim()}...`);
+    setTimeout(()=>{t.classList.remove("active");i++;next();},1000);
+  };next();
+}
+function showConnections(value){
+  showPhase("Commit Phase","#2da44e");
+  log("🔗 Linking fibers & alternates...");
+  const pairs=[["curr-app","work-app"],["curr-input","work-input"],["curr-button","work-button"],["curr-text","work-text"]];
+  pairs.forEach(([a,b])=>{connectLine(a,b);connectLine(a,b,"#1f6feb",true);});
+  setTimeout(()=>commitPhase(value),1500);
+}
+function commitPhase(value){
+  log("🚀 Commit phase (applying diff)...");
+  clearStates();animateTimebar();
+  const curr=document.getElementById("curr-text");
+  const work=document.getElementById("work-text");
+  curr.classList.add("changed");work.classList.add("changed");
+  const detail=work.querySelector(".details");
+  detail.innerHTML=`type: span<br>props: {children: "${value}"}<br>state: {}<br>alternate: curr-text`;
+  setTimeout(()=>{outputEl.textContent="Text: "+value;log("🎉 Commit complete! UI updated.");clearStates();},1600);
+}
+document.getElementById("updateBtn").addEventListener("click",()=>{
+  const value=inputEl.value||"(empty)";
+  clearStates();logBox.innerHTML="";log("🧠 User input triggered update.");renderPhase(value);
+});
+document.getElementById("pauseBtn").addEventListener("click",()=>{paused=true;log("⏸ Paused.");});
+document.getElementById("resumeBtn").addEventListener("click",()=>{paused=false;log("▶ Resumed.");});
+let dragged;
+scheduler.addEventListener("dragstart",e=>{if(e.target.classList.contains("fiber"))dragged=e.target;});
+scheduler.addEventListener("dragover",e=>e.preventDefault());
+scheduler.addEventListener("drop",e=>{
+  e.preventDefault();
+  if(!dragged||!e.target.classList.contains("fiber")||dragged===e.target)return;
+  const rect=e.target.getBoundingClientRect();
+  const before=(e.clientY-rect.top)/rect.height<0.5;
+  if(before)scheduler.insertBefore(dragged,e.target);
+  else scheduler.insertBefore(dragged,e.target.nextSibling);
+  log(`🔁 Task reordered: ${dragged.textContent.trim()}`);
+});
+</script>
+</body>
+</html>

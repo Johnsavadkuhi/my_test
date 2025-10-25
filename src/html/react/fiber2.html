@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>React Fiber Scheduler Simulation</title>
+<style>
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background-color: #0d1117;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 30px;
+}
+h1 {
+  color: #58a6ff;
+  margin-bottom: 20px;
+}
+.container {
+  display: flex;
+  gap: 60px;
+  margin-top: 30px;
+  position: relative;
+}
+.tree, .scheduler {
+  background: #161b22;
+  padding: 20px;
+  border-radius: 12px;
+  width: 260px;
+  box-shadow: 0 0 15px #0006;
+  position: relative;
+  z-index: 2;
+}
+.tree h2, .scheduler h2 {
+  text-align: center;
+  color: #3fb950;
+  font-size: 17px;
+  margin-bottom: 10px;
+}
+.fiber {
+  background-color: #1f6feb;
+  padding: 10px 14px;
+  border-radius: 10px;
+  margin: 10px auto;
+  text-align: center;
+  transition: all 0.4s;
+  box-shadow: 0 0 5px #0005;
+  position: relative;
+}
+.fiber.active {
+  background-color: #3fb950;
+  transform: scale(1.05);
+}
+.fiber.changed {
+  background-color: #f39c12;
+  transform: scale(1.05);
+}
+.priority {
+  font-size: 12px;
+  color: #ffcc00;
+}
+.details {
+  background: #0d1117;
+  color: #9ecbff;
+  border-radius: 8px;
+  font-size: 12px;
+  text-align: left;
+  padding: 8px;
+  margin-top: 5px;
+  display: none;
+  border: 1px solid #1f6feb;
+}
+.fiber:hover .details {
+  display: block;
+}
+.link {
+  position: absolute;
+  width: 2px;
+  background: #555;
+  transition: all 1s;
+  z-index: 1;
+}
+#controls {
+  margin-top: 20px;
+  display: flex;
+  gap: 10px;
+}
+input {
+  padding: 10px;
+  border-radius: 6px;
+  border: none;
+  width: 180px;
+  outline: none;
+}
+button {
+  background-color: #238636;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 16px;
+  cursor: pointer;
+  font-size: 15px;
+}
+button:hover {
+  background-color: #2ea043;
+}
+#output {
+  margin-top: 20px;
+  font-size: 18px;
+  color: #9ecbff;
+}
+#log {
+  margin-top: 30px;
+  background: #161b22;
+  padding: 15px;
+  border-radius: 8px;
+  width: 700px;
+  height: 160px;
+  overflow-y: auto;
+  font-size: 13px;
+  color: #9ecbff;
+  box-shadow: inset 0 0 10px #0005;
+}
+.scheduler .fiber {
+  cursor: pointer;
+}
+</style>
+</head>
+<body>
+<h1>React Fiber Full Lifecycle Simulation (Render → Commit → Scheduler)</h1>
+
+<div id="controls">
+  <input type="text" id="inputText" placeholder="Type something..." />
+  <button id="updateBtn">Commit Update</button>
+</div>
+
+<div id="output">Text: (waiting...)</div>
+
+<div class="container" id="container">
+  <div class="tree" id="currentTree">
+    <h2>Current Fiber Tree</h2>
+    <div class="fiber" id="curr-app">FiberRoot (App)</div>
+    <div class="fiber" id="curr-input">Fiber: Input</div>
+    <div class="fiber" id="curr-button">Fiber: Button</div>
+    <div class="fiber" id="curr-text">Fiber: Text</div>
+  </div>
+
+  <div class="tree" id="workTree">
+    <h2>Work-In-Progress Tree</h2>
+    <div class="fiber" id="work-app">FiberRoot (App)</div>
+    <div class="fiber" id="work-input">Fiber: Input</div>
+    <div class="fiber" id="work-button">Fiber: Button</div>
+    <div class="fiber" id="work-text">Fiber: Text</div>
+  </div>
+
+  <div class="scheduler" id="scheduler">
+    <h2>Scheduler Queue</h2>
+    <div class="fiber" id="task-high">Task: Input Change <div class="priority">Priority: High</div></div>
+    <div class="fiber" id="task-normal">Task: Button Update <div class="priority">Priority: Normal</div></div>
+    <div class="fiber" id="task-low">Task: Background Re-render <div class="priority">Priority: Low</div></div>
+  </div>
+</div>
+
+<div id="log"></div>
+
+<script>
+const logBox = document.getElementById("log");
+const inputEl = document.getElementById("inputText");
+const outputEl = document.getElementById("output");
+
+function log(msg) {
+  const t = new Date().toLocaleTimeString();
+  logBox.innerHTML += `<div>[${t}] ${msg}</div>`;
+  logBox.scrollTop = logBox.scrollHeight;
+}
+
+function clearStates() {
+  document.querySelectorAll(".fiber").forEach(f => f.classList.remove("active","changed"));
+}
+
+function connectFibers(id1, id2, color = "#555") {
+  const f1 = document.getElementById(id1);
+  const f2 = document.getElementById(id2);
+  if (!f1 || !f2) return;
+  const rect1 = f1.getBoundingClientRect();
+  const rect2 = f2.getBoundingClientRect();
+  const container = document.getElementById("container");
+  const line = document.createElement("div");
+  line.className = "link";
+  const containerRect = container.getBoundingClientRect();
+  const x1 = rect1.right - containerRect.left;
+  const y1 = rect1.top + rect1.height / 2 - containerRect.top;
+  const x2 = rect2.left - containerRect.left;
+  const y2 = rect2.top + rect2.height / 2 - containerRect.top;
+  const length = Math.sqrt((x2 - x1)**2 + (y2 - y1)**2);
+  const angle = Math.atan2(y2 - y1, x2 - x1) * (180 / Math.PI);
+  line.style.width = length + "px";
+  line.style.transformOrigin = "0 0";
+  line.style.transform = `translate(${x1}px, ${y1}px) rotate(${angle}deg)`;
+  line.style.background = color;
+  container.appendChild(line);
+}
+
+function simulateScheduler(callback) {
+  log("🕒 Scheduler phase started...");
+  const tasks = [
+    {id:"task-high", delay:500},
+    {id:"task-normal", delay:1000},
+    {id:"task-low", delay:1500},
+  ];
+  let i = 0;
+  function step() {
+    if (i >= tasks.length) {
+      log("✅ All scheduled tasks executed.");
+      callback();
+      return;
+    }
+    clearStates();
+    const task = document.getElementById(tasks[i].id);
+    task.classList.add("active");
+    log(`Running ${task.textContent.trim()}...`);
+    setTimeout(() => {
+      task.classList.remove("active");
+      i++;
+      step();
+    }, tasks[i].delay);
+  }
+  step();
+}
+
+function simulateWorkInProgress(value) {
+  log("🔧 Building work-in-progress Fiber tree...");
+  const ids = ["work-app", "work-input", "work-button", "work-text"];
+  let i = 0;
+  function step() {
+    if (i >= ids.length) {
+      log("✅ Render phase done. Proceeding to Scheduler...");
+      simulateScheduler(() => showConnections(value));
+      return;
+    }
+    clearStates();
+    const el = document.getElementById(ids[i]);
+    el.classList.add("active");
+    log(`Rendering Fiber: ${el.textContent}`);
+    i++;
+    setTimeout(step, 600);
+  }
+  step();
+}
+
+function showConnections(value) {
+  log("🔗 Linking current and work-in-progress fibers...");
+  const pairs = [
+    ["curr-app","work-app"],
+    ["curr-input","work-input"],
+    ["curr-button","work-button"],
+    ["curr-text","work-text"]
+  ];
+  pairs.forEach(([a,b]) => connectFibers(a,b,"#3fb950"));
+  setTimeout(() => commitPhase(value), 1500);
+}
+
+function commitPhase(value) {
+  log("🚀 Commit phase started (diffing and applying changes)...");
+  clearStates();
+  const curr = document.getElementById("curr-text");
+  const work = document.getElementById("work-text");
+  curr.classList.add("changed");
+  work.classList.add("changed");
+  log("Fiber diff detected → committing update...");
+  setTimeout(() => {
+    outputEl.textContent = "Text: " + value;
+    log("🎉 Commit complete. UI updated successfully!");
+    clearStates();
+  }, 1200);
+}
+
+document.getElementById("updateBtn").addEventListener("click", () => {
+  const value = inputEl.value || "(empty)";
+  clearStates();
+  logBox.innerHTML = "";
+  log("🧠 State update triggered from user input.");
+  simulateWorkInProgress(value);
+});
+</script>
+</body>
+</html>
