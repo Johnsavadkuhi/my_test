@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced useEffect Simulation</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        :root {
+            --primary: #6C63FF;
+            --secondary: #4A44C6;
+            --accent: #FF6584;
+            --success: #4CAF50;
+            --warning: #FF9800;
+            --danger: #F44336;
+            --dark: #2A2D43;
+            --light: #F8F9FA;
+            --gray: #6C757D;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #2A2D43, #1a2a6c);
+            color: var(--light);
+            min-height: 100vh;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+        }
+        
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 2px 10px rgba(108, 99, 255, 0.3);
+        }
+        
+        .subtitle {
+            font-size: 1.3rem;
+            opacity: 0.9;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        @media (max-width: 1100px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+        }
+        
+        .card h2 {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--primary);
+            font-size: 1.8rem;
+        }
+        
+        .card h2 i {
+            font-size: 1.5rem;
+        }
+        
+        .component {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+            transition: all 0.4s ease;
+            border-left: 6px solid var(--primary);
+        }
+        
+        .component.mounted {
+            border-left-color: var(--success);
+            box-shadow: 0 0 20px rgba(76, 175, 80, 0.3);
+        }
+        
+        .component.updating {
+            border-left-color: var(--warning);
+            animation: pulse 1.5s infinite;
+            box-shadow: 0 0 20px rgba(255, 152, 0, 0.3);
+        }
+        
+        .component.unmounted {
+            border-left-color: var(--danger);
+            opacity: 0.7;
+            transform: scale(0.98);
+        }
+        
+        @keyframes pulse {
+            0% { background-color: rgba(0, 0, 0, 0.2); }
+            50% { background-color: rgba(255, 152, 0, 0.15); }
+            100% { background-color: rgba(0, 0, 0, 0.2); }
+        }
+        
+        .component h3 {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.4rem;
+        }
+        
+        .status-indicator {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        
+        .status-mounted {
+            background-color: var(--success);
+            box-shadow: 0 0 10px var(--success);
+        }
+        
+        .status-updating {
+            background-color: var(--warning);
+            box-shadow: 0 0 10px var(--warning);
+        }
+        
+        .status-unmounted {
+            background-color: var(--danger);
+            box-shadow: 0 0 10px var(--danger);
+        }
+        
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+        
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 15px rgba(108, 99, 255, 0.3);
+        }
+        
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(108, 99, 255, 0.4);
+        }
+        
+        button:active {
+            transform: translateY(1px);
+        }
+        
+        button.secondary {
+            background: linear-gradient(135deg, var(--gray), #5a6268);
+        }
+        
+        button.success {
+            background: linear-gradient(135deg, var(--success), #3d8b40);
+        }
+        
+        button.warning {
+            background: linear-gradient(135deg, var(--warning), #e68900);
+        }
+        
+        button.danger {
+            background: linear-gradient(135deg, var(--danger), #d32f2f);
+        }
+        
+        .counter {
+            font-size: 2.2rem;
+            text-align: center;
+            margin: 25px 0;
+            font-weight: bold;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        
+        .logs {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 20px;
+            height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.95rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .log-entry {
+            margin-bottom: 12px;
+            padding: 10px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .log-mount {
+            background: rgba(76, 175, 80, 0.15);
+            border-left: 4px solid var(--success);
+        }
+        
+        .log-update {
+            background: rgba(255, 152, 0, 0.15);
+            border-left: 4px solid var(--warning);
+        }
+        
+        .log-unmount {
+            background: rgba(244, 67, 54, 0.15);
+            border-left: 4px solid var(--danger);
+        }
+        
+        .log-effect {
+            background: rgba(108, 99, 255, 0.15);
+            border-left: 4px solid var(--primary);
+        }
+        
+        .log-icon {
+            font-size: 1.1rem;
+            width: 24px;
+            text-align: center;
+        }
+        
+        .dependency-controls {
+            display: flex;
+            gap: 15px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        
+        .dependency {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px 15px;
+            border-radius: 8px;
+        }
+        
+        .dependency input {
+            width: 60px;
+            padding: 8px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(0, 0, 0, 0.3);
+            color: white;
+            text-align: center;
+        }
+        
+        .code-block {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+        }
+        
+        .code-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            color: var(--primary);
+            font-weight: 600;
+        }
+        
+        .copy-btn {
+            background: transparent;
+            border: 1px solid var(--primary);
+            padding: 5px 10px;
+            font-size: 0.8rem;
+            box-shadow: none;
+        }
+        
+        .code-block code {
+            color: #f8f9fa;
+            line-height: 1.5;
+        }
+        
+        .code-comment {
+            color: #6C757D;
+        }
+        
+        .code-keyword {
+            color: #FF6584;
+        }
+        
+        .code-function {
+            color: #6C63FF;
+        }
+        
+        .code-string {
+            color: #4CAF50;
+        }
+        
+        .use-cases {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+        
+        .use-case {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .use-case:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-5px);
+        }
+        
+        .use-case h3 {
+            color: var(--primary);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 50px;
+            padding: 25px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            font-size: 0.95rem;
+            opacity: 0.8;
+        }
+        
+        .effect-visualization {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 25px 0;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+        }
+        
+        .lifecycle-stage {
+            text-align: center;
+            flex: 1;
+            position: relative;
+        }
+        
+        .lifecycle-stage:not(:last-child)::after {
+            content: '→';
+            position: absolute;
+            right: -10px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.5rem;
+            color: var(--primary);
+        }
+        
+        .stage-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 1.5rem;
+            background: rgba(108, 99, 255, 0.2);
+            border: 2px solid var(--primary);
+        }
+        
+        .stage-active .stage-icon {
+            background: var(--primary);
+            box-shadow: 0 0 20px var(--primary);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-sync-alt"></i> Advanced useEffect Simulation</h1>
+            <p class="subtitle">A comprehensive visualization of React's useEffect hook with animations and interactive examples</p>
+        </header>
+        
+        <div class="content">
+            <div class="card">
+                <h2><i class="fas fa-play-circle"></i> Component Lifecycle Simulation</h2>
+                
+                <div class="effect-visualization">
+                    <div class="lifecycle-stage stage-active">
+                        <div class="stage-icon"><i class="fas fa-plus"></i></div>
+                        <div>Mount</div>
+                    </div>
+                    <div class="lifecycle-stage">
+                        <div class="stage-icon"><i class="fas fa-sync"></i></div>
+                        <div>Update</div>
+                    </div>
+                    <div class="lifecycle-stage">
+                        <div class="stage-icon"><i class="fas fa-minus"></i></div>
+                        <div>Unmount</div>
+                    </div>
+                </div>
+                
+                <div class="controls">
+                    <button id="mountBtn" class="success"><i class="fas fa-plus"></i> Mount Component</button>
+                    <button id="updateBtn" class="warning"><i class="fas fa-sync"></i> Update Component</button>
+                    <button id="unmountBtn" class="danger"><i class="fas fa-minus"></i> Unmount Component</button>
+                    <button id="resetBtn" class="secondary"><i class="fas fa-redo"></i> Reset</button>
+                </div>
+                
+                <div class="dependency-controls">
+                    <div class="dependency">
+                        <label for="dep1">Dependency 1:</label>
+                        <input type="number" id="dep1" value="0" min="0">
+                    </div>
+                    <div class="dependency">
+                        <label for="dep2">Dependency 2:</label>
+                        <input type="number" id="dep2" value="0" min="0">
+                    </div>
+                    <button id="updateDepsBtn"><i class="fas fa-cog"></i> Update Dependencies</button>
+                </div>
+                
+                <div id="componentContainer">
+                    <!-- Component will be rendered here -->
+                </div>
+                
+                <div class="counter">
+                    Render Count: <span id="countValue">0</span>
+                </div>
+                
+                <h3><i class="fas fa-list-alt"></i> Effect Logs</h3>
+                <div id="logs" class="logs">
+                    <!-- Logs will appear here -->
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2><i class="fas fa-info-circle"></i> How useEffect Works</h2>
+                
+                <p>In React, the <strong>useEffect</strong> hook lets you perform side effects in function components. It serves the same purpose as <strong>componentDidMount</strong>, <strong>componentDidUpdate</strong>, and <strong>componentWillUnmount</strong> in React classes, but unified into a single API.</p>
+                
+                <div class="code-block">
+                    <div class="code-header">
+                        <span>useEffect Syntax</span>
+                        <button class="copy-btn"><i class="far fa-copy"></i> Copy</button>
+                    </div>
+                    <code>
+                        <span class="code-keyword">import</span> React, { useEffect } <span class="code-keyword">from</span> <span class="code-string">'react'</span>;<br><br>
+                        
+                        <span class="code-keyword">function</span> <span class="code-function">MyComponent</span>() {<br>
+                        &nbsp;&nbsp;<span class="code-comment">// Effect with no dependencies - runs after every render</span><br>
+                        &nbsp;&nbsp;<span class="code-function">useEffect</span>(() => {<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="code-function">console</span>.<span class="code-function">log</span>(<span class="code-string">'Effect ran after render'</span>);<br>
+                        &nbsp;&nbsp;});<br><br>
+                        
+                        &nbsp;&nbsp;<span class="code-comment">// Effect with empty dependency array - runs only on mount</span><br>
+                        &nbsp;&nbsp;<span class="code-function">useEffect</span>(() => {<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="code-function">console</span>.<span class="code-function">log</span>(<span class="code-string">'Effect ran on mount'</span>);<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="code-comment">// Cleanup function - runs on unmount</span><br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="code-keyword">return</span> () => {<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="code-function">console</span>.<span class="code-function">log</span>(<span class="code-string">'Cleanup on unmount'</span>);<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;};<br>
+                        &nbsp;&nbsp;}, []); <span class="code-comment">// Empty dependency array</span><br><br>
+                        
+                        &nbsp;&nbsp;<span class="code-comment">// Effect with dependencies - runs when dependencies change</span><br>
+                        &nbsp;&nbsp;<span class="code-function">useEffect</span>(() => {<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="code-function">console</span>.<span class="code-function">log</span>(<span class="code-string">'Effect ran because dependency changed'</span>);<br>
+                        &nbsp;&nbsp;}, [dependency1, dependency2]); <span class="code-comment">// Dependency array</span><br>
+                        }
+                    </code>
+                </div>
+                
+                <h3><i class="fas fa-check-circle"></i> When does useEffect run?</h3>
+                <ul>
+                    <li><strong>After every render</strong> - when no dependency array is provided</li>
+                    <li><strong>Only on mount</strong> - when dependency array is empty []</li>
+                    <li><strong>When dependencies change</strong> - when specific values are in the dependency array</li>
+                </ul>
+                
+                <div class="use-cases">
+                    <div class="use-case">
+                        <h3><i class="fas fa-database"></i> Data Fetching</h3>
+                        <p>useEffect is commonly used to fetch data from APIs when a component mounts or when certain values change.</p>
+                    </div>
+                    <div class="use-case">
+                        <h3><i class="fas fa-window-restore"></i> Event Listeners</h3>
+                        <p>Setting up and cleaning up event listeners to prevent memory leaks.</p>
+                    </div>
+                    <div class="use-case">
+                        <h3><i class="fas fa-clock"></i> Timers & Intervals</h3>
+                        <p>Setting up timers and intervals that need to be cleared when the component unmounts.</p>
+                    </div>
+                    <div class="use-case">
+                        <h3><i class="fas fa-cogs"></i> Third-party Libraries</h3>
+                        <p>Integrating with third-party libraries that need setup and cleanup.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>Advanced Simulation of React's useEffect Hook with HTML, CSS, and JavaScript</p>
+            <p>Try different interactions to see how useEffect behaves in various scenarios!</p>
+        </footer>
+    </div>
+
+    <script>
+        // State management
+        let componentState = {
+            mounted: false,
+            count: 0,
+            logs: [],
+            dependencies: {
+                dep1: 0,
+                dep2: 0
+            },
+            previousDependencies: {
+                dep1: 0,
+                dep2: 0
+            }
+        };
+
+        // DOM elements
+        const componentContainer = document.getElementById('componentContainer');
+        const countValue = document.getElementById('countValue');
+        const logsContainer = document.getElementById('logs');
+        const mountBtn = document.getElementById('mountBtn');
+        const updateBtn = document.getElementById('updateBtn');
+        const unmountBtn = document.getElementById('unmountBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const updateDepsBtn = document.getElementById('updateDepsBtn');
+        const dep1Input = document.getElementById('dep1');
+        const dep2Input = document.getElementById('dep2');
+        const lifecycleStages = document.querySelectorAll('.lifecycle-stage');
+
+        // Effect simulation functions
+        function runEffectsOnMount() {
+            addLog('useEffect: Component mounted', 'mount');
+            addLog('useEffect: Running initial effects (empty dependency array)', 'effect');
+            
+            // Simulate API call or other side effects
+            setTimeout(() => {
+                addLog('useEffect: Data fetched successfully', 'effect');
+            }, 1500);
+            
+            // Return cleanup function
+            return () => {
+                addLog('useEffect: Cleanup from mount effects', 'unmount');
+            };
+        }
+
+        function runEffectsOnUpdate() {
+            addLog(`useEffect: Component updated (count: ${componentState.count})`, 'update');
+            addLog('useEffect: Running effects after render (no dependency array)', 'effect');
+            
+            // Return cleanup function
+            return () => {
+                addLog('useEffect: Cleanup from previous effects', 'effect');
+            };
+        }
+
+        function runEffectsOnDependencyChange() {
+            addLog(`useEffect: Dependencies changed from [${componentState.previousDependencies.dep1}, ${componentState.previousDependencies.dep2}] to [${componentState.dependencies.dep1}, ${componentState.dependencies.dep2}]`, 'update');
+            addLog('useEffect: Running effects due to dependency change', 'effect');
+            
+            // Return cleanup function
+            return () => {
+                addLog('useEffect: Cleanup from dependency effects', 'effect');
+            };
+        }
+
+        function runEffectsOnUnmount() {
+            addLog('useEffect: Component will unmount', 'unmount');
+            addLog('useEffect: Running cleanup effects', 'effect');
+        }
+
+        // Component rendering
+        function renderComponent() {
+            if (!componentState.mounted) {
+                componentContainer.innerHTML = '';
+                return;
+            }
+
+            componentContainer.innerHTML = `
+                <div class="component ${componentState.count > 0 ? 'updating' : 'mounted'}">
+                    <h3>
+                        <span class="status-indicator ${componentState.count > 0 ? 'status-updating' : 'status-mounted'}"></span>
+                        <i class="fas fa-cube"></i> Component Instance
+                    </h3>
+                    <p>This component is currently <strong>${componentState.count > 0 ? 'updating' : 'mounted'}</strong>.</p>
+                    <p>It has been updated <strong>${componentState.count}</strong> time(s).</p>
+                    <p>Current dependencies: [${componentState.dependencies.dep1}, ${componentState.dependencies.dep2}]</p>
+                    <p>Try updating, changing dependencies, or unmounting to see useEffect in action!</p>
+                </div>
+            `;
+        }
+
+        // Logging functionality
+        function addLog(message, type) {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = { message, type, timestamp };
+            componentState.logs.push(logEntry);
+            
+            // Update logs display
+            const logElement = document.createElement('div');
+            logElement.className = `log-entry log-${type}`;
+            
+            let icon = 'fas fa-info-circle';
+            if (type === 'mount') icon = 'fas fa-plus-circle';
+            else if (type === 'update') icon = 'fas fa-sync-alt';
+            else if (type === 'unmount') icon = 'fas fa-minus-circle';
+            else if (type === 'effect') icon = 'fas fa-bolt';
+            
+            logElement.innerHTML = `
+                <div class="log-icon"><i class="${icon}"></i></div>
+                <div>
+                    <div>${message}</div>
+                    <small style="opacity:0.7">${timestamp}</small>
+                </div>
+            `;
+            
+            logsContainer.appendChild(logElement);
+            
+            // Auto-scroll to bottom
+            logsContainer.scrollTop = logsContainer.scrollHeight;
+        }
+
+        // Update lifecycle visualization
+        function updateLifecycleVisualization(stage) {
+            lifecycleStages.forEach((el, index) => {
+                if (index === stage) {
+                    el.classList.add('stage-active');
+                } else {
+                    el.classList.remove('stage-active');
+                }
+            });
+        }
+
+        // Event handlers
+        mountBtn.addEventListener('click', () => {
+            if (!componentState.mounted) {
+                componentState.mounted = true;
+                componentState.count = 0;
+                countValue.textContent = componentState.count;
+                
+                updateLifecycleVisualization(0);
+                renderComponent();
+                
+                // Simulate useEffect on mount
+                const cleanup = runEffectsOnMount();
+                
+                // Store cleanup function for later
+                componentState.cleanup = cleanup;
+                
+                addLog('Component mounted successfully', 'mount');
+            }
+        });
+
+        updateBtn.addEventListener('click', () => {
+            if (componentState.mounted) {
+                // Run cleanup from previous effects
+                if (componentState.cleanup) {
+                    componentState.cleanup();
+                }
+                
+                componentState.count++;
+                countValue.textContent = componentState.count;
+                
+                updateLifecycleVisualization(1);
+                renderComponent();
+                
+                // Simulate useEffect on update
+                const cleanup = runEffectsOnUpdate();
+                
+                // Store cleanup function for later
+                componentState.cleanup = cleanup;
+            }
+        });
+
+        updateDepsBtn.addEventListener('click', () => {
+            if (componentState.mounted) {
+                // Store previous dependencies
+                componentState.previousDependencies = {...componentState.dependencies};
+                
+                // Update dependencies
+                componentState.dependencies.dep1 = parseInt(dep1Input.value) || 0;
+                componentState.dependencies.dep2 = parseInt(dep2Input.value) || 0;
+                
+                // Run cleanup from previous effects
+                if (componentState.cleanup) {
+                    componentState.cleanup();
+                }
+                
+                // Check if dependencies actually changed
+                if (componentState.dependencies.dep1 !== componentState.previousDependencies.dep1 || 
+                    componentState.dependencies.dep2 !== componentState.previousDependencies.dep2) {
+                    
+                    // Simulate useEffect on dependency change
+                    const cleanup = runEffectsOnDependencyChange();
+                    
+                    // Store cleanup function for later
+                    componentState.cleanup = cleanup;
+                    
+                    renderComponent();
+                } else {
+                    addLog('Dependencies unchanged - no effect triggered', 'effect');
+                }
+            }
+        });
+
+        unmountBtn.addEventListener('click', () => {
+            if (componentState.mounted) {
+                // Run cleanup from previous effects
+                if (componentState.cleanup) {
+                    componentState.cleanup();
+                }
+                
+                // Simulate useEffect on unmount
+                runEffectsOnUnmount();
+                
+                componentState.mounted = false;
+                updateLifecycleVisualization(2);
+                
+                // Add unmounted state visualization
+                componentContainer.innerHTML = `
+                    <div class="component unmounted">
+                        <h3>
+                            <span class="status-indicator status-unmounted"></span>
+                            <i class="fas fa-cube"></i> Component Unmounted
+                        </h3>
+                        <p>This component has been unmounted. Click "Mount Component" to create a new instance.</p>
+                        <p>All effects have been cleaned up and event listeners removed.</p>
+                    </div>
+                `;
+                
+                addLog('Component unmounted successfully', 'unmount');
+            }
+        });
+
+        resetBtn.addEventListener('click', () => {
+            componentState.mounted = false;
+            componentState.count = 0;
+            componentState.logs = [];
+            componentState.dependencies = { dep1: 0, dep2: 0 };
+            componentState.previousDependencies = { dep1: 0, dep2: 0 };
+            
+            countValue.textContent = componentState.count;
+            logsContainer.innerHTML = '';
+            componentContainer.innerHTML = '';
+            dep1Input.value = '0';
+            dep2Input.value = '0';
+            updateLifecycleVisualization(0);
+            
+            addLog('Application reset. Click "Mount Component" to begin.', 'effect');
+        });
+
+        // Copy code button functionality
+        document.querySelector('.copy-btn').addEventListener('click', () => {
+            const code = document.querySelector('.code-block code').innerText;
+            navigator.clipboard.writeText(code).then(() => {
+                const btn = document.querySelector('.copy-btn');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                }, 2000);
+            });
+        });
+
+        // Initial log
+        addLog('Application started. Click "Mount Component" to begin.', 'effect');
+    </script>
+</body>
+</html>
