@@ -1,0 +1,1347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>useEffect Simulation - Input Triggers Count Effects</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --dark: #1e293b;
+            --light: #f8fafc;
+            --gray: #64748b;
+            --gray-light: #cbd5e1;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #0f172a, #1e293b);
+            color: var(--light);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px;
+            background: rgba(30, 41, 59, 0.7);
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            background: linear-gradient(90deg, #8b5cf6, #3b82f6);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 2px 10px rgba(139, 92, 246, 0.3);
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            color: var(--gray-light);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        @media (max-width: 1100px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .card {
+            background: rgba(30, 41, 59, 0.7);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+        }
+        
+        .card h2 {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid rgba(99, 102, 241, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--primary);
+        }
+        
+        .card h2 i {
+            font-size: 1.5rem;
+        }
+        
+        .component-container {
+            position: relative;
+            min-height: 300px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .component {
+            background: rgba(15, 23, 42, 0.8);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            transition: all 0.5s ease;
+            border-left: 6px solid var(--primary);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .component.mounted {
+            border-left-color: var(--secondary);
+            animation: mountAnimation 0.8s ease;
+        }
+        
+        .component.updating {
+            border-left-color: var(--warning);
+            animation: updateAnimation 0.8s ease;
+        }
+        
+        .component.unmounted {
+            border-left-color: var(--danger);
+            animation: unmountAnimation 0.8s ease;
+        }
+        
+        @keyframes mountAnimation {
+            0% { transform: scale(0.8); opacity: 0; }
+            70% { transform: scale(1.05); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        @keyframes updateAnimation {
+            0% { background-color: rgba(15, 23, 42, 0.8); }
+            50% { background-color: rgba(245, 158, 11, 0.2); }
+            100% { background-color: rgba(15, 23, 42, 0.8); }
+        }
+        
+        @keyframes unmountAnimation {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(0.8); opacity: 0; }
+        }
+        
+        .component h3 {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--light);
+        }
+        
+        .status-indicator {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        
+        .status-mounted {
+            background-color: var(--secondary);
+            box-shadow: 0 0 10px var(--secondary);
+        }
+        
+        .status-updating {
+            background-color: var(--warning);
+            box-shadow: 0 0 10px var(--warning);
+            animation: pulse 1.5s infinite;
+        }
+        
+        .status-unmounted {
+            background-color: var(--danger);
+            box-shadow: 0 0 10px var(--danger);
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.3); opacity: 0.7; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+        
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            background: var(--primary);
+            color: white;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        button:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        }
+        
+        button:active {
+            transform: translateY(1px);
+        }
+        
+        button.mount {
+            background: var(--secondary);
+        }
+        
+        button.mount:hover {
+            background: #0da271;
+        }
+        
+        button.update {
+            background: var(--warning);
+        }
+        
+        button.update:hover {
+            background: #d97706;
+        }
+        
+        button.unmount {
+            background: var(--danger);
+        }
+        
+        button.unmount:hover {
+            background: #dc2626;
+        }
+        
+        button.reset {
+            background: var(--gray);
+        }
+        
+        button.reset:hover {
+            background: #475569;
+        }
+        
+        .counter {
+            font-size: 2.5rem;
+            text-align: center;
+            margin: 25px 0;
+            font-weight: bold;
+            color: var(--primary);
+            text-shadow: 0 2px 10px rgba(99, 102, 241, 0.3);
+        }
+        
+        .input-group {
+            margin: 20px 0;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--gray-light);
+        }
+        
+        .input-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(15, 23, 42, 0.8);
+            color: var(--light);
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .input-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3);
+        }
+        
+        .input-group input.effect-triggered {
+            animation: inputEffect 1s ease;
+        }
+        
+        @keyframes inputEffect {
+            0% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(99, 102, 241, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
+        }
+        
+        .user-profile {
+            background: rgba(15, 23, 42, 0.6);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            text-align: center;
+            transition: all 0.5s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .user-profile.updated {
+            animation: profileUpdate 0.8s ease;
+        }
+        
+        @keyframes profileUpdate {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); background: rgba(99, 102, 241, 0.2); }
+            100% { transform: scale(1); }
+        }
+        
+        .user-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 2rem;
+            color: white;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .user-name {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: var(--light);
+        }
+        
+        .user-role {
+            color: var(--gray-light);
+            font-size: 0.9rem;
+        }
+        
+        .logs-container {
+            background: rgba(15, 23, 42, 0.8);
+            border-radius: 12px;
+            padding: 20px;
+            height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.95rem;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3);
+        }
+        
+        .log-entry {
+            margin-bottom: 12px;
+            padding: 10px 15px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateX(-10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        .log-mount {
+            background: rgba(16, 185, 129, 0.2);
+            border-left: 4px solid var(--secondary);
+        }
+        
+        .log-update {
+            background: rgba(245, 158, 11, 0.2);
+            border-left: 4px solid var(--warning);
+        }
+        
+        .log-unmount {
+            background: rgba(239, 68, 68, 0.2);
+            border-left: 4px solid var(--danger);
+        }
+        
+        .log-effect {
+            background: rgba(99, 102, 241, 0.2);
+            border-left: 4px solid var(--primary);
+        }
+        
+        .log-cleanup {
+            background: rgba(100, 116, 139, 0.2);
+            border-left: 4px solid var(--gray);
+        }
+        
+        .log-user {
+            background: rgba(168, 85, 247, 0.2);
+            border-left: 4px solid #a855f7;
+        }
+        
+        .log-time {
+            font-size: 0.8rem;
+            color: var(--gray-light);
+            min-width: 80px;
+        }
+        
+        .log-message {
+            flex: 1;
+        }
+        
+        .dependency-controls {
+            display: flex;
+            gap: 15px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        
+        .dependency {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(15, 23, 42, 0.6);
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .dependency label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+        
+        .dependency input {
+            width: 18px;
+            height: 18px;
+        }
+        
+        .code-block {
+            background: #0f172a;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.95rem;
+            overflow-x: auto;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .code-line {
+            margin-bottom: 8px;
+            display: flex;
+        }
+        
+        .line-number {
+            color: var(--gray);
+            min-width: 40px;
+            user-select: none;
+        }
+        
+        .code-keyword {
+            color: #c678dd;
+        }
+        
+        .code-function {
+            color: #61afef;
+        }
+        
+        .code-comment {
+            color: #5c6370;
+            font-style: italic;
+        }
+        
+        .code-string {
+            color: #98c379;
+        }
+        
+        .code-var {
+            color: #e06c75;
+        }
+        
+        .highlight {
+            color: var(--warning);
+            font-weight: 600;
+        }
+        
+        .use-cases {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .use-case {
+            background: rgba(30, 41, 59, 0.7);
+            border-radius: 12px;
+            padding: 20px;
+            border-left: 4px solid var(--primary);
+        }
+        
+        .use-case h4 {
+            margin-bottom: 10px;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 25px;
+            background: rgba(30, 41, 59, 0.7);
+            border-radius: 16px;
+            color: var(--gray-light);
+            font-size: 0.9rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .tab-container {
+            margin-top: 20px;
+        }
+        
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .tab {
+            padding: 12px 20px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+        
+        .tab.active {
+            border-bottom: 3px solid var(--primary);
+            color: var(--primary);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .visualization {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 30px 0;
+            padding: 20px;
+            background: rgba(15, 23, 42, 0.6);
+            border-radius: 12px;
+        }
+        
+        .lifecycle-stage {
+            text-align: center;
+            flex: 1;
+            padding: 15px;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .lifecycle-stage.active {
+            background: rgba(99, 102, 241, 0.2);
+            transform: scale(1.05);
+        }
+        
+        .stage-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            color: var(--primary);
+        }
+        
+        .arrow {
+            font-size: 1.5rem;
+            color: var(--primary);
+        }
+        
+        .effect-flow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 20px 0;
+            gap: 10px;
+        }
+        
+        .flow-item {
+            padding: 10px 15px;
+            background: rgba(15, 23, 42, 0.6);
+            border-radius: 8px;
+            text-align: center;
+            flex: 1;
+            transition: all 0.3s ease;
+        }
+        
+        .flow-item.active {
+            background: rgba(99, 102, 241, 0.3);
+            transform: scale(1.05);
+        }
+        
+        .flow-arrow {
+            font-size: 1.2rem;
+            color: var(--primary);
+        }
+        
+        .connection-line {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 15px 0;
+            color: var(--primary);
+            font-weight: bold;
+        }
+        
+        @media (max-width: 768px) {
+            .visualization, .effect-flow {
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            .arrow, .flow-arrow {
+                transform: rotate(90deg);
+            }
+            
+            h1 {
+                font-size: 2.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-sync-alt"></i> useEffect Simulation</h1>
+            <p class="subtitle">Input changes trigger count useEffect with animations</p>
+        </header>
+        
+        <div class="content">
+            <div class="card">
+                <h2><i class="fas fa-play-circle"></i> Interactive Simulation</h2>
+                
+                <div class="component-container">
+                    <div id="component" class="component">
+                        <h3>
+                            <span class="status-indicator status-unmounted"></span>
+                            Component State: <span id="componentState">Unmounted</span>
+                        </h3>
+                        <p>This component simulation shows how useEffect runs at different lifecycle stages.</p>
+                        <p>Current render count: <strong id="renderCount">0</strong></p>
+                        <p>Effect runs: <strong id="effectRuns">0</strong></p>
+                        <p>Cleanup runs: <strong id="cleanupRuns">0</strong></p>
+                        
+                        <div class="input-group">
+                            <label for="usernameInput"><i class="fas fa-user"></i> Username:</label>
+                            <input type="text" id="usernameInput" placeholder="Enter username to trigger count effect">
+                            <p class="input-hint" style="margin-top: 8px; font-size: 0.9rem; color: var(--gray-light);">
+                                Changing this input will trigger the count useEffect after mounting
+                            </p>
+                        </div>
+                        
+                        <div class="connection-line">
+                            <i class="fas fa-arrow-down"></i> Input change triggers count effect <i class="fas fa-arrow-down"></i>
+                        </div>
+                        
+                        <div id="userProfile" class="user-profile">
+                            <div class="user-avatar">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <div class="user-name" id="displayUsername">No user</div>
+                            <div class="user-role" id="userRole">Guest</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="counter">
+                    Count: <span id="countValue">0</span>
+                </div>
+                
+                <div class="controls">
+                    <button class="mount" id="mountBtn">
+                        <i class="fas fa-plus-circle"></i> Mount Component
+                    </button>
+                    <button class="update" id="updateBtn">
+                        <i class="fas fa-redo-alt"></i> Update Component
+                    </button>
+                    <button class="unmount" id="unmountBtn">
+                        <i class="fas fa-minus-circle"></i> Unmount Component
+                    </button>
+                    <button class="reset" id="resetBtn">
+                        <i class="fas fa-eraser"></i> Reset Simulation
+                    </button>
+                </div>
+                
+                <div class="dependency-controls">
+                    <h3>Effect Dependencies:</h3>
+                    <div class="dependency">
+                        <label>
+                            <input type="checkbox" id="depCount" checked> Count
+                        </label>
+                    </div>
+                    <div class="dependency">
+                        <label>
+                            <input type="checkbox" id="depUser"> User
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="effect-flow">
+                    <div class="flow-item" id="flow-input">Input Change</div>
+                    <div class="flow-arrow"><i class="fas fa-arrow-right"></i></div>
+                    <div class="flow-item" id="flow-dependency">Count Effect Runs</div>
+                    <div class="flow-arrow"><i class="fas fa-arrow-right"></i></div>
+                    <div class="flow-item" id="flow-effect">Count Updates</div>
+                    <div class="flow-arrow"><i class="fas fa-arrow-right"></i></div>
+                    <div class="flow-item" id="flow-cleanup">Cleanup (if needed)</div>
+                </div>
+                
+                <h3><i class="fas fa-list-alt"></i> Effect Execution Log</h3>
+                <div id="logs" class="logs-container">
+                    <!-- Logs will appear here -->
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2><i class="fas fa-book-open"></i> useEffect Explained</h2>
+                
+                <div class="tab-container">
+                    <div class="tabs">
+                        <div class="tab active" data-tab="overview">Overview</div>
+                        <div class="tab" data-tab="syntax">Syntax</div>
+                        <div class="tab" data-tab="behavior">Behavior</div>
+                    </div>
+                    
+                    <div class="tab-content active" id="overview">
+                        <p>The <span class="highlight">useEffect</span> hook lets you perform side effects in function components. It serves the same purpose as <span class="highlight">componentDidMount</span>, <span class="highlight">componentDidUpdate</span>, and <span class="highlight">componentWillUnmount</span> in React classes, but unified into a single API.</p>
+                        
+                        <div class="visualization">
+                            <div class="lifecycle-stage active" id="stage-mount">
+                                <div class="stage-icon"><i class="fas fa-plus"></i></div>
+                                <h4>Mount</h4>
+                                <p>Effect runs after initial render</p>
+                            </div>
+                            <div class="arrow"><i class="fas fa-arrow-right"></i></div>
+                            <div class="lifecycle-stage" id="stage-update">
+                                <div class="stage-icon"><i class="fas fa-sync"></i></div>
+                                <h4>Update</h4>
+                                <p>Effect runs when dependencies change</p>
+                            </div>
+                            <div class="arrow"><i class="fas fa-arrow-right"></i></div>
+                            <div class="lifecycle-stage" id="stage-unmount">
+                                <div class="stage-icon"><i class="fas fa-minus"></i></div>
+                                <h4>Unmount</h4>
+                                <p>Cleanup runs before component removal</p>
+                            </div>
+                        </div>
+                        
+                        <div class="input-demo">
+                            <h4><i class="fas fa-keyboard"></i> Input Triggers Count Effect</h4>
+                            <p>In this simulation, changing the username input triggers the count useEffect when the component is mounted. This demonstrates how user interactions can indirectly trigger effects that depend on other state variables.</p>
+                            
+                            <div class="code-block">
+                                <div class="code-line">
+                                    <span class="line-number">1</span>
+                                    <span class="code-keyword">const</span> [<span class="code-var">count</span>, <span class="code-var">setCount</span>] = <span class="code-function">useState</span>(<span class="code-var">0</span>);
+                                </div>
+                                <div class="code-line">
+                                    <span class="line-number">2</span>
+                                    <span class="code-keyword">const</span> [<span class="code-var">username</span>, <span class="code-var">setUsername</span>] = <span class="code-function">useState</span>(<span class="code-string">''</span>);
+                                </div>
+                                <div class="code-line">
+                                    <span class="line-number">3</span>
+                                </div>
+                                <div class="code-line">
+                                    <span class="line-number">4</span>
+                                    <span class="code-comment">// This effect runs when count changes</span>
+                                </div>
+                                <div class="code-line">
+                                    <span class="line-number">5</span>
+                                    <span class="code-function">useEffect</span>(() => {
+                                </div>
+                                <div class="code-line">
+                                    <span class="line-number">6</span>
+                                    &nbsp;&nbsp;<span class="code-function">console</span>.<span class="code-function">log</span>(<span class="code-string">'Count effect ran, count is:'</span>, <span class="code-var">count</span>);
+                                </div>
+                                <div class="code-line">
+                                    <span class="line-number">7</span>
+                                    &nbsp;&nbsp;<span class="code-function">console</span>.<span class="code-function">log</span>(<span class="code-string">'Username is:'</span>, <span class="code-var">username</span>);
+                                </div>
+                                <div class="code-line">
+                                    <span class="line-number">8</span>
+                                }, [<span class="code-var">count</span>]); <span class="code-comment">// Only depends on count</span>
+                                <div class="code-line">
+                                    <span class="line-number">9</span>
+                                </div>
+                                <div class="code-line">
+                                    <span class="line-number">10</span>
+                                    <span class="code-comment">// But username input triggers count update</span>
+                                </div>
+                                <div class="code-line">
+                                    <span class="line-number">11</span>
+                                    <span class="code-keyword">const</span> <span class="code-function">handleUsernameChange</span> = (<span class="code-var">e</span>) => {
+                                </div>
+                                <div class="code-line">
+                                    <span class="line-number">12</span>
+                                    &nbsp;&nbsp;<span class="code-function">setUsername</span>(<span class="code-var">e</span>.<span class="code-var">target</span>.<span class="code-var">value</span>);
+                                </div>
+                                <div class="code-line">
+                                    <span class="line-number">13</span>
+                                    &nbsp;&nbsp;<span class="code-comment">// This triggers count update, which runs the effect</span>
+                                </div>
+                                <div class="code-line">
+                                    <span class="line-number">14</span>
+                                    &nbsp;&nbsp;<span class="code-function">setCount</span>(<span class="code-var">prev</span> => <span class="code-var">prev</span> + <span class="code-var">1</span>);
+                                </div>
+                                <div class="code-line">
+                                    <span class="line-number">15</span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="tab-content" id="syntax">
+                        <div class="code-block">
+                            <div class="code-line">
+                                <span class="line-number">1</span>
+                                <span class="code-keyword">import</span> <span class="code-function">React</span>, { <span class="code-var">useState</span>, <span class="code-var">useEffect</span> } <span class="code-keyword">from</span> <span class="code-string">'react'</span>;
+                            </div>
+                            <div class="code-line">
+                                <span class="line-number">2</span>
+                            </div>
+                            <div class="code-line">
+                                <span class="line-number">3</span>
+                                <span class="code-keyword">function</span> <span class="code-function">MyComponent</span>() {
+                            </div>
+                            <div class="code-line">
+                                <span class="line-number">4</span>
+                                &nbsp;&nbsp;<span class="code-keyword">const</span> [<span class="code-var">count</span>, <span class="code-var">setCount</span>] = <span class="code-function">useState</span>(<span class="code-var">0</span>);
+                            </div>
+                            <div class="code-line">
+                                <span class="line-number">5</span>
+                                &nbsp;&nbsp;<span class="code-keyword">const</span> [<span class="code-var">username</span>, <span class="code-var">setUsername</span>] = <span class="code-function">useState</span>(<span class="code-string">''</span>);
+                            </div>
+                            <div class="code-line">
+                                <span class="line-number">6</span>
+                            </div>
+                            <div class="code-line">
+                                <span class="line-number">7</span>
+                                &nbsp;&nbsp;<span class="code-comment">// useEffect with count dependency</span>
+                            </div>
+                            <div class="code-line">
+                                <span class="line-number">8</span>
+                                &nbsp;&nbsp;<span class="code-function">useEffect</span>(() => {
+                            </div>
+                            <div class="code-line">
+                                <span class="line-number">9</span>
+                                &nbsp;&nbsp;&nbsp;&nbsp;<span class="code-comment">// Side effect logic here</span>
+                            </div>
+                            <div class="code-line">
+                                <span class="line-number">10</span>
+                                &nbsp;&nbsp;&nbsp;&nbsp;<span class="code-function">console</span>.<span class="code-function">log</span>(<span class="code-string">'Effect ran, count is:'</span>, <span class="code-var">count</span>);
+                            </div>
+                            <div class="code-line">
+                                <span class="line-number">11</span>
+                                &nbsp;&nbsp;&nbsp;&nbsp;<span class="code-function">console</span>.<span class="code-function">log</span>(<span class="code-string">'Username is:'</span>, <span class="code-var">username</span>);
+                            </div>
+                            <div class="code-line">
+                                <span class="line-number">12</span>
+                            </div>
+                            <div class="code-line">
+                                <span class="line-number">13</span>
+                                &nbsp;&nbsp;&nbsp;&nbsp;<span class="code-keyword">return</span> () => {
+                            </div>
+                            <div class="code-line">
+                                <span class="line-number">14</span>
+                                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="code-comment">// Cleanup function (optional)</span>
+                            </div>
+                            <div class="code-line">
+                                <span class="line-number">15</span>
+                                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="code-function">console</span>.<span class="code-function">log</span>(<span class="code-string">'Cleanup ran'</span>);
+                            </div>
+                            <div class="code-line">
+                                <span class="line-number">16</span>
+                                &nbsp;&nbsp;&nbsp;&nbsp;};
+                            </div>
+                            <div class="code-line">
+                                <span class="line-number">17</span>
+                                &nbsp;&nbsp;}, [<span class="code-var">count</span>]); <span class="code-comment">// Only runs when count changes</span>
+                            </div>
+                            <div class="code-line">
+                                <span class="line-number">18</span>
+                            </div>
+                            <div class="code-line">
+                                <span class="line-number">19</span>
+                                &nbsp;&nbsp;<span class="code-comment">// Username change handler</span>
+                            </div>
+                            <div class="code-line">
+                                <span class="line-number">20</span>
+                                &nbsp;&nbsp;<span class="code-keyword">const</span> <span class="code-function">handleUsernameChange</span> = (<span class="code-var">e</span>) => {
+                            </div>
+                            <div class="code-line">
+                                <span class="line-number">21</span>
+                                &nbsp;&nbsp;&nbsp;&nbsp;<span class="code-function">setUsername</span>(<span class="code-var">e</span>.<span class="code-var">target</span>.<span class="code-var">value</span>);
+                            </div>
+                            <div class="code-line">
+                                <span class="line-number">22</span>
+                                &nbsp;&nbsp;&nbsp;&nbsp;<span class="code-comment">// This will trigger the count effect</span>
+                            </div>
+                            <div class="code-line">
+                                <span class="line-number">23</span>
+                                &nbsp;&nbsp;&nbsp;&nbsp;<span class="code-function">setCount</span>(<span class="code-var">c</span> => <span class="code-var">c</span> + <span class="code-var">1</span>);
+                            </div>
+                            <div class="code-line">
+                                <span class="line-number">24</span>
+                                &nbsp;&nbsp;};
+                            </div>
+                            <div class="code-line">
+                                <span class="line-number">25</span>
+                            </div>
+                            <div class="code-line">
+                                <span class="line-number">26</span>
+                                &nbsp;&nbsp;<span class="code-keyword">return</span> (
+                            </div>
+                            <div class="code-line">
+                                <span class="line-number">27</span>
+                                &nbsp;&nbsp;&nbsp;&nbsp;<span class="code-comment">// JSX here</span>
+                            </div>
+                            <div class="code-line">
+                                <span class="line-number">28</span>
+                                &nbsp;&nbsp;);
+                            </div>
+                            <div class="code-line">
+                                <span class="line-number">29</span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="tab-content" id="behavior">
+                        <p>How input changes trigger count effects:</p>
+                        
+                        <div class="use-cases">
+                            <div class="use-case">
+                                <h4><i class="fas fa-mouse-pointer"></i> User Interaction</h4>
+                                <p>User types in the input field, which triggers a state update for both username and count.</p>
+                            </div>
+                            
+                            <div class="use-case">
+                                <h4><i class="fas fa-sync-alt"></i> State Update</h4>
+                                <p>The count state updates, which is a dependency of the useEffect hook.</p>
+                            </div>
+                            
+                            <div class="use-case">
+                                <h4><i class="fas fa-bolt"></i> Effect Execution</h4>
+                                <p>Since count changed, the useEffect hook runs, performing its side effects.</p>
+                            </div>
+                            
+                            <div class="use-case">
+                                <h4><i class="fas fa-broom"></i> Cleanup (if needed)</h4>
+                                <p>If the effect returns a cleanup function, it runs before the next execution.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="code-block">
+                            <div class="code-line">
+                                <span class="line-number">1</span>
+                                <span class="code-comment">// This demonstrates the flow:</span>
+                            </div>
+                            <div class="code-line">
+                                <span class="line-number">2</span>
+                                <span class="code-comment">// 1. User types in input → username state updates</span>
+                            </div>
+                            <div class="code-line">
+                                <span class="line-number">3</span>
+                                <span class="code-comment">// 2. Input handler also updates count state</span>
+                            </div>
+                            <div class="code-line">
+                                <span class="line-number">4</span>
+                                <span class="code-comment">// 3. Count state change triggers useEffect</span>
+                            </div>
+                            <div class="code-line">
+                                <span class="line-number">5</span>
+                                <span class="code-comment">// 4. useEffect runs with latest count and username values</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>useEffect Simulation | Input changes trigger count effects with animations</p>
+        </footer>
+    </div>
+
+    <script>
+        // State management
+        let componentState = {
+            mounted: false,
+            count: 0,
+            renderCount: 0,
+            effectRuns: 0,
+            cleanupRuns: 0,
+            logs: [],
+            username: '',
+            previousUsername: ''
+        };
+
+        // DOM elements
+        const component = document.getElementById('component');
+        const componentStateText = document.getElementById('componentState');
+        const renderCount = document.getElementById('renderCount');
+        const effectRuns = document.getElementById('effectRuns');
+        const cleanupRuns = document.getElementById('cleanupRuns');
+        const countValue = document.getElementById('countValue');
+        const logsContainer = document.getElementById('logs');
+        const mountBtn = document.getElementById('mountBtn');
+        const updateBtn = document.getElementById('updateBtn');
+        const unmountBtn = document.getElementById('unmountBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const usernameInput = document.getElementById('usernameInput');
+        const userProfile = document.getElementById('userProfile');
+        const displayUsername = document.getElementById('displayUsername');
+        const userRole = document.getElementById('userRole');
+        
+        // Flow elements
+        const flowInput = document.getElementById('flow-input');
+        const flowDependency = document.getElementById('flow-dependency');
+        const flowEffect = document.getElementById('flow-effect');
+        const flowCleanup = document.getElementById('flow-cleanup');
+        
+        // Tab functionality
+        const tabs = document.querySelectorAll('.tab');
+        const tabContents = document.querySelectorAll('.tab-content');
+        
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const tabId = tab.getAttribute('data-tab');
+                
+                // Update active tab
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                
+                // Show active content
+                tabContents.forEach(content => {
+                    content.classList.remove('active');
+                    if (content.id === tabId) {
+                        content.classList.add('active');
+                    }
+                });
+            });
+        });
+
+        // Username input handling - triggers count effect
+        usernameInput.addEventListener('input', function() {
+            componentState.previousUsername = componentState.username;
+            componentState.username = this.value;
+            
+            // Visual feedback for input change
+            this.classList.add('effect-triggered');
+            setTimeout(() => {
+                this.classList.remove('effect-triggered');
+            }, 1000);
+            
+            // Highlight the input flow step
+            highlightFlowStep('input');
+            
+            addLog(`User input changed: "${componentState.previousUsername}" → "${componentState.username}"`, 'user');
+            
+            // If component is mounted, update count which will trigger the count effect
+            if (componentState.mounted) {
+                // Run cleanup from previous effects if needed
+                if (componentState.cleanup) {
+                    componentState.cleanup();
+                }
+                
+                // Update count - this will trigger the count useEffect
+                componentState.count++;
+                countValue.textContent = componentState.count;
+                
+                addLog(`Count updated to ${componentState.count} due to username change`, 'update');
+                
+                // Run effects for count change
+                componentState.cleanup = runEffectsOnCountChange();
+                
+                // Update component appearance
+                renderComponent();
+            }
+            
+            // Update user profile display
+            updateUserProfile();
+        });
+        
+        function updateUserProfile() {
+            if (componentState.username) {
+                displayUsername.textContent = componentState.username;
+                userRole.textContent = 'Registered User';
+                userProfile.classList.add('updated');
+                setTimeout(() => {
+                    userProfile.classList.remove('updated');
+                }, 800);
+            } else {
+                displayUsername.textContent = 'No user';
+                userRole.textContent = 'Guest';
+            }
+        }
+
+        // Effect simulation functions
+        function runEffectsOnMount() {
+            addLog('useEffect: Component mounted', 'mount');
+            addLog('useEffect: Running initial effects', 'effect');
+            componentState.effectRuns++;
+            updateStats();
+            
+            // Highlight the effect flow step
+            highlightFlowStep('effect');
+            
+            // Simulate API call or other side effects
+            setTimeout(() => {
+                addLog('useEffect: Initial data fetched successfully', 'effect');
+            }, 800);
+            
+            // Return cleanup function
+            return () => {
+                addLog('useEffect: Cleanup from mount effects', 'cleanup');
+                componentState.cleanupRuns++;
+                updateStats();
+                
+                // Highlight the cleanup flow step
+                highlightFlowStep('cleanup');
+            };
+        }
+
+        function runEffectsOnCountChange() {
+            addLog(`useEffect: Count changed to ${componentState.count}`, 'update');
+            addLog('useEffect: Running count effects', 'effect');
+            componentState.effectRuns++;
+            updateStats();
+            
+            // Highlight the effect flow step
+            highlightFlowStep('effect');
+            
+            // Simulate effect that uses both count and username
+            setTimeout(() => {
+                addLog(`useEffect: Processed count ${componentState.count} for user "${componentState.username}"`, 'effect');
+            }, 600);
+            
+            // Return cleanup function
+            return () => {
+                addLog('useEffect: Cleanup from count effects', 'cleanup');
+                componentState.cleanupRuns++;
+                updateStats();
+                
+                // Highlight the cleanup flow step
+                highlightFlowStep('cleanup');
+            };
+        }
+        
+        function updateStats() {
+            effectRuns.textContent = componentState.effectRuns;
+            cleanupRuns.textContent = componentState.cleanupRuns;
+        }
+        
+        function highlightFlowStep(step) {
+            // Reset all flow steps
+            flowInput.classList.remove('active');
+            flowDependency.classList.remove('active');
+            flowEffect.classList.remove('active');
+            flowCleanup.classList.remove('active');
+            
+            // Highlight the current step
+            switch(step) {
+                case 'input':
+                    flowInput.classList.add('active');
+                    break;
+                case 'dependency':
+                    flowDependency.classList.add('active');
+                    break;
+                case 'effect':
+                    flowEffect.classList.add('active');
+                    break;
+                case 'cleanup':
+                    flowCleanup.classList.add('active');
+                    break;
+            }
+            
+            // Remove highlight after a delay
+            setTimeout(() => {
+                flowInput.classList.remove('active');
+                flowDependency.classList.remove('active');
+                flowEffect.classList.remove('active');
+                flowCleanup.classList.remove('active');
+            }, 1500);
+        }
+
+        // Component rendering
+        function renderComponent() {
+            if (!componentState.mounted) {
+                component.className = 'component unmounted';
+                componentStateText.textContent = 'Unmounted';
+                return;
+            }
+
+            componentState.renderCount++;
+            renderCount.textContent = componentState.renderCount;
+            
+            if (componentState.count === 0) {
+                component.className = 'component mounted';
+                componentStateText.textContent = 'Mounted';
+            } else {
+                component.className = 'component updating';
+                componentStateText.textContent = 'Updated';
+                
+                // Reset the updating class after animation completes
+                setTimeout(() => {
+                    if (componentState.mounted) {
+                        component.className = 'component';
+                    }
+                }, 800);
+            }
+            
+            countValue.textContent = componentState.count;
+            
+            // Update lifecycle visualization
+            updateLifecycleVisualization();
+        }
+        
+        function updateLifecycleVisualization() {
+            const stages = document.querySelectorAll('.lifecycle-stage');
+            stages.forEach(stage => stage.classList.remove('active'));
+            
+            if (!componentState.mounted) {
+                document.getElementById('stage-unmount').classList.add('active');
+            } else if (componentState.count === 0) {
+                document.getElementById('stage-mount').classList.add('active');
+            } else {
+                document.getElementById('stage-update').classList.add('active');
+            }
+        }
+
+        // Logging functionality
+        function addLog(message, type) {
+            const timestamp = new Date().toLocaleTimeString();
+            componentState.logs.push({ message, type, timestamp });
+            
+            // Update logs display
+            logsContainer.innerHTML = componentState.logs.map(log => 
+                `<div class="log-entry log-${log.type}">
+                    <span class="log-time">${log.timestamp}</span>
+                    <span class="log-message">${log.message}</span>
+                </div>`
+            ).join('');
+            
+            // Auto-scroll to bottom
+            logsContainer.scrollTop = logsContainer.scrollHeight;
+        }
+
+        // Event handlers
+        mountBtn.addEventListener('click', () => {
+            if (!componentState.mounted) {
+                componentState.mounted = true;
+                componentState.count = 0;
+                
+                renderComponent();
+                
+                // Simulate useEffect on mount
+                componentState.cleanup = runEffectsOnMount();
+            }
+        });
+
+        updateBtn.addEventListener('click', () => {
+            if (componentState.mounted) {
+                // Run cleanup from previous effects
+                if (componentState.cleanup) {
+                    componentState.cleanup();
+                }
+                
+                componentState.count++;
+                
+                renderComponent();
+                
+                // Simulate useEffect on update
+                componentState.cleanup = runEffectsOnCountChange();
+            }
+        });
+
+        unmountBtn.addEventListener('click', () => {
+            if (componentState.mounted) {
+                // Run cleanup from previous effects
+                if (componentState.cleanup) {
+                    componentState.cleanup();
+                }
+                
+                // Simulate useEffect on unmount
+                addLog('useEffect: Component will unmount', 'unmount');
+                addLog('useEffect: Running cleanup effects', 'effect');
+                
+                componentState.mounted = false;
+                renderComponent();
+            }
+        });
+
+        resetBtn.addEventListener('click', () => {
+            componentState.mounted = false;
+            componentState.count = 0;
+            componentState.renderCount = 0;
+            componentState.effectRuns = 0;
+            componentState.cleanupRuns = 0;
+            componentState.logs = [];
+            componentState.username = '';
+            componentState.previousUsername = '';
+            
+            countValue.textContent = componentState.count;
+            renderCount.textContent = componentState.renderCount;
+            effectRuns.textContent = componentState.effectRuns;
+            cleanupRuns.textContent = componentState.cleanupRuns;
+            logsContainer.innerHTML = '';
+            usernameInput.value = '';
+            updateUserProfile();
+            renderComponent();
+            
+            addLog('Simulation reset', 'effect');
+        });
+
+        // Initial log
+        addLog('Application started. Click "Mount Component" to begin.', 'effect');
+        updateLifecycleVisualization();
+    </script>
+</body>
+</html>
