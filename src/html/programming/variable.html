@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Variable Simulation in Memory & CPU - Revolutionary Animation</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --accent: #e74c3c;
+            --memory: #9b59b6;
+            --cpu: #f39c12;
+            --success: #2ecc71;
+            --light: #ecf0f1;
+            --dark: #34495e;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, var(--primary), var(--dark));
+            color: var(--light);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, var(--secondary), var(--success));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.8;
+        }
+        
+        .simulation-area {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        @media (max-width: 900px) {
+            .simulation-area {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .memory-section, .cpu-section {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .section-title {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .memory-section .section-title {
+            color: var(--memory);
+        }
+        
+        .cpu-section .section-title {
+            color: var(--cpu);
+        }
+        
+        .memory-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .memory-cell {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 15px 10px;
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            min-height: 100px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        
+        .memory-cell.active {
+            box-shadow: 0 0 15px var(--secondary);
+            transform: scale(1.05);
+        }
+        
+        .memory-address {
+            font-size: 0.8rem;
+            opacity: 0.7;
+            margin-bottom: 5px;
+        }
+        
+        .variable-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .variable-value {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--success);
+        }
+        
+        .variable-type {
+            font-size: 0.8rem;
+            opacity: 0.7;
+            margin-top: 5px;
+        }
+        
+        .cpu-registers {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .register {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            transition: all 0.3s ease;
+            min-height: 100px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .register.active {
+            box-shadow: 0 0 15px var(--cpu);
+            transform: scale(1.05);
+        }
+        
+        .register-name {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: var(--cpu);
+        }
+        
+        .register-value {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+        
+        .data-path {
+            position: absolute;
+            height: 4px;
+            background: var(--secondary);
+            z-index: 1;
+            transition: all 0.5s ease;
+        }
+        
+        .control-panel {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            margin-bottom: 40px;
+        }
+        
+        .code-editor {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            font-family: 'Courier New', monospace;
+            line-height: 1.5;
+            min-height: 150px;
+            overflow: auto;
+        }
+        
+        .code-line {
+            margin-bottom: 5px;
+            padding: 5px;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+        
+        .code-line.active {
+            background: rgba(52, 152, 219, 0.3);
+            box-shadow: 0 0 10px rgba(52, 152, 219, 0.5);
+        }
+        
+        .buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            background: var(--secondary);
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex: 1;
+            min-width: 120px;
+        }
+        
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .btn-run {
+            background: var(--success);
+        }
+        
+        .btn-step {
+            background: var(--cpu);
+        }
+        
+        .btn-reset {
+            background: var(--accent);
+        }
+        
+        .explanation {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            margin-top: 40px;
+        }
+        
+        .explanation h2 {
+            margin-bottom: 15px;
+            color: var(--secondary);
+        }
+        
+        .explanation p {
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+        
+        .pulse {
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 0.7; }
+            50% { opacity: 1; }
+            100% { opacity: 0.7; }
+        }
+        
+        .data-flow {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--success);
+            z-index: 10;
+            box-shadow: 0 0 10px var(--success);
+            display: none;
+        }
+        
+        .highlight {
+            animation: highlight 1s ease;
+        }
+        
+        @keyframes highlight {
+            0% { background-color: rgba(46, 204, 113, 0.3); }
+            100% { background-color: transparent; }
+        }
+        
+        .binary-representation {
+            font-size: 0.7rem;
+            margin-top: 5px;
+            opacity: 0.7;
+            font-family: 'Courier New', monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Variable Simulation in Memory & CPU</h1>
+            <p class="subtitle">A Revolutionary Animation Showing How Variables Work at the Hardware Level</p>
+        </header>
+        
+        <div class="simulation-area">
+            <div class="memory-section">
+                <h2 class="section-title">
+                    <span>Memory (RAM)</span>
+                </h2>
+                <div class="memory-grid" id="memoryGrid">
+                    <!-- Memory cells will be generated by JavaScript -->
+                </div>
+            </div>
+            
+            <div class="cpu-section">
+                <h2 class="section-title">
+                    <span>Central Processing Unit (CPU)</span>
+                </h2>
+                <div class="cpu-registers">
+                    <div class="register" id="registerA">
+                        <div class="register-name">Register A</div>
+                        <div class="register-value">-</div>
+                    </div>
+                    <div class="register" id="registerB">
+                        <div class="register-name">Register B</div>
+                        <div class="register-value">-</div>
+                    </div>
+                    <div class="register" id="registerC">
+                        <div class="register-name">Register C</div>
+                        <div class="register-value">-</div>
+                    </div>
+                    <div class="register" id="registerIP">
+                        <div class="register-name">Instruction Pointer</div>
+                        <div class="register-value">0x0000</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="control-panel">
+            <div class="code-editor" id="codeEditor">
+                <div class="code-line">int a = 10;</div>
+                <div class="code-line">int b = 20;</div>
+                <div class="code-line">int c = a + b;</div>
+                <div class="code-line">a = b * 2;</div>
+                <div class="code-line">b = c - a;</div>
+            </div>
+            
+            <div class="buttons">
+                <button class="btn-run" id="btnRun">Run Program</button>
+                <button class="btn-step" id="btnStep">Step Forward</button>
+                <button class="btn-reset" id="btnReset">Reset</button>
+            </div>
+        </div>
+        
+        <div class="explanation">
+            <h2>How Variables Work in Memory and CPU</h2>
+            <p>This simulation demonstrates how programming variables are stored in memory and processed by the CPU:</p>
+            <ul>
+                <li><strong>Memory (RAM)</strong> stores variables at specific addresses. Each variable has a name, value, type, and memory address.</li>
+                <li><strong>CPU Registers</strong> are small, fast storage locations inside the processor used to perform operations.</li>
+                <li>When a program runs, the CPU fetches variables from memory into registers, performs operations, and stores results back in memory.</li>
+                <li>The <strong>Instruction Pointer</strong> keeps track of which line of code is being executed.</li>
+            </ul>
+            <p>Watch as the animation shows data moving between memory and CPU registers during program execution!</p>
+        </div>
+    </div>
+
+    <script>
+        // Memory simulation
+        const memory = [
+            { address: '0x1000', name: 'a', value: 10, type: 'int', binary: '00001010' },
+            { address: '0x1004', name: 'b', value: 20, type: 'int', binary: '00010100' },
+            { address: '0x1008', name: 'c', value: 0, type: 'int', binary: '00000000' },
+            { address: '0x100C', name: 'temp', value: 0, type: 'int', binary: '00000000' }
+        ];
+        
+        // CPU registers
+        const registers = {
+            A: { value: null, element: document.getElementById('registerA') },
+            B: { value: null, element: document.getElementById('registerB') },
+            C: { value: null, element: document.getElementById('registerC') },
+            IP: { value: '0x0000', element: document.getElementById('registerIP') }
+        };
+        
+        // Program code
+        const program = [
+            { line: 0, code: 'int a = 10;', action: 'declare' },
+            { line: 1, code: 'int b = 20;', action: 'declare' },
+            { line: 2, code: 'int c = a + b;', action: 'add' },
+            { line: 3, code: 'a = b * 2;', action: 'multiply' },
+            { line: 4, code: 'b = c - a;', action: 'subtract' }
+        ];
+        
+        let currentStep = 0;
+        let isRunning = false;
+        
+        // Initialize memory grid
+        const memoryGrid = document.getElementById('memoryGrid');
+        
+        function initializeMemoryGrid() {
+            memoryGrid.innerHTML = '';
+            memory.forEach(cell => {
+                const memoryCell = document.createElement('div');
+                memoryCell.className = 'memory-cell';
+                memoryCell.id = `cell-${cell.address}`;
+                memoryCell.innerHTML = `
+                    <div class="memory-address">${cell.address}</div>
+                    <div class="variable-name">${cell.name}</div>
+                    <div class="variable-value">${cell.value}</div>
+                    <div class="variable-type">${cell.type}</div>
+                    <div class="binary-representation">${cell.binary}</div>
+                `;
+                memoryGrid.appendChild(memoryCell);
+            });
+        }
+        
+        // Initialize code editor highlighting
+        const codeLines = document.querySelectorAll('.code-line');
+        
+        // Update register display
+        function updateRegisters() {
+            for (const reg in registers) {
+                const valueElement = registers[reg].element.querySelector('.register-value');
+                valueElement.textContent = registers[reg].value !== null ? registers[reg].value : '-';
+            }
+        }
+        
+        // Highlight active code line
+        function highlightCodeLine(lineNumber) {
+            codeLines.forEach((line, index) => {
+                if (index === lineNumber) {
+                    line.classList.add('active');
+                } else {
+                    line.classList.remove('active');
+                }
+            });
+        }
+        
+        // Create data flow animation
+        function createDataFlow(fromElement, toElement, color = '#2ecc71') {
+            const fromRect = fromElement.getBoundingClientRect();
+            const toRect = toElement.getBoundingClientRect();
+            
+            const dataFlow = document.createElement('div');
+            dataFlow.className = 'data-flow';
+            dataFlow.style.backgroundColor = color;
+            dataFlow.style.left = `${fromRect.left + fromRect.width/2 - 10}px`;
+            dataFlow.style.top = `${fromRect.top + fromRect.height/2 - 10}px`;
+            document.body.appendChild(dataFlow);
+            
+            // Animate the data flow
+            const startX = fromRect.left + fromRect.width/2;
+            const startY = fromRect.top + fromRect.height/2;
+            const endX = toRect.left + toRect.width/2;
+            const endY = toRect.top + toRect.height/2;
+            
+            dataFlow.style.display = 'block';
+            
+            // Animate using requestAnimationFrame
+            let startTime = null;
+            const duration = 1000; // ms
+            
+            function animate(time) {
+                if (!startTime) startTime = time;
+                const progress = (time - startTime) / duration;
+                
+                if (progress < 1) {
+                    const currentX = startX + (endX - startX) * progress;
+                    const currentY = startY + (endY - startY) * progress;
+                    
+                    dataFlow.style.left = `${currentX - 10}px`;
+                    dataFlow.style.top = `${currentY - 10}px`;
+                    
+                    requestAnimationFrame(animate);
+                } else {
+                    document.body.removeChild(dataFlow);
+                    toElement.classList.add('highlight');
+                    setTimeout(() => {
+                        toElement.classList.remove('highlight');
+                    }, 1000);
+                }
+            }
+            
+            requestAnimationFrame(animate);
+        }
+        
+        // Execute a program step
+        function executeStep() {
+            if (currentStep >= program.length) {
+                isRunning = false;
+                return;
+            }
+            
+            const step = program[currentStep];
+            highlightCodeLine(step.line);
+            
+            // Update instruction pointer
+            registers.IP.value = `0x${(0x1000 + currentStep * 4).toString(16).toUpperCase()}`;
+            updateRegisters();
+            
+            switch(step.action) {
+                case 'declare':
+                    // For declaration, just highlight the variable in memory
+                    const varName = step.code.split(' ')[1];
+                    const memoryCell = memory.find(cell => cell.name === varName);
+                    if (memoryCell) {
+                        const cellElement = document.getElementById(`cell-${memoryCell.address}`);
+                        cellElement.classList.add('active');
+                        setTimeout(() => {
+                            cellElement.classList.remove('active');
+                        }, 1000);
+                    }
+                    break;
+                    
+                case 'add':
+                    // Simulate adding two variables
+                    const aCell = memory.find(cell => cell.name === 'a');
+                    const bCell = memory.find(cell => cell.name === 'b');
+                    const cCell = memory.find(cell => cell.name === 'c');
+                    
+                    if (aCell && bCell && cCell) {
+                        // Load a into register A
+                        registers.A.value = aCell.value;
+                        updateRegisters();
+                        createDataFlow(
+                            document.getElementById(`cell-${aCell.address}`),
+                            registers.A.element,
+                            '#3498db'
+                        );
+                        
+                        // Load b into register B after a short delay
+                        setTimeout(() => {
+                            registers.B.value = bCell.value;
+                            updateRegisters();
+                            createDataFlow(
+                                document.getElementById(`cell-${bCell.address}`),
+                                registers.B.element,
+                                '#3498db'
+                            );
+                            
+                            // Perform addition after another delay
+                            setTimeout(() => {
+                                registers.C.value = registers.A.value + registers.B.value;
+                                updateRegisters();
+                                
+                                // Store result in memory after another delay
+                                setTimeout(() => {
+                                    cCell.value = registers.C.value;
+                                    const cCellElement = document.getElementById(`cell-${cCell.address}`);
+                                    cCellElement.querySelector('.variable-value').textContent = cCell.value;
+                                    cCellElement.querySelector('.binary-representation').textContent = 
+                                        cCell.value.toString(2).padStart(8, '0');
+                                    
+                                    createDataFlow(
+                                        registers.C.element,
+                                        cCellElement,
+                                        '#2ecc71'
+                                    );
+                                    
+                                    // Clear registers after storing
+                                    setTimeout(() => {
+                                        registers.A.value = null;
+                                        registers.B.value = null;
+                                        registers.C.value = null;
+                                        updateRegisters();
+                                    }, 1000);
+                                }, 1000);
+                            }, 1000);
+                        }, 1000);
+                    }
+                    break;
+                    
+                case 'multiply':
+                    // Similar pattern for multiplication
+                    const bCell2 = memory.find(cell => cell.name === 'b');
+                    const aCell2 = memory.find(cell => cell.name === 'a');
+                    const tempCell = memory.find(cell => cell.name === 'temp');
+                    
+                    if (aCell2 && bCell2 && tempCell) {
+                        // Load b into register A
+                        registers.A.value = bCell2.value;
+                        updateRegisters();
+                        createDataFlow(
+                            document.getElementById(`cell-${bCell2.address}`),
+                            registers.A.element,
+                            '#3498db'
+                        );
+                        
+                        // Load constant 2 into register B
+                        setTimeout(() => {
+                            registers.B.value = 2;
+                            updateRegisters();
+                            
+                            // Perform multiplication
+                            setTimeout(() => {
+                                registers.C.value = registers.A.value * registers.B.value;
+                                updateRegisters();
+                                
+                                // Store result in temp
+                                setTimeout(() => {
+                                    tempCell.value = registers.C.value;
+                                    const tempCellElement = document.getElementById(`cell-${tempCell.address}`);
+                                    tempCellElement.querySelector('.variable-value').textContent = tempCell.value;
+                                    tempCellElement.querySelector('.binary-representation').textContent = 
+                                        tempCell.value.toString(2).padStart(8, '0');
+                                    
+                                    createDataFlow(
+                                        registers.C.element,
+                                        tempCellElement,
+                                        '#2ecc71'
+                                    );
+                                    
+                                    // Move temp to a
+                                    setTimeout(() => {
+                                        aCell2.value = tempCell.value;
+                                        const aCellElement = document.getElementById(`cell-${aCell2.address}`);
+                                        aCellElement.querySelector('.variable-value').textContent = aCell2.value;
+                                        aCellElement.querySelector('.binary-representation').textContent = 
+                                            aCell2.value.toString(2).padStart(8, '0');
+                                        
+                                        createDataFlow(
+                                            tempCellElement,
+                                            aCellElement,
+                                            '#e74c3c'
+                                        );
+                                        
+                                        // Clear registers
+                                        setTimeout(() => {
+                                            registers.A.value = null;
+                                            registers.B.value = null;
+                                            registers.C.value = null;
+                                            updateRegisters();
+                                        }, 1000);
+                                    }, 1000);
+                                }, 1000);
+                            }, 1000);
+                        }, 1000);
+                    }
+                    break;
+                    
+                case 'subtract':
+                    // Similar pattern for subtraction
+                    const cCell3 = memory.find(cell => cell.name === 'c');
+                    const aCell3 = memory.find(cell => cell.name === 'a');
+                    const bCell3 = memory.find(cell => cell.name === 'b');
+                    
+                    if (aCell3 && bCell3 && cCell3) {
+                        // Load c into register A
+                        registers.A.value = cCell3.value;
+                        updateRegisters();
+                        createDataFlow(
+                            document.getElementById(`cell-${cCell3.address}`),
+                            registers.A.element,
+                            '#3498db'
+                        );
+                        
+                        // Load a into register B
+                        setTimeout(() => {
+                            registers.B.value = aCell3.value;
+                            updateRegisters();
+                            createDataFlow(
+                                document.getElementById(`cell-${aCell3.address}`),
+                                registers.B.element,
+                                '#3498db'
+                            );
+                            
+                            // Perform subtraction
+                            setTimeout(() => {
+                                registers.C.value = registers.A.value - registers.B.value;
+                                updateRegisters();
+                                
+                                // Store result in b
+                                setTimeout(() => {
+                                    bCell3.value = registers.C.value;
+                                    const bCellElement = document.getElementById(`cell-${bCell3.address}`);
+                                    bCellElement.querySelector('.variable-value').textContent = bCell3.value;
+                                    bCellElement.querySelector('.binary-representation').textContent = 
+                                        bCell3.value.toString(2).padStart(8, '0');
+                                    
+                                    createDataFlow(
+                                        registers.C.element,
+                                        bCellElement,
+                                        '#2ecc71'
+                                    );
+                                    
+                                    // Clear registers
+                                    setTimeout(() => {
+                                        registers.A.value = null;
+                                        registers.B.value = null;
+                                        registers.C.value = null;
+                                        updateRegisters();
+                                    }, 1000);
+                                }, 1000);
+                            }, 1000);
+                        }, 1000);
+                    }
+                    break;
+            }
+            
+            currentStep++;
+        }
+        
+        // Run the entire program
+        function runProgram() {
+            if (isRunning) return;
+            
+            isRunning = true;
+            const runStep = () => {
+                if (currentStep < program.length && isRunning) {
+                    executeStep();
+                    setTimeout(runStep, 6000); // Wait for animations to complete
+                } else {
+                    isRunning = false;
+                }
+            };
+            
+            runStep();
+        }
+        
+        // Reset the simulation
+        function resetSimulation() {
+            currentStep = 0;
+            isRunning = false;
+            
+            // Reset memory
+            memory[0].value = 10;
+            memory[1].value = 20;
+            memory[2].value = 0;
+            memory[3].value = 0;
+            
+            // Reset registers
+            for (const reg in registers) {
+                if (reg !== 'IP') {
+                    registers[reg].value = null;
+                } else {
+                    registers[reg].value = '0x0000';
+                }
+            }
+            
+            // Update displays
+            initializeMemoryGrid();
+            updateRegisters();
+            highlightCodeLine(-1);
+        }
+        
+        // Event listeners
+        document.getElementById('btnRun').addEventListener('click', runProgram);
+        document.getElementById('btnStep').addEventListener('click', () => {
+            if (!isRunning) {
+                executeStep();
+            }
+        });
+        document.getElementById('btnReset').addEventListener('click', resetSimulation);
+        
+        // Initialize the simulation
+        initializeMemoryGrid();
+        updateRegisters();
+    </script>
+</body>
+</html>
