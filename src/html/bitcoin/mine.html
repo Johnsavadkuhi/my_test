@@ -1,682 +1,366 @@
 <!DOCTYPE html>
-<html lang="fa" dir="rtl">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>شبیه‌ساز ماینینگ بیت‌کوین</title>
+    <title>Bitcoin Mining Simulation</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
         body {
-            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-            color: #fff;
-            min-height: 100vh;
+            font-family: 'Arial', sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 20px;
-            overflow-x: hidden;
         }
-
+        
         .container {
-            max-width: 1200px;
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 30px;
-        }
-
-        header {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-            background: linear-gradient(to right, #f0b90b, #ffde5c);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-shadow: 0 0 10px rgba(240, 185, 11, 0.3);
-        }
-
-        .subtitle {
-            font-size: 1.2rem;
-            color: #aaa;
-        }
-
-        .dashboard {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            width: 100%;
-        }
-
-        .card {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 15px;
+            max-width: 800px;
+            background-color: white;
+            border-radius: 10px;
             padding: 20px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
-
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+        
+        h1 {
+            color: #f7931a;
+            text-align: center;
         }
-
-        .card h2 {
-            font-size: 1.5rem;
+        
+        .explanation {
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        
+        .mining-area {
+            border: 2px solid #f7931a;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            background-color: #f9f9f9;
+        }
+        
+        .block {
+            background-color: #f7931a;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
             margin-bottom: 15px;
-            color: #f0b90b;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-            padding-bottom: 10px;
+            position: relative;
         }
-
-        .stats {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .stat {
+        
+        .block-header {
             display: flex;
             justify-content: space-between;
-            padding: 8px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 10px;
         }
-
-        .stat-value {
+        
+        .block-number {
             font-weight: bold;
-            color: #f0b90b;
         }
-
+        
+        .hash {
+            font-family: monospace;
+            background-color: #333;
+            color: #fff;
+            padding: 5px;
+            border-radius: 4px;
+            word-break: break-all;
+            margin: 10px 0;
+        }
+        
+        .nonce {
+            font-weight: bold;
+            color: #f7931a;
+        }
+        
+        .miners {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+        }
+        
+        .miner {
+            text-align: center;
+            padding: 10px;
+            border-radius: 8px;
+            background-color: #e9e9e9;
+            width: 120px;
+        }
+        
+        .miner.active {
+            background-color: #f7931a;
+            color: white;
+        }
+        
+        .miner .hash-rate {
+            font-size: 12px;
+            margin-top: 5px;
+        }
+        
+        .progress-container {
+            margin: 20px 0;
+        }
+        
+        .progress-bar {
+            height: 20px;
+            background-color: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .progress {
+            height: 100%;
+            background-color: #f7931a;
+            width: 0%;
+            transition: width 0.5s;
+        }
+        
         .controls {
             display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .btn {
-            background: linear-gradient(to right, #f0b90b, #ffde5c);
-            color: #333;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(240, 185, 11, 0.3);
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(240, 185, 11, 0.5);
-        }
-
-        .btn:active {
-            transform: translateY(0);
-        }
-
-        .btn-stop {
-            background: linear-gradient(to right, #ff416c, #ff4b2b);
-            box-shadow: 0 4px 15px rgba(255, 65, 108, 0.3);
-        }
-
-        .btn-stop:hover {
-            box-shadow: 0 6px 20px rgba(255, 65, 108, 0.5);
-        }
-
-        .mining-animation {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 20px;
-        }
-
-        .miner {
-            width: 200px;
-            height: 200px;
-            position: relative;
-            display: flex;
             justify-content: center;
-            align-items: center;
+            gap: 10px;
+            margin-top: 20px;
         }
-
-        .gear {
-            width: 150px;
-            height: 150px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #333, #555);
-            position: relative;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-            animation: rotate 5s linear infinite;
-            animation-play-state: paused;
-        }
-
-        .gear::before {
-            content: '';
-            position: absolute;
-            width: 30px;
-            height: 30px;
-            background: #f0b90b;
-            border-radius: 50%;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            box-shadow: 0 0 10px #f0b90b;
-        }
-
-        .gear-tooth {
-            position: absolute;
-            width: 20px;
-            height: 60px;
-            background: linear-gradient(to bottom, #444, #666);
-            top: -30px;
-            left: 65px;
-            border-radius: 10px;
-        }
-
-        .gear-tooth:nth-child(2) {
-            transform: rotate(45deg);
-            top: -15px;
-            left: 115px;
-        }
-
-        .gear-tooth:nth-child(3) {
-            transform: rotate(90deg);
-            top: 65px;
-            left: 145px;
-        }
-
-        .gear-tooth:nth-child(4) {
-            transform: rotate(135deg);
-            top: 115px;
-            left: 115px;
-        }
-
-        .gear-tooth:nth-child(5) {
-            transform: rotate(180deg);
-            top: 145px;
-            left: 65px;
-        }
-
-        .gear-tooth:nth-child(6) {
-            transform: rotate(225deg);
-            top: 115px;
-            left: 15px;
-        }
-
-        .gear-tooth:nth-child(7) {
-            transform: rotate(270deg);
-            top: 65px;
-            left: -15px;
-        }
-
-        .gear-tooth:nth-child(8) {
-            transform: rotate(315deg);
-            top: 15px;
-            left: 15px;
-        }
-
-        .hash-display {
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 10px;
-            padding: 15px;
-            width: 100%;
-            max-width: 600px;
-            height: 120px;
-            overflow-y: auto;
-            font-family: monospace;
-            font-size: 0.9rem;
-            line-height: 1.5;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .hash-item {
-            margin-bottom: 5px;
-            padding: 5px;
+        
+        button {
+            padding: 10px 20px;
+            background-color: #f7931a;
+            color: white;
+            border: none;
             border-radius: 5px;
-            background: rgba(255, 255, 255, 0.05);
-            transition: background 0.3s ease;
+            cursor: pointer;
+            font-size: 16px;
         }
-
-        .hash-item.found {
-            background: rgba(240, 185, 11, 0.2);
-            color: #f0b90b;
-            font-weight: bold;
-            animation: pulse 1s ease;
+        
+        button:hover {
+            background-color: #e08218;
         }
-
-        .progress-container {
-            width: 100%;
-            max-width: 600px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            height: 20px;
-            overflow: hidden;
-            margin-top: 10px;
-        }
-
-        .progress-bar {
-            height: 100%;
-            background: linear-gradient(to right, #f0b90b, #ffde5c);
-            width: 0%;
-            transition: width 0.5s ease;
-            border-radius: 10px;
-        }
-
-        @keyframes rotate {
-            from {
-                transform: rotate(0deg);
-            }
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
-        @keyframes pulse {
-            0% {
-                background: rgba(240, 185, 11, 0.2);
-            }
-            50% {
-                background: rgba(240, 185, 11, 0.5);
-            }
-            100% {
-                background: rgba(240, 185, 11, 0.2);
-            }
-        }
-
-        .particles {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            top: 0;
-            left: 0;
-            pointer-events: none;
-        }
-
-        .particle {
-            position: absolute;
-            width: 4px;
-            height: 4px;
-            background: #f0b90b;
-            border-radius: 50%;
-            opacity: 0;
-        }
-
-        footer {
-            margin-top: 30px;
+        
+        .reward {
             text-align: center;
-            color: #aaa;
-            font-size: 0.9rem;
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 20px;
+            color: #f7931a;
+            opacity: 0;
+            transition: opacity 0.5s;
         }
-
-        @media (max-width: 768px) {
-            .dashboard {
-                grid-template-columns: 1fr;
-            }
-            
-            h1 {
-                font-size: 2rem;
-            }
+        
+        .reward.show {
+            opacity: 1;
+        }
+        
+        .transaction {
+            background-color: #e9e9e9;
+            padding: 8px;
+            margin: 5px 0;
+            border-radius: 4px;
+            font-size: 14px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1>شبیه‌ساز ماینینگ بیت‌کوین</h1>
-            <p class="subtitle">این یک شبیه‌ساز آموزشی است و بیت‌کوین واقعی تولید نمی‌کند</p>
-        </header>
-
-        <div class="dashboard">
-            <div class="card">
-                <h2>آمار ماینینگ</h2>
-                <div class="stats">
-                    <div class="stat">
-                        <span>سرعت هش:</span>
-                        <span class="stat-value" id="hashRate">0 H/s</span>
-                    </div>
-                    <div class="stat">
-                        <span>هش‌های محاسبه شده:</span>
-                        <span class="stat-value" id="totalHashes">0</span>
-                    </div>
-                    <div class="stat">
-                        <span>هش‌های موفق:</span>
-                        <span class="stat-value" id="successHashes">0</span>
-                    </div>
-                    <div class="stat">
-                        <span>بیت‌کوین استخراج شده:</span>
-                        <span class="stat-value" id="minedBTC">0.00000000 BTC</span>
-                    </div>
-                    <div class="stat">
-                        <span>زمان فعالیت:</span>
-                        <span class="stat-value" id="miningTime">00:00:00</span>
-                    </div>
+        <h1>Bitcoin Mining Simulation</h1>
+        
+        <div class="explanation">
+            <p>Bitcoin mining is like a giant puzzle competition where computers around the world compete to solve a difficult math problem. The first one to solve it gets to add a new block to the blockchain and receives a reward in Bitcoin.</p>
+            <p>In this simulation, we'll show how miners try different numbers (called "nonces") to find a hash that starts with a certain number of zeros.</p>
+        </div>
+        
+        <div class="mining-area">
+            <div class="block">
+                <div class="block-header">
+                    <span class="block-number">Block #812345</span>
+                    <span>Target: Hash starting with 0000...</span>
                 </div>
-            </div>
-
-            <div class="card">
-                <h2>کنترل‌ها</h2>
-                <div class="controls">
-                    <button class="btn" id="startBtn">شروع ماینینگ</button>
-                    <button class="btn btn-stop" id="stopBtn" disabled>توقف ماینینگ</button>
-                    <button class="btn" id="resetBtn">بازنشانی</button>
-                </div>
-            </div>
-
-            <div class="card mining-animation">
-                <h2>انیمیشن ماینینگ</h2>
-                <div class="miner">
-                    <div class="gear" id="gear">
-                        <div class="gear-tooth"></div>
-                        <div class="gear-tooth"></div>
-                        <div class="gear-tooth"></div>
-                        <div class="gear-tooth"></div>
-                        <div class="gear-tooth"></div>
-                        <div class="gear-tooth"></div>
-                        <div class="gear-tooth"></div>
-                        <div class="gear-tooth"></div>
-                    </div>
-                    <div class="particles" id="particles"></div>
-                </div>
+                <div class="hash" id="current-hash">0000000000000000000000000000000000000000000000000000000000000000</div>
+                <div>Trying nonce: <span class="nonce" id="current-nonce">0</span></div>
                 <div class="progress-container">
-                    <div class="progress-bar" id="progressBar"></div>
+                    <div class="progress-bar">
+                        <div class="progress" id="mining-progress"></div>
+                    </div>
                 </div>
             </div>
-        </div>
-
-        <div class="card" style="width: 100%; max-width: 600px;">
-            <h2>هش‌های تولید شده</h2>
-            <div class="hash-display" id="hashDisplay">
-                <div class="hash-item">ماینینگ شروع نشده است...</div>
+            
+            <div class="miners" id="miners-container">
+                <!-- Miners will be added here by JavaScript -->
             </div>
+            
+            <div class="reward" id="reward-message">Miner #3 found the solution! Reward: 6.25 BTC</div>
         </div>
-
-        <footer>
-            <p>این یک شبیه‌ساز آموزشی است و برای ماینینگ واقعی بیت‌کوین استفاده نمی‌شود.</p>
-        </footer>
+        
+        <div class="controls">
+            <button id="start-btn">Start Mining</button>
+            <button id="reset-btn">Reset</button>
+        </div>
+        
+        <div class="explanation">
+            <h3>How It Works:</h3>
+            <ul>
+                <li>Miners collect transactions and try to add them to a new block</li>
+                <li>They change a number called "nonce" and calculate the hash of the block</li>
+                <li>The hash must be lower than a target value (start with many zeros)</li>
+                <li>This is like trying to guess a combination lock - it takes many attempts!</li>
+                <li>The first miner to find a valid hash gets to add the block and receives Bitcoin as a reward</li>
+                <li>This process happens approximately every 10 minutes</li>
+            </ul>
+        </div>
     </div>
 
     <script>
-        // متغیرهای اصلی
-        let isMining = false;
-        let miningInterval;
-        let hashCount = 0;
-        let successHashCount = 0;
-        let startTime;
-        let timerInterval;
-        let animationFrame;
-
-        // عناصر DOM
-        const startBtn = document.getElementById('startBtn');
-        const stopBtn = document.getElementById('stopBtn');
-        const resetBtn = document.getElementById('resetBtn');
-        const hashRateEl = document.getElementById('hashRate');
-        const totalHashesEl = document.getElementById('totalHashes');
-        const successHashesEl = document.getElementById('successHashes');
-        const minedBTCEL = document.getElementById('minedBTC');
-        const miningTimeEl = document.getElementById('miningTime');
-        const hashDisplayEl = document.getElementById('hashDisplay');
-        const progressBarEl = document.getElementById('progressBar');
-        const gearEl = document.getElementById('gear');
-        const particlesEl = document.getElementById('particles');
-
-        // شروع ماینینگ
-        startBtn.addEventListener('click', startMining);
-        
-        // توقف ماینینگ
-        stopBtn.addEventListener('click', stopMining);
-        
-        // بازنشانی
-        resetBtn.addEventListener('click', resetMining);
-
-        // تابع شروع ماینینگ
-        function startMining() {
-            if (isMining) return;
+        document.addEventListener('DOMContentLoaded', function() {
+            const startBtn = document.getElementById('start-btn');
+            const resetBtn = document.getElementById('reset-btn');
+            const currentHash = document.getElementById('current-hash');
+            const currentNonce = document.getElementById('current-nonce');
+            const miningProgress = document.getElementById('mining-progress');
+            const minersContainer = document.getElementById('miners-container');
+            const rewardMessage = document.getElementById('reward-message');
             
-            isMining = true;
-            startBtn.disabled = true;
-            stopBtn.disabled = false;
+            let miningInterval;
+            let isMining = false;
+            let nonce = 0;
+            let progress = 0;
+            let miners = [];
+            let targetZeros = 4; // How many zeros the hash must start with
             
-            // شروع انیمیشن چرخ دنده
-            gearEl.style.animationPlayState = 'running';
-            
-            // شروع تایمر
-            startTime = new Date();
-            timerInterval = setInterval(updateTimer, 1000);
-            
-            // شروع تولید ذرات
-            startParticles();
-            
-            // شروع تولید هش
-            miningInterval = setInterval(generateHash, 100);
-            
-            // به روز رسانی وضعیت
-            updateStats();
-        }
-
-        // تابع توقف ماینینگ
-        function stopMining() {
-            if (!isMining) return;
-            
-            isMining = false;
-            startBtn.disabled = false;
-            stopBtn.disabled = true;
-            
-            // توقف انیمیشن چرخ دنده
-            gearEl.style.animationPlayState = 'paused';
-            
-            // توقف تایمر
-            clearInterval(timerInterval);
-            
-            // توقف تولید ذرات
-            stopParticles();
-            
-            // توقف تولید هش
-            clearInterval(miningInterval);
-        }
-
-        // تابع بازنشانی
-        function resetMining() {
-            stopMining();
-            
-            hashCount = 0;
-            successHashCount = 0;
-            
-            // بازنشانی نمایش هش
-            hashDisplayEl.innerHTML = '<div class="hash-item">ماینینگ شروع نشده است...</div>';
-            
-            // بازنشانی نوار پیشرفت
-            progressBarEl.style.width = '0%';
-            
-            // بازنشانی آمار
-            updateStats();
-            miningTimeEl.textContent = '00:00:00';
-            minedBTCEL.textContent = '0.00000000 BTC';
-        }
-
-        // تابع تولید هش تصادفی
-        function generateHash() {
-            if (!isMining) return;
-            
-            // افزایش تعداد هش‌ها
-            hashCount++;
-            
-            // تولید هش تصادفی
-            const hash = generateRandomHash();
-            
-            // بررسی موفقیت (شانس 1 در 1000)
-            const isSuccessful = Math.random() < 0.001;
-            
-            if (isSuccessful) {
-                successHashCount++;
+            // Initialize miners
+            function initializeMiners() {
+                minersContainer.innerHTML = '';
+                miners = [];
                 
-                // نمایش هش موفق
-                const hashItem = document.createElement('div');
-                hashItem.className = 'hash-item found';
-                hashItem.textContent = `✅ ${hash} - بلاک پیدا شد!`;
-                hashDisplayEl.prepend(hashItem);
-                
-                // به روز رسانی نوار پیشرفت
-                updateProgressBar();
-                
-                // ایجاد انیمیشن ذرات برای هش موفق
-                createSuccessParticles();
-            } else {
-                // نمایش هش عادی
-                const hashItem = document.createElement('div');
-                hashItem.className = 'hash-item';
-                hashItem.textContent = hash;
-                hashDisplayEl.prepend(hashItem);
+                for (let i = 0; i < 5; i++) {
+                    const miner = document.createElement('div');
+                    miner.className = 'miner';
+                    miner.innerHTML = `
+                        <div>Miner #${i+1}</div>
+                        <div class="hash-rate">${Math.floor(Math.random() * 100) + 50} H/s</div>
+                    `;
+                    minersContainer.appendChild(miner);
+                    miners.push({
+                        element: miner,
+                        hashRate: Math.floor(Math.random() * 100) + 50,
+                        isActive: false
+                    });
+                }
             }
             
-            // محدود کردن تعداد هش‌های نمایش داده شده
-            if (hashDisplayEl.children.length > 20) {
-                hashDisplayEl.removeChild(hashDisplayEl.lastChild);
+            // Generate a random hash (simplified for demonstration)
+            function generateHash(nonce) {
+                // In real Bitcoin mining, this would be a complex cryptographic function
+                // Here we're just creating a simplified version for demonstration
+                let hash = '';
+                const chars = '0123456789abcdef';
+                
+                // Start with some zeros based on our target
+                for (let i = 0; i < 64; i++) {
+                    if (i < targetZeros) {
+                        hash += '0';
+                    } else {
+                        hash += chars.charAt(Math.floor(Math.random() * chars.length));
+                    }
+                }
+                
+                return hash;
             }
             
-            // به روز رسانی آمار
-            updateStats();
-        }
-
-        // تابع تولید هش تصادفی
-        function generateRandomHash() {
-            const chars = '0123456789abcdef';
-            let hash = '';
-            for (let i = 0; i < 64; i++) {
-                hash += chars[Math.floor(Math.random() * chars.length)];
+            // Check if a hash meets the target difficulty
+            function isValidHash(hash) {
+                // In this simulation, we're just checking if the hash starts with enough zeros
+                // In real Bitcoin, it's more complex (hash must be less than target value)
+                return hash.startsWith('0'.repeat(targetZeros));
             }
-            return hash;
-        }
-
-        // تابع به روز رسانی آمار
-        function updateStats() {
-            // محاسبه سرعت هش (فرضی)
-            const hashRate = Math.floor(hashCount / (Math.max(1, (new Date() - startTime) / 1000)));
-            hashRateEl.textContent = `${hashRate.toLocaleString()} H/s`;
             
-            totalHashesEl.textContent = hashCount.toLocaleString();
-            successHashesEl.textContent = successHashCount.toLocaleString();
-            
-            // محاسبه بیت‌کوین استخراج شده (فرضی)
-            const minedBTC = successHashCount * 0.00000001;
-            minedBTCEL.textContent = minedBTC.toFixed(8) + ' BTC';
-        }
-
-        // تابع به روز رسانی تایمر
-        function updateTimer() {
-            if (!isMining) return;
-            
-            const now = new Date();
-            const diff = Math.floor((now - startTime) / 1000);
-            
-            const hours = Math.floor(diff / 3600);
-            const minutes = Math.floor((diff % 3600) / 60);
-            const seconds = diff % 60;
-            
-            miningTimeEl.textContent = 
-                `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-        }
-
-        // تابع به روز رسانی نوار پیشرفت
-        function updateProgressBar() {
-            const progress = (successHashCount % 10) * 10;
-            progressBarEl.style.width = `${progress}%`;
-        }
-
-        // تابع شروع تولید ذرات
-        function startParticles() {
-            function createParticle() {
-                if (!isMining) return;
+            // Start the mining process
+            function startMining() {
+                if (isMining) return;
                 
-                const particle = document.createElement('div');
-                particle.className = 'particle';
+                isMining = true;
+                startBtn.disabled = true;
+                nonce = 0;
+                progress = 0;
+                rewardMessage.classList.remove('show');
                 
-                // موقعیت تصادفی در اطراف چرخ دنده
-                const angle = Math.random() * Math.PI * 2;
-                const distance = 80 + Math.random() * 40;
-                const x = 100 + Math.cos(angle) * distance;
-                const y = 100 + Math.sin(angle) * distance;
-                
-                particle.style.left = `${x}px`;
-                particle.style.top = `${y}px`;
-                
-                particlesEl.appendChild(particle);
-                
-                // انیمیشن ذره
-                const animation = particle.animate([
-                    { opacity: 1, transform: 'scale(1)' },
-                    { opacity: 0, transform: 'scale(0)' }
-                ], {
-                    duration: 1000 + Math.random() * 1000,
-                    easing: 'ease-out'
+                // Activate all miners
+                miners.forEach(miner => {
+                    miner.element.classList.add('active');
+                    miner.isActive = true;
                 });
                 
-                animation.onfinish = () => {
-                    particle.remove();
-                };
-                
-                // ایجاد ذره بعدی
-                setTimeout(createParticle, 100 + Math.random() * 200);
+                miningInterval = setInterval(() => {
+                    // Update nonce and hash
+                    nonce++;
+                    currentNonce.textContent = nonce;
+                    
+                    // Generate a new hash
+                    const hash = generateHash(nonce);
+                    currentHash.textContent = hash;
+                    
+                    // Update progress (simulated)
+                    progress += 0.5;
+                    if (progress > 100) progress = 100;
+                    miningProgress.style.width = progress + '%';
+                    
+                    // Randomly select a "winning" miner
+                    if (Math.random() < 0.005 || progress >= 100) {
+                        // A miner found the solution!
+                        finishMining();
+                    }
+                }, 100);
             }
             
-            // شروع تولید ذرات
-            for (let i = 0; i < 5; i++) {
-                setTimeout(createParticle, i * 200);
+            // Finish the mining process when a solution is found
+            function finishMining() {
+                clearInterval(miningInterval);
+                isMining = false;
+                startBtn.disabled = false;
+                
+                // Pick a random winner
+                const winnerIndex = Math.floor(Math.random() * miners.length);
+                
+                // Show reward message
+                rewardMessage.textContent = `Miner #${winnerIndex+1} found the solution! Reward: 6.25 BTC`;
+                rewardMessage.classList.add('show');
+                
+                // Deactivate all miners except the winner
+                miners.forEach((miner, index) => {
+                    if (index !== winnerIndex) {
+                        miner.element.classList.remove('active');
+                        miner.isActive = false;
+                    }
+                });
             }
-        }
-
-        // تابع توقف تولید ذرات
-        function stopParticles() {
-            // تمام ذرات موجود را پاک می‌کند
-            particlesEl.innerHTML = '';
-        }
-
-        // تابع ایجاد ذرات برای هش موفق
-        function createSuccessParticles() {
-            for (let i = 0; i < 20; i++) {
-                setTimeout(() => {
-                    const particle = document.createElement('div');
-                    particle.className = 'particle';
-                    particle.style.background = '#f0b90b';
-                    
-                    // موقعیت تصادفی در اطراف چرخ دنده
-                    const angle = Math.random() * Math.PI * 2;
-                    const distance = 60 + Math.random() * 60;
-                    const x = 100 + Math.cos(angle) * distance;
-                    const y = 100 + Math.sin(angle) * distance;
-                    
-                    particle.style.left = `${x}px`;
-                    particle.style.top = `${y}px`;
-                    
-                    particlesEl.appendChild(particle);
-                    
-                    // انیمیشن ذره
-                    const animation = particle.animate([
-                        { opacity: 1, transform: 'scale(1)' },
-                        { opacity: 0, transform: 'scale(2)' }
-                    ], {
-                        duration: 1500 + Math.random() * 500,
-                        easing: 'ease-out'
-                    });
-                    
-                    animation.onfinish = () => {
-                        particle.remove();
-                    };
-                }, i * 50);
+            
+            // Reset the simulation
+            function resetSimulation() {
+                clearInterval(miningInterval);
+                isMining = false;
+                startBtn.disabled = false;
+                nonce = 0;
+                progress = 0;
+                
+                currentNonce.textContent = '0';
+                currentHash.textContent = '0000000000000000000000000000000000000000000000000000000000000000';
+                miningProgress.style.width = '0%';
+                rewardMessage.classList.remove('show');
+                
+                // Deactivate all miners
+                miners.forEach(miner => {
+                    miner.element.classList.remove('active');
+                    miner.isActive = false;
+                });
             }
-        }
+            
+            // Event listeners
+            startBtn.addEventListener('click', startMining);
+            resetBtn.addEventListener('click', resetSimulation);
+            
+            // Initialize the simulation
+            initializeMiners();
+        });
     </script>
 </body>
 </html>
