@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stack & Memory Debugger (Vanilla JS)</title>
+<style>
+:root {
+  --bg: #0e0e10;
+  --bg2: #1c1c1f;
+  --bg3: #252529;
+  --text: #eee;
+  --border: #444;
+  --sp: #00ff99;
+  --bp: #00b3ff;
+  --ret: #ff6b6b;
+  --param: #ffa94d;
+  --local: #74c0fc;
+  --highlight: rgba(255,255,0,0.25);
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Segoe UI", Tahoma, sans-serif;
+  margin: 0;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+h1 { color: var(--sp); margin-bottom: 10px; }
+.subtitle { color: #aaa; margin-bottom: 25px; text-align: center; }
+
+.container { display: flex; flex-wrap: wrap; justify-content: center; gap: 30px; max-width: 1400px; width: 100%; }
+.code-section, .stack-section { flex: 1; min-width: 320px; max-width: 500px; }
+
+.panel {
+  background: var(--bg2);
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  padding: 15px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}
+
+#codeEditor {
+  width: 100%;
+  height: 200px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 6px;
+  font-family: monospace;
+  font-size: 0.9rem;
+  padding: 10px;
+  resize: vertical;
+}
+
+#codeMemory, #stackMemory {
+  margin-top: 15px;
+  background: var(--bg3);
+  border-radius: 6px;
+  padding: 10px;
+  font-family: monospace;
+  font-size: 0.9rem;
+  max-height: 420px;
+  overflow-y: auto;
+}
+
+.code-line {
+  display: flex;
+  justify-content: space-between;
+  padding: 3px 5px;
+  border-radius: 4px;
+}
+.code-line.highlight { background: var(--highlight); }
+.code-addr { color: #999; width: 70px; }
+.code-text { flex: 1; }
+
+.stack-container { position: relative; }
+.stack-frame {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 5px;
+  margin-bottom: 6px;
+  background: var(--bg2);
+  transition: 0.4s;
+}
+.stack-title {
+  color: var(--bp);
+  font-weight: bold;
+  font-size: 0.9rem;
+  margin-bottom: 5px;
+  border-bottom: 1px solid var(--border);
+}
+.stack-item {
+  display: flex; justify-content: space-between;
+  font-size: 0.85rem;
+  padding: 2px 5px;
+  border-radius: 3px;
+}
+.stack-item.return { background: rgba(255,107,107,0.1); color: var(--ret); }
+.stack-item.param { background: rgba(255,169,77,0.1); color: var(--param); }
+.stack-item.local { background: rgba(116,192,252,0.1); color: var(--local); }
+
+.arrow {
+  position: absolute;
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  z-index: 10;
+  transition: all 0.5s ease;
+}
+#spArrow { border-bottom: 16px solid var(--sp); }
+#bpArrow { border-bottom: 16px solid var(--bp); }
+
+.ptr-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 15px;
+}
+.ptr {
+  background: var(--bg3);
+  padding: 8px 14px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: bold;
+}
+.sp { color: var(--sp); border-left: 3px solid var(--sp); }
+.bp { color: var(--bp); border-left: 3px solid var(--bp); }
+
+.controls {
+  margin-top: 15px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+button {
+  background: var(--sp);
+  color: #000;
+  font-weight: bold;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 15px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+button:hover { transform: translateY(-2px); }
+button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.speed {
+  display: flex; align-items: center; gap: 8px; justify-content: center; margin-top: 10px;
+}
+#comment {
+  margin-top: 15px;
+  background: var(--bg3);
+  border-radius: 6px;
+  padding: 10px;
+  min-height: 70px;
+  line-height: 1.5;
+}
+</style>
+</head>
+<body>
+  <h1>🧠 Stack & Memory Debugger (Vanilla JS)</h1>
+  <p class="subtitle">Visualize Code Segment, Stack Frames, and SP/BP behavior in a live step-by-step simulation.</p>
+
+  <div class="container">
+    <div class="code-section">
+      <div class="panel">
+        <h3>💻 Program Code</h3>
+        <textarea id="codeEditor" spellcheck="false">
+// Default example
+int bar(int n) {
+  int temp = n * 3;
+  return temp + 1;
+}
+
+int foo(int x, int y) {
+  int z = bar(x + y);
+  return z * 2;
+}
+
+int main() {
+  int a = 5, b = 10;
+  int result = foo(a, b);
+  return 0;
+}
+        </textarea>
+        <div id="codeMemory"></div>
+      </div>
+    </div>
+
+    <div class="stack-section">
+      <div class="panel">
+        <h3>📦 Stack Memory</h3>
+        <div class="stack-container">
+          <div id="stackMemory"></div>
+          <div id="spArrow" class="arrow"></div>
+          <div id="bpArrow" class="arrow"></div>
+        </div>
+
+        <div class="ptr-labels">
+          <div class="ptr sp" id="spLabel">SP → 0x0000</div>
+          <div class="ptr bp" id="bpLabel">BP → 0x0000</div>
+        </div>
+
+        <div class="controls">
+          <button id="prevBtn">◀ Prev</button>
+          <button id="nextBtn">Next ▶</button>
+          <button id="autoBtn">Auto ▶</button>
+          <button id="resetBtn">Reset 🔄</button>
+        </div>
+        <div class="speed">
+          <label>Speed:</label>
+          <input type="range" id="speedSlider" min="500" max="3000" value="1500" step="100">
+          <span id="speedVal">1.5s</span>
+        </div>
+        <div id="comment">Press "Next" to begin the simulation.</div>
+      </div>
+    </div>
+  </div>
+
+<script>
+// === ELEMENTS ===
+const codeEditor = document.getElementById("codeEditor");
+const codeMemory = document.getElementById("codeMemory");
+const stackMemory = document.getElementById("stackMemory");
+const spArrow = document.getElementById("spArrow");
+const bpArrow = document.getElementById("bpArrow");
+const spLabel = document.getElementById("spLabel");
+const bpLabel = document.getElementById("bpLabel");
+const commentBox = document.getElementById("comment");
+const nextBtn = document.getElementById("nextBtn");
+const prevBtn = document.getElementById("prevBtn");
+const autoBtn = document.getElementById("autoBtn");
+const resetBtn = document.getElementById("resetBtn");
+const speedSlider = document.getElementById("speedSlider");
+const speedVal = document.getElementById("speedVal");
+
+let steps = [], currentStep = 0, autoTimer = null;
+let memoryAddress = 0x4000, stackFrames = [];
+let animationSpeed = 1500;
+
+// === SPEED ===
+speedSlider.addEventListener("input", e => {
+  animationSpeed = parseInt(e.target.value);
+  speedVal.textContent = (animationSpeed/1000).toFixed(1)+'s';
+});
+
+// === BUILD CODE MEMORY ===
+function loadCode() {
+  codeMemory.innerHTML = "";
+  steps = []; currentStep = 0; memoryAddress = 0x4000;
+
+  const lines = codeEditor.value.trim().split("\n").map(l => l.trimEnd());
+  lines.forEach((line, i) => {
+    const addr = "0x" + memoryAddress.toString(16).toUpperCase().padStart(4,"0");
+    const div = document.createElement("div");
+    div.className = "code-line";
+    div.innerHTML = `<span class="code-addr">${addr}</span><span class="code-text">${line}</span>`;
+    codeMemory.appendChild(div);
+    memoryAddress += 4;
+    steps.push({ line, addr, index: i });
+  });
+}
+
+// === HIGHLIGHT CODE ===
+function highlightLine() {
+  document.querySelectorAll(".code-line").forEach(l=>l.classList.remove("highlight"));
+  const s = steps[currentStep];
+  if (s) {
+    const el = codeMemory.children[s.index];
+    el?.classList.add("highlight");
+    el?.scrollIntoView({behavior:"smooth",block:"center"});
+  }
+}
+
+// === STACK MANAGEMENT ===
+function pushFrame(name, params=[]) {
+  const frame = {
+    name,
+    params,
+    locals: [],
+    addr: "0x" + (0x8000 + stackFrames.length*0x10).toString(16).toUpperCase()
+  };
+  stackFrames.push(frame);
+  renderStack();
+}
+function popFrame() { stackFrames.pop(); renderStack(); }
+function addLocal(name,val) {
+  if(!stackFrames.length) return;
+  stackFrames.at(-1).locals.push({name,val});
+  renderStack();
+}
+function renderStack() {
+  stackMemory.innerHTML="";
+  [...stackFrames].reverse().forEach(f=>{
+    const div=document.createElement("div");
+    div.className="stack-frame";
+    div.innerHTML=`<div class="stack-title">${f.name}() [${f.addr}]</div>`;
+    f.params.forEach(p=>div.innerHTML+=`<div class="stack-item param"><span>${p}</span><span>?</span></div>`);
+    f.locals.forEach(l=>div.innerHTML+=`<div class="stack-item local"><span>${l.name}</span><span>${l.val}</span></div>`);
+    div.innerHTML+=`<div class="stack-item return"><span>Return Addr</span><span>0x${(64+Math.floor(Math.random()*128)).toString(16).toUpperCase()}</span></div>`;
+    stackMemory.appendChild(div);
+  });
+  updatePointers();
+}
+function updatePointers() {
+  const rect=stackMemory.getBoundingClientRect();
+  const y=window.scrollY;
+  if(stackFrames.length===0){
+    spArrow.style.top=(rect.top+y+stackMemory.clientHeight-10)+"px";
+    bpArrow.style.top=(rect.top+y+stackMemory.clientHeight-10)+"px";
+    spLabel.textContent="SP → 0x0000";
+    bpLabel.textContent="BP → 0x0000";
+  } else {
+    const top=stackMemory.firstElementChild.getBoundingClientRect();
+    spArrow.style.top=(top.top+y-15)+"px";
+    bpArrow.style.top=(top.top+y+top.height-20)+"px";
+    spLabel.textContent="SP → "+stackFrames.at(-1).addr;
+    bpLabel.textContent="BP → "+(stackFrames.length>1?stackFrames.at(-2).addr:"0x0000");
+  }
+  spArrow.style.left=(rect.right+8)+"px";
+  bpArrow.style.left=(rect.left-30)+"px";
+}
+
+// === EXECUTION ===
+function parseLine(line){
+  line=line.trim();
+  if(!line) return;
+
+  if(line.match(/int\s+(\w+)\s*\((.*?)\)\s*{/)){
+    const [,name,params]=line.match(/int\s+(\w+)\s*\((.*?)\)\s*{/);
+    const ps=params.split(",").map(p=>p.trim()).filter(p=>p).map(p=>p.split(" ").pop());
+    pushFrame(name,ps);
+    commentBox.innerHTML=`📥 Entering function <b>${name}()</b>`;
+    return;
+  }
+  if(line==="}"||line.startsWith("return 0")){
+    popFrame();
+    commentBox.innerHTML="📤 Exiting current function";
+    return;
+  }
+  if(line.match(/(\w+)\s*=\s*(\w+)\s*\((.*?)\);/)){
+    const [,lhs,func,args]=line.match(/(\w+)\s*=\s*(\w+)\s*\((.*?)\);/);
+    const arr=args.split(",").map(a=>a.trim()).filter(a=>a);
+    pushFrame(func,arr);
+    commentBox.innerHTML=`📞 Calling function <b>${func}(${arr.join(",")})</b>`;
+    return;
+  }
+  if(line.match(/int\s+(.+);/)){
+    const vars=line.match(/int\s+(.+);/)[1].split(",").map(v=>v.trim());
+    vars.forEach(v=>{
+      const [n,val]=(v.split("=").map(x=>x.trim()));
+      addLocal(n,val||"0");
+    });
+    commentBox.innerHTML=`🧮 Declaring variables: ${vars.join(", ")}`;
+    return;
+  }
+  if(line.startsWith("return")){
+    popFrame();
+    commentBox.innerHTML=`🔙 Return statement`;
+  }
+}
+
+// === STEP CONTROL ===
+function executeStep(d){
+  if(d>0 && currentStep<steps.length){ parseLine(steps[currentStep].line); currentStep++; }
+  else if(d<0 && currentStep>0){
+    currentStep--; stackFrames=[]; loadCode(); for(let i=0;i<currentStep;i++) parseLine(steps[i].line);
+  }
+  highlightLine(); updateButtons();
+}
+function updateButtons(){
+  prevBtn.disabled=currentStep===0;
+  nextBtn.disabled=currentStep>=steps.length;
+}
+
+// === AUTO PLAY ===
+function autoPlay(){
+  if(autoTimer){ clearInterval(autoTimer); autoTimer=null; autoBtn.textContent="Auto ▶"; return; }
+  autoBtn.textContent="⏹ Stop";
+  autoTimer=setInterval(()=>{
+    if(currentStep>=steps.length){ clearInterval(autoTimer); autoTimer=null; autoBtn.textContent="Auto ▶"; return; }
+    executeStep(1);
+  },animationSpeed);
+}
+
+// === RESET ===
+function resetSim(){
+  if(autoTimer) clearInterval(autoTimer);
+  autoTimer=null; autoBtn.textContent="Auto ▶"; stackFrames=[]; currentStep=0;
+  loadCode(); renderStack(); highlightLine(); commentBox.innerHTML="Press 'Next' to begin simulation."; updateButtons();
+}
+
+// === INIT ===
+loadCode(); highlightLine(); updateButtons();
+nextBtn.onclick=()=>executeStep(1);
+prevBtn.onclick=()=>executeStep(-1);
+autoBtn.onclick=autoPlay;
+resetBtn.onclick=resetSim;
+codeEditor.onchange=resetSim;
+window.onresize=updatePointers;
+</script>
+</body>
+</html>
