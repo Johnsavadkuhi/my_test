@@ -2,6 +2,7 @@ import { useState } from 'react'
 import './App.css'
 import ThemeProvider from './theme/ThemeContext'
 import Theme from './pages/Theme'
+import Name from './pages/Name'
 
 function App() {
   const [count, setCount] = useState(0)
@@ -19,7 +20,7 @@ function App() {
       </div>
 
       <Theme />
-
+<Name/>
     </ThemeProvider>
   )
 }
