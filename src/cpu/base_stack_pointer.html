@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Advanced SP / BP Stack Frame Simulator</title>
+<style>
+:root {
+  --bg-primary: #0e0e10;
+  --bg-secondary: #1c1c1f;
+  --bg-tertiary: #26262a;
+  --border-color: #444;
+  --text-primary: #eee;
+  --text-secondary: #aaa;
+  --sp-color: #00ff99;
+  --bp-color: #00b3ff;
+  --ret-color: #ff6b6b;
+  --param-color: #ffa94d;
+  --local-color: #51cf66;
+  --padding-color: #495057;
+  --success: #2b8a3e;
+  --warning: #e67700;
+  --danger: #c92a2a;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  min-height: 100vh;
+  overflow-x: hidden;
+  padding: 20px;
+}
+
+header {
+  text-align: center;
+  margin-bottom: 20px;
+  width: 100%;
+}
+
+h1 {
+  margin: 10px 0;
+  color: var(--text-primary);
+  font-size: 2.2rem;
+}
+
+.subtitle {
+  color: var(--text-secondary);
+  margin-bottom: 20px;
+  max-width: 800px;
+  line-height: 1.5;
+}
+
+.container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  width: 100%;
+  max-width: 1400px;
+  justify-content: center;
+}
+
+.panel {
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  padding: 15px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.registers-panel {
+  flex: 1;
+  min-width: 300px;
+}
+
+.stack-panel {
+  flex: 2;
+  min-width: 500px;
+  display: flex;
+  flex-direction: column;
+}
+
+.code-panel {
+  flex: 1;
+  min-width: 300px;
+}
+
+.panel-title {
+  font-size: 1.2rem;
+  margin-bottom: 15px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+#stack-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 500px;
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--bg-primary);
+  position: relative;
+  overflow: hidden;
+}
+
+#stack {
+  display: flex;
+  flex-direction: column-reverse;
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.frame {
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  margin: 4px;
+  padding: 10px;
+  background: var(--bg-tertiary);
+  transition: all 0.5s ease;
+  position: relative;
+  min-height: 100px;
+}
+
+.frame-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-weight: bold;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 5px;
+}
+
+.frame-name {
+  color: var(--text-primary);
+}
+
+.frame-address {
+  color: var(--text-secondary);
+  font-family: monospace;
+  font-size: 0.9rem;
+}
+
+.frame-content {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 5px;
+  font-family: monospace;
+  font-size: 0.9rem;
+}
+
+.frame-item {
+  display: flex;
+  padding: 3px 0;
+}
+
+.item-address {
+  color: var(--text-secondary);
+  text-align: right;
+  padding-right: 10px;
+}
+
+.item-value {
+  display: flex;
+  align-items: center;
+}
+
+.value-type {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  margin-right: 5px;
+}
+
+.type-ret { background: var(--ret-color); }
+.type-bp { background: var(--bp-color); }
+.type-param { background: var(--param-color); }
+.type-local { background: var(--local-color); }
+.type-padding { background: var(--padding-color); }
+
+#pointers {
+  display: flex;
+  justify-content: space-between;
+  margin: 15px 0;
+  width: 100%;
+}
+
+.pointer {
+  display: flex;
+  align-items: center;
+  padding: 8px 15px;
+  border-radius: 6px;
+  background: var(--bg-tertiary);
+  font-weight: bold;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.sp { color: var(--sp-color); border-left: 4px solid var(--sp-color); }
+.bp { color: var(--bp-color); border-left: 4px solid var(--bp-color); }
+
+.arrow {
+  position: absolute;
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  z-index: 10;
+  transition: all 0.5s ease;
+}
+
+#spArrow { border-bottom: 16px solid var(--sp-color); }
+#bpArrow { border-bottom: 16px solid var(--bp-color); }
+
+.registers {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.register {
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  background: var(--bg-tertiary);
+  border-radius: 6px;
+}
+
+.register-name {
+  font-weight: bold;
+  margin-bottom: 5px;
+  color: var(--text-secondary);
+}
+
+.register-value {
+  font-family: monospace;
+  font-size: 1.1rem;
+  color: var(--text-primary);
+}
+
+#code-display {
+  background: var(--bg-primary);
+  border-radius: 6px;
+  padding: 15px;
+  font-family: monospace;
+  height: 200px;
+  overflow-y: auto;
+  white-space: pre;
+  line-height: 1.5;
+}
+
+.code-line {
+  padding: 2px 5px;
+  border-radius: 3px;
+  transition: background 0.3s;
+}
+
+.code-line.active {
+  background: rgba(0, 179, 255, 0.2);
+  border-left: 3px solid var(--bp-color);
+}
+
+#controls {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin: 20px 0;
+  flex-wrap: wrap;
+}
+
+button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  background: var(--success);
+  color: #fff;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+button:active {
+  transform: translateY(0);
+}
+
+button:disabled {
+  background: #555;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+#prevBtn { background: var(--warning); }
+#resetBtn { background: var(--danger); }
+#autoBtn { background: #7048e8; }
+
+#comment {
+  margin-top: 20px;
+  width: 100%;
+  max-width: 800px;
+  min-height: 80px;
+  padding: 15px;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  text-align: center;
+  line-height: 1.6;
+}
+
+.progress-container {
+  width: 100%;
+  max-width: 800px;
+  margin-top: 10px;
+}
+
+.progress-bar {
+  height: 8px;
+  background: var(--bg-tertiary);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress {
+  height: 100%;
+  background: var(--bp-color);
+  width: 0%;
+  transition: width 0.5s ease;
+}
+
+.step-indicator {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 5px;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+@media (max-width: 1100px) {
+  .container {
+    flex-direction: column;
+  }
+  
+  .panel {
+    width: 100%;
+  }
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>Advanced Stack Frame Simulator</h1>
+  <p class="subtitle">This simulator visually demonstrates how the Stack Pointer (SP) and Base Pointer (BP) work during function calls in x86 assembly. Watch how the stack grows and shrinks as functions are called and return.</p>
+</header>
+
+<div class="container">
+  <div class="panel registers-panel">
+    <div class="panel-title">Registers & Memory</div>
+    <div class="registers">
+      <div class="register">
+        <div class="register-name">Stack Pointer (SP/RSP)</div>
+        <div class="register-value" id="sp-value">0x7FFFFFFFE000</div>
+      </div>
+      <div class="register">
+        <div class="register-name">Base Pointer (BP/RBP)</div>
+        <div class="register-value" id="bp-value">0x7FFFFFFFE000</div>
+      </div>
+      <div class="register">
+        <div class="register-name">Instruction Pointer (IP/RIP)</div>
+        <div class="register-value" id="ip-value">0x400510</div>
+      </div>
+      <div class="register">
+        <div class="register-name">Stack Base</div>
+        <div class="register-value">0x7FFFFFFFE000</div>
+      </div>
+    </div>
+    
+    <div class="panel-title" style="margin-top: 20px;">Memory Layout</div>
+    <div style="height: 150px; background: var(--bg-primary); border-radius: 6px; padding: 10px; position: relative;">
+      <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 70%; background: rgba(255, 107, 107, 0.2); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.8rem;">
+        Kernel Space
+      </div>
+      <div style="position: absolute; top: 30%; left: 0; right: 0; bottom: 40%; background: rgba(0, 179, 255, 0.2); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.8rem;">
+        Stack (grows downward)
+      </div>
+      <div style="position: absolute; top: 60%; left: 0; right: 0; bottom: 20%; background: rgba(255, 169, 77, 0.2); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.8rem;">
+        Heap (grows upward)
+      </div>
+      <div style="position: absolute; top: 80%; left: 0; right: 0; bottom: 0; background: rgba(81, 207, 102, 0.2); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.8rem;">
+        Data & Code
+      </div>
+    </div>
+  </div>
+  
+  <div class="panel stack-panel">
+    <div class="panel-title">Stack Visualization</div>
+    <div id="stack-container">
+      <div id="stack"></div>
+      <div id="spArrow" class="arrow"></div>
+      <div id="bpArrow" class="arrow"></div>
+    </div>
+    
+    <div id="pointers">
+      <div class="pointer sp" id="spLabel">SP → 0x7FFFFFFFE000</div>
+      <div class="pointer bp" id="bpLabel">BP → 0x7FFFFFFFE000</div>
+    </div>
+  </div>
+  
+  <div class="panel code-panel">
+    <div class="panel-title">Assembly Code</div>
+    <div id="code-display"></div>
+    
+    <div class="panel-title" style="margin-top: 20px;">Current Operation</div>
+    <div id="operation" style="padding: 10px; background: var(--bg-tertiary); border-radius: 6px; font-family: monospace; min-height: 60px;">
+      // Operation details will appear here
+    </div>
+  </div>
+</div>
+
+<div id="controls">
+  <button id="prevBtn">◀ Previous Step</button>
+  <button id="resetBtn">↺ Reset</button>
+  <button id="nextBtn">Next Step ▶</button>
+  <button id="autoBtn">Auto Play ▶</button>
+</div>
+
+<div class="progress-container">
+  <div class="progress-bar">
+    <div class="progress" id="progress"></div>
+  </div>
+  <div class="step-indicator">
+    <span>Step 0: Initial State</span>
+    <span id="step-counter">0/12</span>
+    <span>Step 12: Program End</span>
+  </div>
+</div>
+
+<div id="comment">
+  <strong>Welcome to the Stack Frame Simulator!</strong><br>
+  This educational tool demonstrates how function calls manage memory on the stack in x86-64 assembly.<br>
+  Click "Next Step" to begin the simulation.
+</div>
+
+<script>
+// DOM Elements
+const stack = document.getElementById("stack");
+const spArrow = document.getElementById("spArrow");
+const bpArrow = document.getElementById("bpArrow");
+const comment = document.getElementById("comment");
+const operation = document.getElementById("operation");
+const codeDisplay = document.getElementById("code-display");
+const spValue = document.getElementById("sp-value");
+const bpValue = document.getElementById("bp-value");
+const ipValue = document.getElementById("ip-value");
+const progress = document.getElementById("progress");
+const stepCounter = document.getElementById("step-counter");
+
+// Stack simulation state
+let frames = [];
+let currentStep = 0;
+let autoTimer = null;
+let stackBase = 0x7FFFFFFFE000; // Initial stack address
+
+// Assembly code for each function
+const assemblyCode = {
+  main: [
+    "main:",
+    "  push   rbp",
+    "  mov    rbp, rsp",
+    "  sub    rsp, 16",
+    "  mov    DWORD PTR [rbp-4], 10   ; local var a",
+    "  mov    DWORD PTR [rbp-8], 20   ; local var b",
+    "  mov    eax, DWORD PTR [rbp-4]",
+    "  mov    edx, DWORD PTR [rbp-8]",
+    "  add    eax, edx",
+    "  mov    edi, eax",
+    "  call   foo",
+    "  mov    DWORD PTR [rbp-12], eax",
+    "  mov    eax, 0",
+    "  leave",
+    "  ret"
+  ],
+  foo: [
+    "foo:",
+    "  push   rbp",
+    "  mov    rbp, rsp",
+    "  sub    rsp, 16",
+    "  mov    DWORD PTR [rbp-4], edi  ; param x",
+    "  mov    DWORD PTR [rbp-8], 5    ; local y",
+    "  mov    eax, DWORD PTR [rbp-4]",
+    "  imul   eax, DWORD PTR [rbp-8]",
+    "  mov    edi, eax",
+    "  call   bar",
+    "  leave",
+    "  ret"
+  ],
+  bar: [
+    "bar:",
+    "  push   rbp",
+    "  mov    rbp, rsp",
+    "  sub    rsp, 16",
+    "  mov    DWORD PTR [rbp-4], edi  ; param n",
+    "  mov    DWORD PTR [rbp-8], 2    ; local z",
+    "  mov    DWORD PTR [rbp-12], 3   ; temp",
+    "  mov    eax, DWORD PTR [rbp-4]",
+    "  imul   eax, DWORD PTR [rbp-8]",
+    "  imul   eax, DWORD PTR [rbp-12]",
+    "  leave",
+    "  ret"
+  ]
+};
+
+// Step definitions with detailed operations
+const steps = [
+  // Step 0: Initial state
+  () => {
+    comment.innerHTML = `<strong>Initial State:</strong> The stack is empty. Both SP and BP point to the top of the stack.`;
+    operation.textContent = "// Stack is initialized, ready for program execution";
+    updateCodeDisplay("main", -1);
+    updateRegisters(stackBase, stackBase, 0x400510);
+    updateStepCounter(0);
+  },
+  
+  // Step 1: main function prologue
+  () => {
+    const frame = createFrame("main", stackBase - 0x20, [
+      { type: "padding", name: "(alignment)", value: "0x0" },
+      { type: "local", name: "b", value: "0x14" },
+      { type: "local", name: "a", value: "0xA" },
+      { type: "bp", name: "saved BP", value: "0x0" },
+      { type: "ret", name: "return address", value: "0x400600" }
+    ]);
+    frames.push(frame);
+    
+    comment.innerHTML = `<strong>main() Prologue:</strong> The main function is called. The return address and old BP are pushed onto the stack. BP is updated to point to the new frame base.`;
+    operation.textContent = "push rbp; mov rbp, rsp; sub rsp, 16";
+    updateCodeDisplay("main", 2);
+    updateRegisters(stackBase - 0x28, stackBase - 0x20, 0x400515);
+    updateStepCounter(1);
+  },
+  
+  // Step 2: main function locals initialized
+  () => {
+    comment.innerHTML = `<strong>main() Local Variables:</strong> Local variables 'a' and 'b' are allocated on the stack and initialized with values 10 and 20 (0xA and 0x14 in hex).`;
+    operation.textContent = "mov DWORD PTR [rbp-4], 10; mov DWORD PTR [rbp-8], 20";
+    updateCodeDisplay("main", 4);
+    updateRegisters(stackBase - 0x28, stackBase - 0x20, 0x400520);
+    updateStepCounter(2);
+  },
+  
+  // Step 3: Preparing to call foo()
+  () => {
+    comment.innerHTML = `<strong>Preparing foo() Call:</strong> The values of local variables are loaded into registers to prepare for the function call. The sum of a and b is calculated.`;
+    operation.textContent = "mov eax, DWORD PTR [rbp-4]; mov edx, DWORD PTR [rbp-8]; add eax, edx; mov edi, eax";
+    updateCodeDisplay("main", 8);
+    updateRegisters(stackBase - 0x28, stackBase - 0x20, 0x400530);
+    updateStepCounter(3);
+  },
+  
+  // Step 4: foo() function call
+  () => {
+    const frame = createFrame("foo", stackBase - 0x50, [
+      { type: "padding", name: "(alignment)", value: "0x0" },
+      { type: "local", name: "y", value: "0x5" },
+      { type: "param", name: "x", value: "0x1E" },
+      { type: "bp", name: "saved BP", value: "0x7FFFFFFFE000" },
+      { type: "ret", name: "return address", value: "0x400540" }
+    ]);
+    frames.push(frame);
+    
+    comment.innerHTML = `<strong>foo() Called:</strong> The call instruction pushes the return address onto the stack. The foo() prologue then saves the current BP and sets up a new stack frame.`;
+    operation.textContent = "call foo; push rbp; mov rbp, rsp; sub rsp, 16";
+    updateCodeDisplay("foo", 2);
+    updateRegisters(stackBase - 0x58, stackBase - 0x50, 0x400515);
+    updateStepCounter(4);
+  },
+  
+  // Step 5: foo() parameters and locals
+  () => {
+    comment.innerHTML = `<strong>foo() Local Setup:</strong> The parameter x (value 30/0x1E) is stored in its stack location, and local variable y is initialized to 5.`;
+    operation.textContent = "mov DWORD PTR [rbp-4], edi; mov DWORD PTR [rbp-8], 5";
+    updateCodeDisplay("foo", 4);
+    updateRegisters(stackBase - 0x58, stackBase - 0x50, 0x400520);
+    updateStepCounter(5);
+  },
+  
+  // Step 6: foo() calculation and bar() call preparation
+  () => {
+    comment.innerHTML = `<strong>foo() Calculation:</strong> foo() multiplies x and y (30 * 5 = 150) and prepares to call bar() with this result.`;
+    operation.textContent = "mov eax, DWORD PTR [rbp-4]; imul eax, DWORD PTR [rbp-8]; mov edi, eax";
+    updateCodeDisplay("foo", 8);
+    updateRegisters(stackBase - 0x58, stackBase - 0x50, 0x400530);
+    updateStepCounter(6);
+  },
+  
+  // Step 7: bar() function call
+  () => {
+    const frame = createFrame("bar", stackBase - 0x70, [
+      { type: "local", name: "temp", value: "0x3" },
+      { type: "local", name: "z", value: "0x2" },
+      { type: "param", name: "n", value: "0x96" },
+      { type: "bp", name: "saved BP", value: "0x7FFFFFFFE000" },
+      { type: "ret", name: "return address", value: "0x400535" }
+    ]);
+    frames.push(frame);
+    
+    comment.innerHTML = `<strong>bar() Called:</strong> bar() is called with the value 150 (0x96). A new stack frame is created for bar().`;
+    operation.textContent = "call bar; push rbp; mov rbp, rsp; sub rsp, 16";
+    updateCodeDisplay("bar", 2);
+    updateRegisters(stackBase - 0x78, stackBase - 0x70, 0x400515);
+    updateStepCounter(7);
+  },
+  
+  // Step 8: bar() parameters and locals
+  () => {
+    comment.innerHTML = `<strong>bar() Local Setup:</strong> The parameter n is stored, and local variables z and temp are initialized to 2 and 3 respectively.`;
+    operation.textContent = "mov DWORD PTR [rbp-4], edi; mov DWORD PTR [rbp-8], 2; mov DWORD PTR [rbp-12], 3";
+    updateCodeDisplay("bar", 4);
+    updateRegisters(stackBase - 0x78, stackBase - 0x70, 0x400525);
+    updateStepCounter(8);
+  },
+  
+  // Step 9: bar() calculation and return
+  () => {
+    comment.innerHTML = `<strong>bar() Calculation:</strong> bar() calculates n * z * temp (150 * 2 * 3 = 900). The result is stored in EAX for return.`;
+    operation.textContent = "mov eax, DWORD PTR [rbp-4]; imul eax, DWORD PTR [rbp-8]; imul eax, DWORD PTR [rbp-12]";
+    updateCodeDisplay("bar", 8);
+    updateRegisters(stackBase - 0x78, stackBase - 0x70, 0x400535);
+    updateStepCounter(9);
+  },
+  
+  // Step 10: bar() epilogue and return
+  () => {
+    frames.pop();
+    
+    comment.innerHTML = `<strong>bar() Returns:</strong> bar() completes execution. The leave instruction restores SP and BP, and ret pops the return address to resume execution in foo().`;
+    operation.textContent = "leave; ret";
+    updateCodeDisplay("foo", 10);
+    updateRegisters(stackBase - 0x58, stackBase - 0x50, 0x400535);
+    updateStepCounter(10);
+  },
+  
+  // Step 11: foo() epilogue and return
+  () => {
+    frames.pop();
+    
+    comment.innerHTML = `<strong>foo() Returns:</strong> foo() returns the value from bar() (900). The stack frame is cleaned up, and execution returns to main().`;
+    operation.textContent = "leave; ret";
+    updateCodeDisplay("main", 12);
+    updateRegisters(stackBase - 0x28, stackBase - 0x20, 0x400540);
+    updateStepCounter(11);
+  },
+  
+  // Step 12: main() epilogue and program end
+  () => {
+    frames.pop();
+    
+    comment.innerHTML = `<strong>Program Completion:</strong> main() stores the return value, sets up the return code (0), and exits. The stack is empty again.`;
+    operation.textContent = "mov DWORD PTR [rbp-12], eax; mov eax, 0; leave; ret";
+    updateCodeDisplay("main", 14);
+    updateRegisters(stackBase, stackBase, 0x400550);
+    updateStepCounter(12);
+  }
+];
+
+// Helper functions
+function createFrame(name, address, items) {
+  const frame = document.createElement("div");
+  frame.className = "frame";
+  
+  let content = `
+    <div class="frame-header">
+      <div class="frame-name">${name}()</div>
+      <div class="frame-address">${address.toString(16).toUpperCase()}</div>
+    </div>
+    <div class="frame-content">
+  `;
+  
+  let currentAddress = address;
+  items.forEach(item => {
+    content += `
+      <div class="frame-item">
+        <div class="item-address">${currentAddress.toString(16).toUpperCase()}</div>
+        <div class="item-value">
+          <span class="value-type type-${item.type}"></span>
+          ${item.name}: ${item.value}
+        </div>
+      </div>
+    `;
+    currentAddress -= 0x8; // Each item is 8 bytes in x86-64
+  });
+  
+  content += `</div>`;
+  frame.innerHTML = content;
+  stack.appendChild(frame);
+  
+  return frame;
+}
+
+function updateRegisters(sp, bp, ip) {
+  spValue.textContent = "0x" + sp.toString(16).toUpperCase();
+  bpValue.textContent = "0x" + bp.toString(16).toUpperCase();
+  ipValue.textContent = "0x" + ip.toString(16).toUpperCase();
+  
+  document.getElementById("spLabel").textContent = `SP → 0x${sp.toString(16).toUpperCase()}`;
+  document.getElementById("bpLabel").textContent = `BP → 0x${bp.toString(16).toUpperCase()}`;
+}
+
+function updateCodeDisplay(functionName, activeLine) {
+  let codeHTML = "";
+  const code = assemblyCode[functionName] || assemblyCode.main;
+  
+  code.forEach((line, index) => {
+    const isActive = index === activeLine;
+    codeHTML += `<div class="code-line ${isActive ? 'active' : ''}">${line}</div>`;
+  });
+  
+  codeDisplay.innerHTML = codeHTML;
+}
+
+function updateStepCounter(step) {
+  stepCounter.textContent = `${step}/${steps.length - 1}`;
+  progress.style.width = `${(step / (steps.length - 1)) * 100}%`;
+}
+
+function moveArrows() {
+  if (frames.length === 0) {
+    // Stack is empty
+    const stackRect = stack.getBoundingClientRect();
+    const containerRect = document.getElementById("stack-container").getBoundingClientRect();
+    
+    spArrow.style.left = (containerRect.right - 30) + "px";
+    bpArrow.style.left = (containerRect.left + 10) + "px";
+    
+    spArrow.style.top = (stackRect.bottom - 20) + "px";
+    bpArrow.style.top = (stackRect.bottom - 20) + "px";
+  } else {
+    // Point to the top frame
+    const topFrame = frames[frames.length - 1];
+    const frameRect = topFrame.getBoundingClientRect();
+    const containerRect = document.getElementById("stack-container").getBoundingClientRect();
+    
+    spArrow.style.left = (containerRect.right - 30) + "px";
+    bpArrow.style.left = (containerRect.left + 10) + "px";
+    
+    spArrow.style.top = (frameRect.top + 30) + "px";
+    bpArrow.style.top = (frameRect.top + frameRect.height - 10) + "px";
+  }
+}
+
+// Navigation functions
+function goToStep(step) {
+  if (step < 0 || step >= steps.length) return;
+  
+  // Clear existing frames
+  while (frames.length > 0) {
+    stack.removeChild(frames.pop());
+  }
+  
+  // Execute all steps up to the target step
+  for (let i = 0; i <= step; i++) {
+    steps[i]();
+  }
+  
+  currentStep = step;
+  moveArrows();
+}
+
+function nextStep() {
+  if (currentStep < steps.length - 1) {
+    currentStep++;
+    goToStep(currentStep);
+  }
+}
+
+function prevStep() {
+  if (currentStep > 0) {
+    currentStep--;
+    goToStep(currentStep);
+  }
+}
+
+function resetSimulation() {
+  if (autoTimer) {
+    clearInterval(autoTimer);
+    autoTimer = null;
+  }
+  currentStep = 0;
+  goToStep(0);
+}
+
+function toggleAutoPlay() {
+  if (autoTimer) {
+    clearInterval(autoTimer);
+    autoTimer = null;
+    comment.textContent += " (Auto stopped)";
+    return;
+  }
+  
+  // Start from current step
+  autoTimer = setInterval(() => {
+    if (currentStep >= steps.length - 1) {
+      clearInterval(autoTimer);
+      autoTimer = null;
+      return;
+    }
+    nextStep();
+  }, 2000);
+}
+
+// Event listeners
+document.getElementById("nextBtn").addEventListener("click", nextStep);
+document.getElementById("prevBtn").addEventListener("click", prevStep);
+document.getElementById("resetBtn").addEventListener("click", resetSimulation);
+document.getElementById("autoBtn").addEventListener("click", toggleAutoPlay);
+
+// Initialize
+window.addEventListener("load", () => {
+  resetSimulation();
+  window.addEventListener("resize", moveArrows);
+});
+</script>
+</body>
+</html>
