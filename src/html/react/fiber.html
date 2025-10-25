@@ -56,7 +56,7 @@
             }
         }
 
-        .dom-preview {
+        .dom-container, .fiber-container {
             background: white;
             border-radius: 10px;
             padding: 20px;
@@ -64,12 +64,12 @@
             overflow: auto;
         }
 
-        .tree-visualization {
-            background: white;
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            overflow: auto;
+        .panel-title {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: #2c3e50;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
         }
 
         .controls-panel {
@@ -88,81 +88,69 @@
             margin-bottom: 30px;
         }
 
-        /* Real DOM Elements Styling */
-        .real-app {
-            border: 2px solid #e0e0e0;
+        /* DOM Elements Styling */
+        .real-dom {
+            border: 2px solid #3498db;
             border-radius: 8px;
             padding: 15px;
-            background: #f9f9f9;
+            background: #ecf0f1;
         }
 
-        .app-header {
-            background: #4CAF50;
-            color: white;
-            padding: 15px;
-            border-radius: 5px;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .app-logo {
-            width: 40px;
-            height: 40px;
+        .dom-element {
+            margin: 10px;
+            padding: 10px;
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
             background: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #4CAF50;
+            transition: all 0.3s ease;
+        }
+
+        .dom-element.highlight {
+            background: #fff3cd;
+            border-color: #ffeaa7;
+            box-shadow: 0 0 10px rgba(255, 193, 7, 0.5);
+        }
+
+        .dom-element.updated {
+            background: #d4edda;
+            border-color: #c3e6cb;
+        }
+
+        .dom-element.removed {
+            background: #f8d7da;
+            border-color: #f5c6cb;
+            opacity: 0.6;
+        }
+
+        .dom-element.added {
+            background: #d1ecf1;
+            border-color: #bee5eb;
+            animation: pulse-add 0.5s;
+        }
+
+        @keyframes pulse-add {
+            0% { transform: scale(0.9); opacity: 0; }
+            70% { transform: scale(1.05); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .element-tag {
             font-weight: bold;
+            color: #e74c3c;
+            margin-right: 10px;
         }
 
-        .main-content {
-            display: grid;
-            grid-template-columns: 200px 1fr;
-            gap: 15px;
+        .element-props {
+            color: #3498db;
+            font-size: 0.9rem;
         }
 
-        .sidebar {
-            background: #2196F3;
-            color: white;
-            padding: 15px;
-            border-radius: 5px;
+        .element-content {
+            margin-top: 5px;
+            padding-left: 15px;
         }
 
-        .sidebar-item {
-            padding: 8px 12px;
-            margin: 5px 0;
-            background: rgba(255,255,255,0.2);
-            border-radius: 3px;
-            cursor: pointer;
-        }
-
-        .sidebar-item:hover {
-            background: rgba(255,255,255,0.3);
-        }
-
-        .content-area {
-            background: white;
-            padding: 15px;
-            border-radius: 5px;
-            border: 1px solid #e0e0e0;
-        }
-
-        .article-title {
-            font-size: 1.5rem;
-            margin-bottom: 10px;
-            color: #333;
-        }
-
-        .article-content {
-            line-height: 1.6;
-            color: #666;
-        }
-
-        /* Fiber Node Styling */
+        /* Fiber Tree Styling */
         .fiber-node {
             border: 2px solid #ddd;
             border-radius: 8px;
@@ -171,12 +159,6 @@
             background: white;
             transition: all 0.3s ease;
             position: relative;
-            cursor: pointer;
-        }
-
-        .fiber-node:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
         }
 
         .fiber-node.active {
@@ -193,11 +175,6 @@
         .fiber-node.completed {
             border-color: #2196F3;
             background-color: #E3F2FD;
-        }
-
-        .fiber-node.updated {
-            border-color: #FF9800;
-            background-color: #FFF3E0;
         }
 
         @keyframes pulse {
@@ -309,10 +286,11 @@
             border-bottom: 1px solid #eee;
         }
 
-        .control-buttons {
+        .control-row {
             display: flex;
             flex-wrap: wrap;
             gap: 10px;
+            margin-bottom: 10px;
         }
 
         .work-loop-status {
@@ -357,31 +335,17 @@
             color: white;
         }
 
-        .legend {
+        .stats-container {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 10px;
+            gap: 20px;
             margin-top: 20px;
         }
 
-        .legend-item {
-            display: flex;
-            align-items: center;
-            font-size: 0.8rem;
-        }
-
-        .legend-color {
-            width: 16px;
-            height: 16px;
-            border-radius: 4px;
-            margin-right: 8px;
-        }
-
-        .fiber-stats {
+        .fiber-stats, .dom-stats {
             background: #f9f9f9;
             padding: 15px;
             border-radius: 8px;
-            margin-top: 20px;
         }
 
         .stat-item {
@@ -404,63 +368,24 @@
             transition: width 0.3s ease;
         }
 
-        .dom-highlight {
-            animation: domHighlight 1s ease;
+        .legend {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 20px;
         }
 
-        @keyframes domHighlight {
-            0% { background-color: transparent; }
-            50% { background-color: #FFF3E0; }
-            100% { background-color: transparent; }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            font-size: 0.8rem;
         }
 
-        .dom-element {
-            transition: all 0.3s ease;
-            position: relative;
-        }
-
-        .dom-element.updated::before {
-            content: 'UPDATED';
-            position: absolute;
-            top: -10px;
-            right: -10px;
-            background: #FF9800;
-            color: white;
-            padding: 2px 6px;
+        .legend-color {
+            width: 16px;
+            height: 16px;
             border-radius: 4px;
-            font-size: 0.7rem;
-            z-index: 10;
-        }
-
-        .dom-element.added::before {
-            content: 'ADDED';
-            position: absolute;
-            top: -10px;
-            right: -10px;
-            background: #4CAF50;
-            color: white;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 0.7rem;
-            z-index: 10;
-        }
-
-        .dom-element.removed {
-            opacity: 0.5;
-            background: #ffebee;
-        }
-
-        .dom-element.removed::before {
-            content: 'REMOVED';
-            position: absolute;
-            top: -10px;
-            right: -10px;
-            background: #F44336;
-            color: white;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 0.7rem;
-            z-index: 10;
+            margin-right: 8px;
         }
     </style>
 </head>
@@ -468,7 +393,7 @@
     <div class="container">
         <header>
             <h1>React Fiber Architecture Simulation</h1>
-            <p class="subtitle">Real DOM elements with corresponding Fiber tree operations</p>
+            <p class="subtitle">Visualizing the connection between Real DOM and Fiber Tree operations</p>
         </header>
 
         <div class="work-loop">
@@ -479,69 +404,81 @@
             </div>
             <div class="phase-indicators">
                 <div class="phase" id="phaseRender">Render/Reconcile</div>
-                <div class="phase" id="phaseCommit">Commit</div>
+                <div class="phase" id="phaseCommit">Commit to DOM</div>
             </div>
         </div>
 
         <div class="controls-panel">
-            <div class="control-group">
-                <h3>Simulation Controls</h3>
-                <div class="control-buttons">
+            <div class="control-row">
+                <div class="control-group">
+                    <h3>Simulation Controls</h3>
                     <button class="btn btn-primary" id="btnStart">Start Reconciliation</button>
                     <button class="btn btn-secondary" id="btnPause">Pause</button>
                     <button class="btn btn-danger" id="btnReset">Reset</button>
                 </div>
-            </div>
 
-            <div class="control-group">
-                <h3>Component Operations</h3>
-                <div class="control-buttons">
-                    <button class="btn btn-secondary" id="btnUpdateProps">Update Component Props</button>
-                    <button class="btn btn-secondary" id="btnUpdateState">Update Component State</button>
-                    <button class="btn btn-secondary" id="btnAddComponent">Add New Component</button>
-                    <button class="btn btn-secondary" id="btnRemoveComponent">Remove Component</button>
-                    <button class="btn btn-secondary" id="btnForceUpdate">Force Re-render</button>
+                <div class="control-group">
+                    <h3>DOM Operations</h3>
+                    <button class="btn btn-secondary" id="btnAddElement">Add DOM Element</button>
+                    <button class="btn btn-secondary" id="btnUpdateElement">Update DOM Element</button>
+                    <button class="btn btn-secondary" id="btnRemoveElement">Remove DOM Element</button>
                 </div>
-            </div>
 
-            <div class="control-group">
-                <h3>Animation Speed</h3>
-                <input type="range" id="speedControl" min="100" max="2000" value="800">
-                <div class="speed-value">Speed: <span id="speedValue">800ms</span></div>
-            </div>
-
-            <div class="fiber-stats">
-                <h3>Fiber Statistics</h3>
-                <div class="stat-item">
-                    <span>Total Nodes:</span>
-                    <span id="statTotalNodes">0</span>
-                </div>
-                <div class="stat-item">
-                    <span>Nodes Processed:</span>
-                    <span id="statProcessedNodes">0</span>
-                </div>
-                <div class="stat-item">
-                    <span>DOM Operations:</span>
-                    <span id="statDomOperations">0</span>
-                </div>
-                <div class="progress-bar">
-                    <div class="progress" id="progressBar" style="width: 0%"></div>
+                <div class="control-group">
+                    <h3>Animation Speed</h3>
+                    <input type="range" id="speedControl" min="100" max="2000" value="800">
+                    <div>Speed: <span id="speedValue">800ms</span></div>
                 </div>
             </div>
         </div>
 
         <div class="simulation-container">
-            <div class="dom-preview">
-                <h2>Real DOM Elements</h2>
-                <div id="realDomContainer" class="real-app">
+            <div class="dom-container">
+                <h2 class="panel-title">Real DOM</h2>
+                <div class="real-dom" id="realDomContainer">
                     <!-- Real DOM elements will be rendered here -->
+                </div>
+                
+                <div class="dom-stats">
+                    <h3>DOM Statistics</h3>
+                    <div class="stat-item">
+                        <span>Total Elements:</span>
+                        <span id="statDomElements">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>Elements Updated:</span>
+                        <span id="statDomUpdated">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>Operations:</span>
+                        <span id="statDomOperations">0</span>
+                    </div>
                 </div>
             </div>
 
-            <div class="tree-visualization">
-                <h2>Fiber Tree Structure</h2>
-                <div id="treeContainer">
+            <div class="fiber-container">
+                <h2 class="panel-title">Fiber Tree</h2>
+                <div id="fiberTreeContainer">
                     <!-- Fiber tree will be rendered here -->
+                </div>
+                
+                <div class="fiber-stats">
+                    <h3>Fiber Statistics</h3>
+                    <div class="stat-item">
+                        <span>Total Nodes:</span>
+                        <span id="statTotalNodes">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>Nodes Processed:</span>
+                        <span id="statProcessedNodes">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>Work Progress:</span>
+                        <span id="statProgress">0%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress" id="progressBar" style="width: 0%"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -556,20 +493,20 @@
                 <span>Function Component</span>
             </div>
             <div class="legend-item">
-                <div class="legend-color node-class"></div>
-                <span>Class Component</span>
-            </div>
-            <div class="legend-item">
-                <div class="legend-color node-text"></div>
-                <span>Text Node</span>
-            </div>
-            <div class="legend-item">
                 <div class="legend-color" style="background: #E8F5E8"></div>
-                <span>Active Node</span>
+                <span>Active Fiber Node</span>
             </div>
             <div class="legend-item">
                 <div class="legend-color" style="background: #FFF3E0"></div>
-                <span>Working Node</span>
+                <span>Working Fiber Node</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #d4edda"></div>
+                <span>Updated DOM Element</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #d1ecf1"></div>
+                <span>Added DOM Element</span>
             </div>
         </div>
     </div>
@@ -577,20 +514,20 @@
     <script>
         // Fiber Node Class
         class FiberNode {
-            constructor(type, key, props = {}, state = null) {
+            constructor(type, key, props = {}, state = null, domElement = null) {
                 this.id = Math.random().toString(36).substr(2, 9);
                 this.type = type;
                 this.key = key;
                 this.props = props;
                 this.state = state;
+                this.domElement = domElement; // Reference to actual DOM element
                 this.children = [];
                 this.sibling = null;
                 this.return = null;
                 this.alternate = null;
                 this.effectTag = null;
                 this.status = 'pending';
-                this.domElement = null;
-                this.domId = null;
+                this.domRef = null; // Reference to DOM element in visualization
             }
 
             addChild(child) {
@@ -603,196 +540,154 @@
             }
         }
 
-        // Fiber Tree Simulation with Real DOM
-        class FiberTreeSimulation {
+        // DOM Element Class
+        class DomElement {
+            constructor(tag, props = {}, content = '', children = []) {
+                this.id = Math.random().toString(36).substr(2, 9);
+                this.tag = tag;
+                this.props = props;
+                this.content = content;
+                this.children = children;
+                this.status = 'normal'; // normal, updated, added, removed
+                this.fiberNode = null; // Reference to corresponding Fiber node
+            }
+
+            addChild(child) {
+                this.children.push(child);
+            }
+        }
+
+        // Main Simulation Class
+        class FiberDomSimulation {
             constructor() {
-                this.root = null;
+                this.fiberRoot = null;
+                this.domRoot = null;
                 this.workInProgress = null;
-                this.currentTree = null;
                 this.isWorking = false;
                 this.isPaused = false;
                 this.animationSpeed = 800;
                 this.workQueue = [];
                 this.domOperations = 0;
-                this.domElementCounter = 0;
                 this.init();
                 this.setupEventListeners();
             }
 
             init() {
-                this.domOperations = 0;
-                this.domElementCounter = 0;
-                this.root = this.createSampleTree();
-                this.currentTree = this.deepCloneFiber(this.root);
-                this.renderRealDOM();
+                this.createSampleApp();
+                this.renderDom();
                 this.renderFiberTree();
                 this.updateStats();
             }
 
-            createSampleTree() {
-                const root = new FiberNode('HostComponent', 'root', { className: 'app-root' });
-                
-                // Header component
-                const header = new FiberNode('FunctionComponent', 'header', { title: 'My App' });
-                root.addChild(header);
-                
-                // Header children
-                const logo = new FiberNode('HostComponent', 'logo', { 
-                    className: 'app-logo',
-                    text: 'R'
-                });
-                const title = new FiberNode('HostText', 'title', {}, 'My Application');
-                header.addChild(logo);
-                header.addChild(title);
-                logo.setSibling(title);
-                
-                // Main content
-                const main = new FiberNode('HostComponent', 'main', { className: 'main-content' });
-                root.addChild(main);
-                header.setSibling(main);
-                
-                // Sidebar
-                const sidebar = new FiberNode('ClassComponent', 'sidebar', {}, { 
-                    collapsed: false,
-                    activeItem: 'Home'
-                });
-                main.addChild(sidebar);
-                
-                // Sidebar items
-                const sidebarItem1 = new FiberNode('HostComponent', 'sidebar-item-1', {}, 'Home');
-                const sidebarItem2 = new FiberNode('HostComponent', 'sidebar-item-2', {}, 'Profile');
-                const sidebarItem3 = new FiberNode('HostComponent', 'sidebar-item-3', {}, 'Settings');
-                sidebar.addChild(sidebarItem1);
-                sidebar.addChild(sidebarItem2);
-                sidebar.addChild(sidebarItem3);
-                sidebarItem1.setSibling(sidebarItem2);
-                sidebarItem2.setSibling(sidebarItem3);
-                
-                // Content area
-                const content = new FiberNode('HostComponent', 'content', { className: 'content-area' });
-                main.addChild(content);
-                sidebar.setSibling(content);
-                
-                // Article
-                const article = new FiberNode('FunctionComponent', 'article', { 
-                    title: 'React Fiber Architecture'
-                });
-                content.addChild(article);
-                
-                // Article children
-                const articleTitle = new FiberNode('HostText', 'article-title', {}, 'Understanding React Fiber');
-                const articleContent = new FiberNode('HostText', 'article-content', {}, 
-                    'Fiber is React\'s new reconciliation algorithm. It enables features like incremental rendering, pause/resume work, and error boundaries.'
+            createSampleApp() {
+                // Create DOM structure
+                this.domRoot = new DomElement('div', { id: 'app', class: 'app-container' }, '', [
+                    new DomElement('header', { class: 'app-header' }, '', [
+                        new DomElement('h1', {}, 'My React App'),
+                        new DomElement('nav', { class: 'navigation' }, '', [
+                            new DomElement('a', { href: '#home' }, 'Home'),
+                            new DomElement('a', { href: '#about' }, 'About'),
+                            new DomElement('a', { href: '#contact' }, 'Contact')
+                        ])
+                    ]),
+                    new DomElement('main', { class: 'main-content' }, '', [
+                        new DomElement('section', { class: 'sidebar' }, '', [
+                            new DomElement('h2', {}, 'Sidebar'),
+                            new DomElement('ul', {}, '', [
+                                new DomElement('li', {}, 'Item 1'),
+                                new DomElement('li', {}, 'Item 2'),
+                                new DomElement('li', {}, 'Item 3')
+                            ])
+                        ]),
+                        new DomElement('section', { class: 'content' }, '', [
+                            new DomElement('article', {}, '', [
+                                new DomElement('h2', {}, 'Welcome to React Fiber Simulation'),
+                                new DomElement('p', {}, 'This demonstrates how React Fiber works with the DOM.'),
+                                new DomElement('button', { class: 'demo-btn' }, 'Click me')
+                            ])
+                        ])
+                    ]),
+                    new DomElement('footer', { class: 'app-footer' }, '© 2023 React Fiber Simulation')
+                ]);
+
+                // Create corresponding Fiber tree
+                this.fiberRoot = this.createFiberTreeFromDom(this.domRoot);
+            }
+
+            createFiberTreeFromDom(domElement, parentFiber = null) {
+                const fiberNode = new FiberNode(
+                    domElement.tag === '#text' ? 'HostText' : 'HostComponent',
+                    domElement.id,
+                    domElement.props,
+                    null,
+                    domElement
                 );
-                article.addChild(articleTitle);
-                article.addChild(articleContent);
-                articleTitle.setSibling(articleContent);
-                
-                return root;
-            }
 
-            deepCloneFiber(node) {
-                const clone = new FiberNode(node.type, node.key, {...node.props}, node.state ? {...node.state} : null);
-                clone.id = node.id;
-                clone.effectTag = node.effectTag;
-                clone.status = node.status;
-                clone.domElement = node.domElement;
-                clone.domId = node.domId;
-                
-                node.children.forEach(child => {
-                    const childClone = this.deepCloneFiber(child);
-                    clone.addChild(childClone);
+                domElement.fiberNode = fiberNode;
+
+                if (parentFiber) {
+                    parentFiber.addChild(fiberNode);
+                }
+
+                // Process children
+                if (domElement.content) {
+                    const textNode = new DomElement('#text', {}, domElement.content);
+                    const textFiber = new FiberNode('HostText', `text-${domElement.id}`, {}, null, textNode);
+                    fiberNode.addChild(textFiber);
+                    textNode.fiberNode = textFiber;
+                }
+
+                domElement.children.forEach(child => {
+                    this.createFiberTreeFromDom(child, fiberNode);
                 });
-                
-                return clone;
+
+                return fiberNode;
             }
 
-            // Real DOM Rendering
-            renderRealDOM(node = this.currentTree, parentElement = document.getElementById('realDomContainer')) {
-                if (!node) return;
+            renderDom(element = this.domRoot, container = document.getElementById('realDomContainer')) {
+                let html = '';
                 
-                let domElement;
-                
-                switch (node.type) {
-                    case 'HostComponent':
-                        domElement = document.createElement('div');
-                        domElement.className = `dom-element ${node.props.className || ''}`;
-                        if (node.props.text) {
-                            domElement.textContent = node.props.text;
-                        }
-                        break;
-                        
-                    case 'HostText':
-                        domElement = document.createTextNode(node.state || '');
-                        break;
-                        
-                    case 'FunctionComponent':
-                    case 'ClassComponent':
-                        domElement = document.createElement('div');
-                        domElement.className = `dom-element component ${node.type.toLowerCase()}`;
-                        break;
-                        
-                    default:
-                        domElement = document.createElement('div');
-                }
-                
-                // Store reference to DOM element
-                if (node.type !== 'HostText') {
-                    node.domElement = domElement;
-                    node.domId = `dom-${this.domElementCounter++}`;
-                    domElement.id = node.domId;
-                    
-                    // Add specific styling based on component type
-                    if (node.type === 'HostComponent' && node.key === 'root') {
-                        domElement.className = 'real-app';
-                    } else if (node.type === 'HostComponent' && node.key === 'logo') {
-                        domElement.className = 'app-logo';
-                    } else if (node.type === 'FunctionComponent' && node.key === 'header') {
-                        domElement.className = 'app-header';
-                    } else if (node.type === 'HostComponent' && node.key === 'main') {
-                        domElement.className = 'main-content';
-                    } else if (node.type === 'ClassComponent' && node.key === 'sidebar') {
-                        domElement.className = 'sidebar';
-                    } else if (node.type === 'HostComponent' && node.key.includes('sidebar-item')) {
-                        domElement.className = 'sidebar-item';
-                    } else if (node.type === 'HostComponent' && node.key === 'content') {
-                        domElement.className = 'content-area';
-                    } else if (node.type === 'FunctionComponent' && node.key === 'article') {
-                        // Article container
-                    } else if (node.type === 'HostText' && node.key === 'title') {
-                        // Already handled as text node
-                    } else if (node.type === 'HostText' && node.key === 'article-title') {
-                        const titleElement = document.createElement('div');
-                        titleElement.className = 'article-title';
-                        titleElement.textContent = node.state;
-                        domElement = titleElement;
-                        node.domElement = titleElement;
-                    } else if (node.type === 'HostText' && node.key === 'article-content') {
-                        const contentElement = document.createElement('div');
-                        contentElement.className = 'article-content';
-                        contentElement.textContent = node.state;
-                        domElement = contentElement;
-                        node.domElement = contentElement;
-                    }
-                }
-                
-                if (node.type !== 'HostText') {
-                    parentElement.appendChild(domElement);
+                if (element.tag === '#text') {
+                    html = `<span class="element-content">${element.content}</span>`;
                 } else {
-                    parentElement.appendChild(domElement);
+                    const classNames = [`dom-element`, element.status].filter(Boolean).join(' ');
+                    html = `
+                        <div class="${classNames}" data-id="${element.id}">
+                            <div>
+                                <span class="element-tag">&lt;${element.tag}&gt;</span>
+                                <span class="element-props">${this.formatProps(element.props)}</span>
+                            </div>
+                            <div class="element-content">
+                    `;
+                    
+                    if (element.content) {
+                        html += `<div class="dom-element" data-id="text-${element.id}">
+                                    <span class="element-tag">#text</span>
+                                    <span class="element-content">${element.content}</span>
+                                 </div>`;
+                    }
+                    
+                    element.children.forEach(child => {
+                        html += this.renderDom(child);
+                    });
+                    
+                    html += `</div><span class="element-tag">&lt;/${element.tag}&gt;</span></div>`;
                 }
                 
-                // Recursively render children
-                if (node.children.length > 0) {
-                    const childrenContainer = node.type === 'HostText' ? parentElement : domElement;
-                    node.children.forEach(child => {
-                        this.renderRealDOM(child, childrenContainer);
-                    });
+                if (element === this.domRoot) {
+                    container.innerHTML = html;
                 }
+                
+                return html;
             }
 
-            // Fiber Tree Rendering
-            renderFiberTree(node = this.currentTree, level = 0) {
+            formatProps(props) {
+                return Object.entries(props).map(([key, value]) => 
+                    `${key}="${value}"`
+                ).join(' ');
+            }
+
+            renderFiberTree(node = this.fiberRoot, level = 0) {
                 if (!node) return '';
                 
                 const nodeClass = `fiber-node ${this.getNodeTypeClass(node.type)} ${node.status}`;
@@ -800,21 +695,20 @@
                     `<div class="effect-tag effect-${node.effectTag.toLowerCase()}">${node.effectTag}</div>` : '';
                 
                 let html = `
-                    <div class="${nodeClass}" data-id="${node.id}" data-dom="${node.domId}">
+                    <div class="${nodeClass}" data-id="${node.id}" style="margin-left: ${level * 30}px">
                         <div class="node-header">
                             <div class="node-type ${this.getNodeTypeClass(node.type)}">${node.type}</div>
                             ${effectTag}
                         </div>
                         <div class="node-content">
                             <div class="node-key">Key: ${node.key}</div>
+                            ${node.domElement ? `<div class="node-dom">DOM: ${node.domElement.tag}</div>` : ''}
                             ${node.props && Object.keys(node.props).length > 0 ? 
                                 `<div class="node-props">Props: ${JSON.stringify(node.props)}</div>` : ''}
-                            ${node.state ? `<div class="node-state">State: ${JSON.stringify(node.state)}</div>` : ''}
-                            ${node.domId ? `<div class="node-dom">DOM: ${node.domId}</div>` : ''}
                         </div>
                         <div class="node-connections">
-                            <div class="connection sibling">Sibling: ${node.sibling ? node.sibling.key : 'null'}</div>
-                            <div class="connection return">Return: ${node.return ? node.return.key : 'null'}</div>
+                            <div class="connection sibling">Sibling: ${node.sibling ? 'Yes' : 'No'}</div>
+                            <div class="connection return">Children: ${node.children.length}</div>
                         </div>
                     </div>
                 `;
@@ -825,6 +719,10 @@
                         html += this.renderFiberTree(child, level + 1);
                     });
                     html += `</div>`;
+                }
+                
+                if (node === this.fiberRoot) {
+                    document.getElementById('fiberTreeContainer').innerHTML = html;
                 }
                 
                 return html;
@@ -840,71 +738,52 @@
                 }
             }
 
-            updateDisplay() {
-                document.getElementById('treeContainer').innerHTML = this.renderFiberTree();
-                this.updateStats();
-            }
-
-            updateStats() {
-                const nodes = this.collectAllNodes(this.currentTree);
-                const processed = nodes.filter(node => node.status === 'completed').length;
-                const total = nodes.length;
-                const progress = total > 0 ? Math.round((processed / total) * 100) : 0;
-                
-                document.getElementById('statTotalNodes').textContent = total;
-                document.getElementById('statProcessedNodes').textContent = processed;
-                document.getElementById('statDomOperations').textContent = this.domOperations;
-                document.getElementById('progressBar').style.width = `${progress}%`;
-            }
-
-            collectAllNodes(node, nodes = []) {
-                if (!node) return nodes;
-                nodes.push(node);
-                node.children.forEach(child => this.collectAllNodes(child, nodes));
-                return nodes;
-            }
-
             // Fiber reconciliation simulation
             async startReconciliation() {
                 if (this.isWorking) return;
                 
                 this.isWorking = true;
                 this.isPaused = false;
-                this.updateStatus('Working: Reconciliation phase', 'status-working');
+                this.updateStatus('Working: Reconciliation phase', 'statusWorking');
                 this.setPhaseActive('phaseRender');
                 
                 // Reset status for all nodes
-                this.resetNodeStatus(this.currentTree);
+                this.resetNodeStatus(this.fiberRoot);
+                this.resetDomStatus(this.domRoot);
                 
                 // Create work queue
-                this.workQueue = this.createWorkQueue(this.currentTree);
+                this.workQueue = this.createWorkQueue(this.fiberRoot);
                 
                 // Process work queue
                 await this.processWorkQueue();
                 
-                // Commit phase
-                this.updateStatus('Working: Commit phase', 'status-working');
+                // Commit phase - apply changes to DOM
+                this.updateStatus('Working: Commit phase', 'statusWorking');
                 this.setPhaseActive('phaseCommit');
                 await this.commitChanges();
                 
-                this.updateStatus('Work loop completed', 'status-idle');
+                this.updateStatus('Work loop completed', 'statusIdle');
                 this.isWorking = false;
-                this.updateDisplay();
+                this.renderFiberTree();
+                this.renderDom();
+                this.updateStats();
             }
 
             createWorkQueue(node, queue = []) {
                 if (!node) return queue;
+                
                 queue.push(node);
                 node.children.forEach(child => {
                     this.createWorkQueue(child, queue);
                 });
+                
                 return queue;
             }
 
             async processWorkQueue() {
                 for (let i = 0; i < this.workQueue.length; i++) {
                     if (this.isPaused) {
-                        this.updateStatus('Work loop paused', 'status-paused');
+                        this.updateStatus('Work loop paused', 'statusPaused');
                         return;
                     }
                     
@@ -912,9 +791,8 @@
                     
                     // Mark node as working
                     node.status = 'working';
-                    this.updateDisplay();
+                    this.renderFiberTree();
                     this.highlightNode(node.id);
-                    this.highlightDOM(node.domId);
                     
                     // Simulate work being done
                     await this.delay(this.animationSpeed);
@@ -923,43 +801,49 @@
                     node.status = 'completed';
                     
                     // Randomly assign effect tags for simulation
-                    if (Math.random() > 0.7) {
+                    if (Math.random() > 0.5) {
                         const effects = ['PLACEMENT', 'UPDATE', 'DELETION'];
                         node.effectTag = effects[Math.floor(Math.random() * effects.length)];
+                        
+                        // Update corresponding DOM element status
+                        if (node.domElement) {
+                            if (node.effectTag === 'UPDATE') {
+                                node.domElement.status = 'updated';
+                            } else if (node.effectTag === 'PLACEMENT') {
+                                node.domElement.status = 'added';
+                            } else if (node.effectTag === 'DELETION') {
+                                node.domElement.status = 'removed';
+                            }
+                        }
                     }
                     
-                    this.updateDisplay();
+                    this.renderFiberTree();
                     this.updateStats();
+                    await this.delay(100);
                 }
             }
 
             async commitChanges() {
-                // Apply DOM updates based on effect tags
-                const nodes = this.collectAllNodes(this.currentTree);
-                
-                for (const node of nodes) {
+                // Simulate DOM operations during commit phase
+                let operations = 0;
+                const processNode = (node) => {
                     if (node.effectTag && node.domElement) {
+                        operations++;
                         this.domOperations++;
                         
-                        switch (node.effectTag) {
-                            case 'UPDATE':
-                                node.domElement.classList.add('updated');
-                                if (node.type === 'HostText' && node.state) {
-                                    node.domElement.textContent = node.state + ' (updated)';
-                                }
-                                break;
-                                
-                            case 'PLACEMENT':
-                                node.domElement.classList.add('added');
-                                break;
-                                
-                            case 'DELETION':
-                                node.domElement.classList.add('removed');
-                                break;
-                        }
-                        
-                        await this.delay(this.animationSpeed / 2);
+                        // Highlight DOM element during commit
+                        this.highlightDomElement(node.domElement.id);
                     }
+                    
+                    node.children.forEach(processNode);
+                };
+                
+                processNode(this.fiberRoot);
+                
+                // Animate the commit process
+                for (let i = 0; i < operations; i++) {
+                    if (this.isPaused) break;
+                    await this.delay(this.animationSpeed / 2);
                 }
                 
                 this.setPhaseActive('phaseRender', false);
@@ -970,23 +854,13 @@
                 if (!node) return;
                 node.status = 'pending';
                 node.effectTag = null;
-                
-                // Reset DOM elements
-                if (node.domElement) {
-                    node.domElement.className = node.domElement.className
-                        .replace('updated', '')
-                        .replace('added', '')
-                        .replace('removed', '')
-                        .trim();
-                    
-                    if (node.type === 'HostText' && node.key === 'article-title') {
-                        node.domElement.textContent = 'Understanding React Fiber';
-                    } else if (node.type === 'HostText' && node.key === 'article-content') {
-                        node.domElement.textContent = 'Fiber is React\'s new reconciliation algorithm. It enables features like incremental rendering, pause/resume work, and error boundaries.';
-                    }
-                }
-                
                 node.children.forEach(child => this.resetNodeStatus(child));
+            }
+
+            resetDomStatus(element) {
+                if (!element) return;
+                element.status = 'normal';
+                element.children.forEach(child => this.resetDomStatus(child));
             }
 
             highlightNode(nodeId) {
@@ -1001,15 +875,14 @@
                 }
             }
 
-            highlightDOM(domId) {
-                document.querySelectorAll('.dom-element').forEach(dom => {
-                    dom.classList.remove('dom-highlight');
-                });
-                
-                const domElement = document.getElementById(domId);
-                if (domElement) {
-                    domElement.classList.add('dom-highlight');
-                    domElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            highlightDomElement(elementId) {
+                const element = document.querySelector(`[data-id="${elementId}"]`);
+                if (element) {
+                    element.classList.add('highlight');
+                    setTimeout(() => {
+                        element.classList.remove('highlight');
+                    }, 500);
+                    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
             }
 
@@ -1029,6 +902,104 @@
                 } else {
                     phaseElement.classList.remove('active');
                 }
+            }
+
+            // DOM Operations
+            addDomElement() {
+                const newElement = new DomElement('div', { class: 'new-element' }, 'Newly added element');
+                this.domRoot.children[1].children[1].addChild(newElement); // Add to content section
+                
+                const newFiber = new FiberNode('HostComponent', newElement.id, newElement.props, null, newElement);
+                newElement.fiberNode = newFiber;
+                
+                // Find the corresponding fiber node and add child
+                const contentFiber = this.findFiberNodeByKey('content');
+                if (contentFiber) {
+                    contentFiber.addChild(newFiber);
+                }
+                
+                this.renderDom();
+                this.renderFiberTree();
+                this.updateStats();
+            }
+
+            updateDomElement() {
+                const elements = this.collectAllDomElements(this.domRoot);
+                if (elements.length > 0) {
+                    const randomElement = elements[Math.floor(Math.random() * elements.length)];
+                    randomElement.props.updated = true;
+                    randomElement.props.timestamp = Date.now();
+                    
+                    if (randomElement.fiberNode) {
+                        randomElement.fiberNode.effectTag = 'UPDATE';
+                    }
+                    
+                    this.renderDom();
+                    this.renderFiberTree();
+                    this.updateStats();
+                }
+            }
+
+            removeDomElement() {
+                const elements = this.collectAllDomElements(this.domRoot);
+                if (elements.length > 2) { // Don't remove root or important structural elements
+                    const randomElement = elements[Math.floor(Math.random() * (elements.length - 2)) + 2];
+                    randomElement.status = 'removed';
+                    
+                    if (randomElement.fiberNode) {
+                        randomElement.fiberNode.effectTag = 'DELETION';
+                    }
+                    
+                    this.renderDom();
+                    this.renderFiberTree();
+                    this.updateStats();
+                }
+            }
+
+            findFiberNodeByKey(key, node = this.fiberRoot) {
+                if (!node) return null;
+                if (node.key === key) return node;
+                
+                for (const child of node.children) {
+                    const found = this.findFiberNodeByKey(key, child);
+                    if (found) return found;
+                }
+                
+                return null;
+            }
+
+            collectAllDomElements(element, elements = []) {
+                if (!element) return elements;
+                elements.push(element);
+                element.children.forEach(child => this.collectAllDomElements(child, elements));
+                return elements;
+            }
+
+            collectAllFiberNodes(node, nodes = []) {
+                if (!node) return nodes;
+                nodes.push(node);
+                node.children.forEach(child => this.collectAllFiberNodes(child, nodes));
+                return nodes;
+            }
+
+            updateStats() {
+                // Fiber stats
+                const fiberNodes = this.collectAllFiberNodes(this.fiberRoot);
+                const processedFiberNodes = fiberNodes.filter(node => node.status === 'completed').length;
+                const fiberProgress = fiberNodes.length > 0 ? Math.round((processedFiberNodes / fiberNodes.length) * 100) : 0;
+                
+                document.getElementById('statTotalNodes').textContent = fiberNodes.length;
+                document.getElementById('statProcessedNodes').textContent = processedFiberNodes;
+                document.getElementById('statProgress').textContent = `${fiberProgress}%`;
+                document.getElementById('progressBar').style.width = `${fiberProgress}%`;
+                
+                // DOM stats
+                const domElements = this.collectAllDomElements(this.domRoot);
+                const updatedDomElements = domElements.filter(el => el.status === 'updated').length;
+                
+                document.getElementById('statDomElements').textContent = domElements.length;
+                document.getElementById('statDomUpdated').textContent = updatedDomElements;
+                document.getElementById('statDomOperations').textContent = this.domOperations;
             }
 
             delay(ms) {
@@ -1051,9 +1022,9 @@
                 document.getElementById('btnReset').addEventListener('click', () => {
                     this.isWorking = false;
                     this.isPaused = false;
-                    document.getElementById('realDomContainer').innerHTML = '';
+                    this.domOperations = 0;
                     this.init();
-                    this.updateStatus('Work loop is idle', 'status-idle');
+                    this.updateStatus('Work loop is idle', 'statusIdle');
                 });
 
                 document.getElementById('speedControl').addEventListener('input', (e) => {
@@ -1061,108 +1032,23 @@
                     document.getElementById('speedValue').textContent = `${this.animationSpeed}ms`;
                 });
 
-                // Demo operations
-                document.getElementById('btnUpdateProps').addEventListener('click', () => {
-                    this.updateComponentProps();
+                document.getElementById('btnAddElement').addEventListener('click', () => {
+                    this.addDomElement();
                 });
 
-                document.getElementById('btnUpdateState').addEventListener('click', () => {
-                    this.updateComponentState();
+                document.getElementById('btnUpdateElement').addEventListener('click', () => {
+                    this.updateDomElement();
                 });
 
-                document.getElementById('btnAddComponent').addEventListener('click', () => {
-                    this.addNewComponent();
+                document.getElementById('btnRemoveElement').addEventListener('click', () => {
+                    this.removeDomElement();
                 });
-
-                document.getElementById('btnRemoveComponent').addEventListener('click', () => {
-                    this.removeComponent();
-                });
-
-                document.getElementById('btnForceUpdate').addEventListener('click', () => {
-                    this.forceRerender();
-                });
-            }
-
-            updateComponentProps() {
-                const nodes = this.collectAllNodes(this.currentTree);
-                const componentNodes = nodes.filter(node => 
-                    node.type === 'FunctionComponent' || node.type === 'ClassComponent'
-                );
-                
-                if (componentNodes.length > 0) {
-                    const randomNode = componentNodes[Math.floor(Math.random() * componentNodes.length)];
-                    randomNode.props.updated = true;
-                    randomNode.props.timestamp = Date.now();
-                    this.updateDisplay();
-                }
-            }
-
-            updateComponentState() {
-                const classNodes = this.collectAllNodes(this.currentTree).filter(node => 
-                    node.type === 'ClassComponent'
-                );
-                
-                if (classNodes.length > 0) {
-                    const randomNode = classNodes[Math.floor(Math.random() * classNodes.length)];
-                    if (!randomNode.state) randomNode.state = {};
-                    randomNode.state.updated = true;
-                    randomNode.state.count = (randomNode.state.count || 0) + 1;
-                    this.updateDisplay();
-                }
-            }
-
-            addNewComponent() {
-                const nodes = this.collectAllNodes(this.currentTree);
-                const contentNodes = nodes.filter(node => node.key === 'content');
-                
-                if (contentNodes.length > 0) {
-                    const contentNode = contentNodes[0];
-                    const newComponent = new FiberNode('FunctionComponent', `new-comp-${Date.now()}`, {
-                        title: 'New Component'
-                    });
-                    
-                    const newText = new FiberNode('HostText', `new-text-${Date.now()}`, {}, 'This is a newly added component!');
-                    newComponent.addChild(newText);
-                    
-                    contentNode.addChild(newComponent);
-                    
-                    // Re-render DOM and fiber tree
-                    document.getElementById('realDomContainer').innerHTML = '';
-                    this.renderRealDOM();
-                    this.updateDisplay();
-                }
-            }
-
-            removeComponent() {
-                const nodes = this.collectAllNodes(this.currentTree);
-                const removableNodes = nodes.filter(node => 
-                    node.key.includes('sidebar-item') || node.key.includes('new-comp')
-                );
-                
-                if (removableNodes.length > 0) {
-                    const randomNode = removableNodes[Math.floor(Math.random() * removableNodes.length)];
-                    if (randomNode.return) {
-                        const index = randomNode.return.children.indexOf(randomNode);
-                        if (index > -1) {
-                            randomNode.return.children.splice(index, 1);
-                            
-                            // Re-render DOM and fiber tree
-                            document.getElementById('realDomContainer').innerHTML = '';
-                            this.renderRealDOM();
-                            this.updateDisplay();
-                        }
-                    }
-                }
-            }
-
-            forceRerender() {
-                this.startReconciliation();
             }
         }
 
-        // Initialize the simulation
+        // Initialize the simulation when the page loads
         document.addEventListener('DOMContentLoaded', () => {
-            window.fiberSimulation = new FiberTreeSimulation();
+            window.fiberDomSimulation = new FiberDomSimulation();
         });
     </script>
 </body>
