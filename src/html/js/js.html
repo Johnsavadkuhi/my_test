@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>JavaScript Event Loop Visualizer</title>
   <style>
@@ -12,15 +12,16 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
-      height: 100vh;
+      justify-content: flex-start;
+      min-height: 100vh;
       overflow: hidden;
+      padding-top: 20px;
     }
 
     h1 {
       color: #00c6ff;
       margin-bottom: 1rem;
-      font-size: 1.8rem;
+      text-shadow: 0 0 8px rgba(0,198,255,0.4);
     }
 
     .container {
@@ -29,6 +30,7 @@
       justify-content: center;
       align-items: flex-start;
       position: relative;
+      margin-top: 10px;
     }
 
     .box {
@@ -38,8 +40,8 @@
       width: 220px;
       height: 260px;
       padding: 10px;
-      position: relative;
       box-shadow: 0 0 15px rgba(0, 198, 255, 0.3);
+      position: relative;
     }
 
     .box h3 {
@@ -57,7 +59,7 @@
       padding: 6px;
       opacity: 0;
       transform: translateY(10px);
-      transition: all 0.5s ease;
+      transition: all 0.6s ease;
     }
 
     .item.active {
@@ -71,11 +73,6 @@
       color: #00c6ff;
       opacity: 0;
       transition: opacity 0.5s ease, transform 1s ease-in-out;
-    }
-
-    .arrow.active {
-      opacity: 1;
-      transform: translateY(0);
     }
 
     .arrow#toWebApi {
@@ -93,6 +90,11 @@
       left: 700px;
     }
 
+    .arrow.active {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
     #explain {
       margin-top: 20px;
       font-size: 18px;
@@ -102,8 +104,13 @@
       min-height: 60px;
     }
 
-    button {
+    .controls {
       margin-top: 20px;
+      display: flex;
+      gap: 10px;
+    }
+
+    button {
       background: #00c6ff;
       color: #111;
       border: none;
@@ -123,6 +130,35 @@
       color: #aaa;
       cursor: not-allowed;
     }
+
+    #console {
+      margin-top: 30px;
+      background: #111;
+      width: 80%;
+      border-radius: 8px;
+      padding: 10px;
+      height: 120px;
+      overflow-y: auto;
+      border: 1px solid #00c6ff;
+      font-family: monospace;
+      box-shadow: 0 0 10px rgba(0,198,255,0.2);
+    }
+
+    #console p {
+      margin: 4px 0;
+    }
+
+    .log {
+      color: #00ff9d;
+    }
+
+    .warn {
+      color: #ffaa00;
+    }
+
+    .info {
+      color: #00c6ff;
+    }
   </style>
 </head>
 <body>
@@ -141,8 +177,16 @@
     </div>
     <div class="arrow" id="toCallStack">⬅️</div>
   </div>
-  <div id="explain">Click "Next Step" to walk through the Event Loop.</div>
-  <button id="nextBtn">Next Step ▶</button>
+
+  <div id="explain">Click <b>Start Demo</b> to run real code and visualize the Event Loop.</div>
+
+  <div class="controls">
+    <button id="nextBtn">Next Step ▶</button>
+    <button id="autoBtn">▶ Auto Play</button>
+    <button id="resetBtn">🔁 Reset</button>
+  </div>
+
+  <div id="console"><p class="info">Console output will appear here...</p></div>
 
   <script>
     const callStack = document.getElementById('callstack');
@@ -150,6 +194,9 @@
     const callbackQueue = document.getElementById('callbackqueue');
     const explain = document.getElementById('explain');
     const nextBtn = document.getElementById('nextBtn');
+    const autoBtn = document.getElementById('autoBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const consoleBox = document.getElementById('console');
 
     const arrows = {
       toWebApi: document.getElementById('toWebApi'),
@@ -163,26 +210,28 @@
         action: () => createItem(callStack, 'main()'),
       },
       {
-        text: '2️⃣ Inside main(), setTimeout() is called — sent to Web APIs.',
+        text: '2️⃣ main() calls setTimeout() → sent to Web APIs for the timer.',
         action: () => {
           createItem(webApi, 'setTimeout callback');
           showArrow('toWebApi');
+          fakeConsole('setTimeout(() => console.log("Timer done"), 0);', 'info');
         },
       },
       {
-        text: '3️⃣ Call Stack finishes execution and is now empty.',
+        text: '3️⃣ Call Stack is now empty after main() finishes.',
         action: () => removeLastItem(callStack),
       },
       {
-        text: '4️⃣ Timer completes — callback moves to Callback Queue.',
+        text: '4️⃣ After the timer, callback moves to Callback Queue.',
         action: () => {
           hideArrow('toWebApi');
           moveItem(webApi, callbackQueue);
           showArrow('fromWebApi');
+          fakeConsole('Timer finished → callback queued', 'warn');
         },
       },
       {
-        text: '5️⃣ Event Loop pushes the callback into the Call Stack.',
+        text: '5️⃣ Event Loop pushes the callback back to the Call Stack.',
         action: () => {
           hideArrow('fromWebApi');
           moveItem(callbackQueue, callStack);
@@ -190,31 +239,64 @@
         },
       },
       {
-        text: '6️⃣ Callback runs and is popped off the Call Stack.',
+        text: '6️⃣ Callback executes and logs output.',
         action: () => {
           hideArrow('toCallStack');
           removeLastItem(callStack);
+          fakeConsole('Timer done', 'log');
         },
       },
       {
         text: '✅ Event Loop repeats — constantly checking for new tasks!',
-        action: () => {},
+        action: () => fakeConsole('Event Loop waiting for next task...', 'info'),
       },
     ];
 
     let index = 0;
+    let autoplay = false;
+    let interval;
 
-    nextBtn.addEventListener('click', () => {
+    nextBtn.addEventListener('click', nextStep);
+    autoBtn.addEventListener('click', startAutoPlay);
+    resetBtn.addEventListener('click', resetAll);
+
+    function nextStep() {
       if (index >= steps.length) {
-        explain.innerText = "🎉 You've completed the Event Loop demo!";
+        explain.innerText = "🎉 Demo complete! You’ve visualized the Event Loop.";
         nextBtn.disabled = true;
+        autoBtn.disabled = true;
         return;
       }
       const step = steps[index];
       explain.innerText = step.text;
       step.action();
       index++;
-    });
+    }
+
+    function startAutoPlay() {
+      if (autoplay) return;
+      autoplay = true;
+      nextBtn.disabled = true;
+      autoBtn.disabled = true;
+      interval = setInterval(() => {
+        nextStep();
+        if (index >= steps.length) clearInterval(interval);
+      }, 1800);
+    }
+
+    function resetAll() {
+      clearInterval(interval);
+      autoplay = false;
+      index = 0;
+      nextBtn.disabled = false;
+      autoBtn.disabled = false;
+      callStack.innerHTML = '<h3>Call Stack</h3>';
+      webApi.innerHTML = '<h3>Web APIs</h3>';
+      callbackQueue.innerHTML = '<h3>Callback Queue</h3>';
+      explain.innerText = 'Click "Start Demo" to run real code and visualize the Event Loop.';
+      consoleBox.innerHTML = '<p class="info">Console output will appear here...</p>';
+      Object.values(arrows).forEach(a => a.classList.remove('active'));
+    }
 
     function createItem(container, text) {
       const item = document.createElement('div');
@@ -241,13 +323,19 @@
     }
 
     function showArrow(id) {
-      const arrow = arrows[id];
-      arrow.classList.add('active');
+      arrows[id].classList.add('active');
     }
 
     function hideArrow(id) {
-      const arrow = arrows[id];
-      arrow.classList.remove('active');
+      arrows[id].classList.remove('active');
+    }
+
+    function fakeConsole(msg, type = 'log') {
+      const line = document.createElement('p');
+      line.className = type;
+      line.textContent = msg;
+      consoleBox.appendChild(line);
+      consoleBox.scrollTop = consoleBox.scrollHeight;
     }
   </script>
 </body>
