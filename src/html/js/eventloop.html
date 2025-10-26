@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JavaScript Event Loop Animation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .container {
+            max-width: 1200px;
+            width: 100%;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .animation-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+        
+        .component {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            flex: 1;
+            min-width: 300px;
+            max-width: 500px;
+        }
+        
+        .component h2 {
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+            padding-bottom: 10px;
+        }
+        
+        .stack, .queue {
+            min-height: 300px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .stack {
+            justify-content: flex-end;
+        }
+        
+        .queue {
+            flex-direction: row;
+            align-items: center;
+            overflow-x: auto;
+        }
+        
+        .item {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+        }
+        
+        .stack .item {
+            animation: push 0.5s ease;
+        }
+        
+        .queue .item {
+            min-width: 120px;
+            animation: enqueue 0.5s ease;
+        }
+        
+        @keyframes push {
+            0% { transform: translateY(-20px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+        
+        @keyframes enqueue {
+            0% { transform: translateX(-20px); opacity: 0; }
+            100% { transform: translateX(0); opacity: 1; }
+        }
+        
+        .event-loop {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 20px 0;
+            position: relative;
+        }
+        
+        .loop {
+            width: 120px;
+            height: 120px;
+            border: 4px solid rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            animation: rotate 5s linear infinite;
+        }
+        
+        .loop-text {
+            position: absolute;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+        
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            padding: 12px 25px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        }
+        
+        button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        .explanation {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 30px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .explanation h2 {
+            margin-bottom: 15px;
+            font-size: 1.8rem;
+        }
+        
+        .explanation p {
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+        
+        .code-block {
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+        }
+        
+        .highlight {
+            color: #fdbb2d;
+            font-weight: bold;
+        }
+        
+        @media (max-width: 768px) {
+            .animation-container {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .component {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>JavaScript Event Loop Animation</h1>
+            <p class="subtitle">Visualize how JavaScript handles asynchronous operations using the Event Loop, Call Stack, Web APIs, and Callback Queue.</p>
+        </header>
+        
+        <div class="animation-container">
+            <div class="component">
+                <h2>Call Stack</h2>
+                <div class="stack" id="callStack">
+                    <div class="item">Global Execution Context</div>
+                </div>
+            </div>
+            
+            <div class="component">
+                <h2>Web APIs</h2>
+                <div class="stack" id="webApis">
+                    <!-- Web API items will be added here -->
+                </div>
+            </div>
+            
+            <div class="component">
+                <h2>Callback Queue</h2>
+                <div class="queue" id="callbackQueue">
+                    <!-- Callback items will be added here -->
+                </div>
+            </div>
+        </div>
+        
+        <div class="event-loop">
+            <div class="loop">
+                <div class="loop-text">Event Loop</div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button id="addSync">Add Synchronous Function</button>
+            <button id="addSetTimeout">Add setTimeout</button>
+            <button id="addSetInterval">Add setInterval</button>
+            <button id="addEventListener">Add Event Listener</button>
+            <button id="clearAll">Clear All</button>
+        </div>
+        
+        <div class="explanation">
+            <h2>How the JavaScript Event Loop Works</h2>
+            <p>The JavaScript Event Loop is a fundamental concept that enables JavaScript's asynchronous behavior despite being single-threaded.</p>
+            
+            <div class="code-block">
+                <span class="highlight">// Example code that uses the event loop</span><br>
+                console.log('Start');<br>
+                <br>
+                setTimeout(() => {<br>
+                &nbsp;&nbsp;console.log('Timeout callback');<br>
+                }, 1000);<br>
+                <br>
+                console.log('End');
+            </div>
+            
+            <p><span class="highlight">1. Call Stack:</span> JavaScript has a single call stack that tracks the currently executing function. When a function is called, it's added to the stack. When it returns, it's removed from the stack.</p>
+            
+            <p><span class="highlight">2. Web APIs:</span> Browser-provided APIs (like setTimeout, DOM events, fetch) handle tasks outside the JavaScript engine. When these complete, their callbacks are sent to the Callback Queue.</p>
+            
+            <p><span class="highlight">3. Callback Queue:</span> Holds callbacks from completed asynchronous operations, waiting to be executed.</p>
+            
+            <p><span class="highlight">4. Event Loop:</span> Continuously checks if the call stack is empty. If it is, it takes the first callback from the queue and pushes it to the call stack for execution.</p>
+            
+            <p>This mechanism allows JavaScript to handle asynchronous operations without blocking the main thread, enabling responsive web applications.</p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const callStack = document.getElementById('callStack');
+            const webApis = document.getElementById('webApis');
+            const callbackQueue = document.getElementById('callbackQueue');
+            
+            const addSyncBtn = document.getElementById('addSync');
+            const addSetTimeoutBtn = document.getElementById('addSetTimeout');
+            const addSetIntervalBtn = document.getElementById('addSetInterval');
+            const addEventListenerBtn = document.getElementById('addEventListener');
+            const clearAllBtn = document.getElementById('clearAll');
+            
+            let functionCounter = 1;
+            let timeoutCounter = 1;
+            let intervalCounter = 1;
+            let eventCounter = 1;
+            
+            // Add synchronous function
+            addSyncBtn.addEventListener('click', function() {
+                const funcName = `syncFunction${functionCounter++}`;
+                addToCallStack(funcName);
+                
+                // Simulate execution time
+                setTimeout(() => {
+                    removeFromCallStack(funcName);
+                }, 1500);
+            });
+            
+            // Add setTimeout
+            addSetTimeoutBtn.addEventListener('click', function() {
+                const timeoutName = `setTimeout${timeoutCounter++}`;
+                addToCallStack(`setTimeout(${timeoutName})`);
+                
+                // Move to Web APIs after a short delay
+                setTimeout(() => {
+                    removeFromCallStack(`setTimeout(${timeoutName})`);
+                    addToWebApis(timeoutName, 'setTimeout');
+                    
+                    // Simulate timeout completion
+                    setTimeout(() => {
+                        removeFromWebApis(timeoutName);
+                        addToCallbackQueue(timeoutName);
+                        
+                        // Simulate event loop moving callback to stack
+                        setTimeout(() => {
+                            if (callbackQueue.children.length > 0) {
+                                const callback = callbackQueue.children[0];
+                                callbackQueue.removeChild(callback);
+                                addToCallStack(`${callback.textContent} callback`);
+                                
+                                // Remove from call stack after execution
+                                setTimeout(() => {
+                                    removeFromCallStack(`${callback.textContent} callback`);
+                                }, 1500);
+                            }
+                        }, 500);
+                    }, 2000);
+                }, 1000);
+            });
+            
+            // Add setInterval
+            addSetIntervalBtn.addEventListener('click', function() {
+                const intervalName = `setInterval${intervalCounter++}`;
+                addToCallStack(`setInterval(${intervalName})`);
+                
+                // Move to Web APIs after a short delay
+                setTimeout(() => {
+                    removeFromCallStack(`setInterval(${intervalName})`);
+                    addToWebApis(intervalName, 'setInterval');
+                    
+                    // Simulate interval execution
+                    const intervalId = setInterval(() => {
+                        if (webApis.querySelector(`[data-name="${intervalName}"]`)) {
+                            addToCallbackQueue(`${intervalName} callback`);
+                            
+                            // Simulate event loop moving callback to stack
+                            setTimeout(() => {
+                                if (callbackQueue.children.length > 0) {
+                                    const callback = callbackQueue.children[0];
+                                    if (callback.textContent.includes(intervalName)) {
+                                        callbackQueue.removeChild(callback);
+                                        addToCallStack(callback.textContent);
+                                        
+                                        // Remove from call stack after execution
+                                        setTimeout(() => {
+                                            removeFromCallStack(callback.textContent);
+                                        }, 1500);
+                                    }
+                                }
+                            }, 500);
+                        } else {
+                            clearInterval(intervalId);
+                        }
+                    }, 3000);
+                }, 1000);
+            });
+            
+            // Add event listener
+            addEventListenerBtn.addEventListener('click', function() {
+                const eventName = `clickEvent${eventCounter++}`;
+                addToCallStack(`addEventListener(${eventName})`);
+                
+                // Move to Web APIs after a short delay
+                setTimeout(() => {
+                    removeFromCallStack(`addEventListener(${eventName})`);
+                    addToWebApis(eventName, 'EventListener');
+                    
+                    // Simulate event firing
+                    setTimeout(() => {
+                        // Only add to callback queue if the event listener is still in Web APIs
+                        if (webApis.querySelector(`[data-name="${eventName}"]`)) {
+                            addToCallbackQueue(`${eventName} callback`);
+                            
+                            // Simulate event loop moving callback to stack
+                            setTimeout(() => {
+                                if (callbackQueue.children.length > 0) {
+                                    const callback = callbackQueue.children[0];
+                                    if (callback.textContent.includes(eventName)) {
+                                        callbackQueue.removeChild(callback);
+                                        addToCallStack(callback.textContent);
+                                        
+                                        // Remove from call stack after execution
+                                        setTimeout(() => {
+                                            removeFromCallStack(callback.textContent);
+                                            removeFromWebApis(eventName);
+                                        }, 1500);
+                                    }
+                                }
+                            }, 500);
+                        }
+                    }, 2000);
+                }, 1000);
+            });
+            
+            // Clear all
+            clearAllBtn.addEventListener('click', function() {
+                // Clear call stack except global context
+                while (callStack.children.length > 1) {
+                    callStack.removeChild(callStack.lastChild);
+                }
+                
+                // Clear web APIs
+                while (webApis.children.length > 0) {
+                    webApis.removeChild(webApis.lastChild);
+                }
+                
+                // Clear callback queue
+                while (callbackQueue.children.length > 0) {
+                    callbackQueue.removeChild(callbackQueue.lastChild);
+                }
+                
+                // Reset counters
+                functionCounter = 1;
+                timeoutCounter = 1;
+                intervalCounter = 1;
+                eventCounter = 1;
+            });
+            
+            // Helper functions
+            function addToCallStack(name) {
+                const item = document.createElement('div');
+                item.className = 'item';
+                item.textContent = name;
+                item.setAttribute('data-name', name);
+                callStack.appendChild(item);
+            }
+            
+            function removeFromCallStack(name) {
+                const items = callStack.querySelectorAll('.item');
+                for (let i = items.length - 1; i >= 0; i--) {
+                    if (items[i].getAttribute('data-name') === name) {
+                        items[i].style.transform = 'translateY(-20px)';
+                        items[i].style.opacity = '0';
+                        setTimeout(() => {
+                            if (items[i].parentNode) {
+                                callStack.removeChild(items[i]);
+                            }
+                        }, 300);
+                        break;
+                    }
+                }
+            }
+            
+            function addToWebApis(name, type) {
+                const item = document.createElement('div');
+                item.className = 'item';
+                item.textContent = `${type}: ${name}`;
+                item.setAttribute('data-name', name);
+                webApis.appendChild(item);
+            }
+            
+            function removeFromWebApis(name) {
+                const item = webApis.querySelector(`[data-name="${name}"]`);
+                if (item) {
+                    item.style.transform = 'translateY(-20px)';
+                    item.style.opacity = '0';
+                    setTimeout(() => {
+                        if (item.parentNode) {
+                            webApis.removeChild(item);
+                        }
+                    }, 300);
+                }
+            }
+            
+            function addToCallbackQueue(name) {
+                const item = document.createElement('div');
+                item.className = 'item';
+                item.textContent = name;
+                item.setAttribute('data-name', name);
+                callbackQueue.appendChild(item);
+            }
+        });
+    </script>
+</body>
+</html>
