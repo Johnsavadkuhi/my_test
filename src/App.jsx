@@ -21,6 +21,7 @@ function App() {
 
       <Theme />
 <Name/>
+
     </ThemeProvider>
   )
 }

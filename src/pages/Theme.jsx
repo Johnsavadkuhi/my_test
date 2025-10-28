@@ -1,4 +1,5 @@
 import { useTheme } from "../theme/ThemeContext";
+import Counter from "./Counter";
 
 export default function Theme() {
 
@@ -18,7 +19,7 @@ export default function Theme() {
             <button onClick={() => dispatch({ type: "TOGGLE_THEME" })}>
                 Toggle Theme
             </button>
-            
+            <Counter theme={state.theme}/>
         </div>
     );
 }
